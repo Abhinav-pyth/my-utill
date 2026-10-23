@@ -62,7 +62,16 @@
       "icon": "⏱️",
       "category": "Productivity",
       "color": "from-red-500 to-red-600"
+    },
+    {
+      "id": "AIStudioPro",
+      "name": "AI Studio Pro",
+      "description": "AI Story Studio Pro",
+      "path": "/apps/AIStudioPro.html",
+      "icon": "⏱️",
+      "category": "AI",
+      "color": "from-cyan-500 to-cyan-600"
     }
   ],
-  "categories": ["All", "Productivity", "Utility", "Widget"]
+  "categories": ["All", "Productivity", "Utility", "Widget", "AI"]
 }
