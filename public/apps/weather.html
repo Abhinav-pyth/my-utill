@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Widget</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #1d4ed8 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .widget {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .location {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    .date {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 24px;
+    }
+    .main-weather {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .temperature {
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .temperature sup {
+      font-size: 28px;
+      font-weight: 400;
+    }
+    .weather-icon {
+      font-size: 64px;
+    }
+    .condition {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 24px;
+    }
+    .details {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .detail-item {
+      text-align: center;
+    }
+    .detail-item .label {
+      font-size: 12px;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .detail-item .value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .forecast {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .forecast-day {
+      text-align: center;
+    }
+    .forecast-day .day-name {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .forecast-day .day-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .forecast-day .day-temp {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+    .search-box input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    .search-box button {
+      padding: 12px 20px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .search-box button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="search-box">
+      <input type="text" id="cityInput" placeholder="Search city..." value="San Francisco" onkeypress="if(event.key==='Enter')searchCity()">
+      <button onclick="searchCity()">🔍</button>
+    </div>
+    <div class="location" id="location">San Francisco, CA</div>
+    <div class="date" id="date"></div>
+    <div class="main-weather">
+      <div class="temperature" id="temp">22<sup>°C</sup></div>
+      <div class="weather-icon" id="icon">☀️</div>
+    </div>
+    <div class="condition" id="condition">Sunny</div>
+    <div class="details">
+      <div class="detail-item">
+        <div class="label">Humidity</div>
+        <div class="value" id="humidity">65%</div>
+      </div>
+      <div class="detail-item">
+        <div class="label">Wind</div>
+        <div class="value" id="wind">12 km/h</div>
+      </div>
+      <div class="detail-item">
+        <div class="label">UV Index</div>
+        <div class="value" id="uv">5</div>
+      </div>
+    </div>
+    <div class="forecast" id="forecast"></div>
+  </div>
+
+  <script>
+    const weatherData = {
+      'san francisco': { temp: 22, icon: '☀️', condition: 'Sunny', humidity: 65, wind: 12, uv: 5, location: 'San Francisco, CA' },
+      'new york': { temp: 18, icon: '⛅', condition: 'Partly Cloudy', humidity: 72, wind: 18, uv: 3, location: 'New York, NY' },
+      'london': { temp: 14, icon: '🌧️', condition: 'Light Rain', humidity: 85, wind: 22, uv: 2, location: 'London, UK' },
+      'tokyo': { temp: 26, icon: '🌤️', condition: 'Mostly Sunny', humidity: 58, wind: 8, uv: 7, location: 'Tokyo, Japan' },
+      'paris': { temp: 20, icon: '⛅', condition: 'Partly Cloudy', humidity: 60, wind: 15, uv: 4, location: 'Paris, France' },
+      'sydney': { temp: 28, icon: '☀️', condition: 'Clear Sky', humidity: 45, wind: 10, uv: 8, location: 'Sydney, Australia' },
+      'dubai': { temp: 38, icon: '☀️', condition: 'Hot & Sunny', humidity: 30, wind: 15, uv: 11, location: 'Dubai, UAE' },
+      'moscow': { temp: 8, icon: '🌨️', condition: 'Light Snow', humidity: 90, wind: 25, uv: 1, location: 'Moscow, Russia' },
+      'mumbai': { temp: 32, icon: '🌦️', condition: 'Humid & Warm', humidity: 78, wind: 12, uv: 9, location: 'Mumbai, India' },
+      'berlin': { temp: 16, icon: '🌥️', condition: 'Overcast', humidity: 70, wind: 20, uv: 3, location: 'Berlin, Germany' },
+    };
+
+    const forecastIcons = ['☀️', '⛅', '🌤️', '🌧️', '☀️', '⛅', '🌤️'];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    function setDate() {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('date').textContent = now.toLocaleDateString('en-US', options);
+    }
+
+    function renderForecast(baseTemp) {
+      const forecast = document.getElementById('forecast');
+      const today = new Date().getDay();
+      let html = '';
+      for (let i = 0; i < 5; i++) {
+        const dayIndex = (today + i) % 7;
+        const tempVariation = Math.floor(Math.random() * 8) - 4;
+        html += `
+          <div class="forecast-day">
+            <div class="day-name">${days[dayIndex]}</div>
+            <div class="day-icon">${forecastIcons[Math.floor(Math.random() * forecastIcons.length)]}</div>
+            <div class="day-temp">${baseTemp + tempVariation}°</div>
+          </div>
+        `;
+      }
+      forecast.innerHTML = html;
+    }
+
+    function searchCity() {
+      const input = document.getElementById('cityInput').value.trim().toLowerCase();
+      const data = weatherData[input];
+      
+      if (data) {
+        document.getElementById('location').textContent = data.location;
+        document.getElementById('temp').innerHTML = `${data.temp}<sup>°C</sup>`;
+        document.getElementById('icon').textContent = data.icon;
+        document.getElementById('condition').textContent = data.condition;
+        document.getElementById('humidity').textContent = `${data.humidity}%`;
+        document.getElementById('wind').textContent = `${data.wind} km/h`;
+        document.getElementById('uv').textContent = data.uv;
+        renderForecast(data.temp);
+      } else {
+        // Generate random weather for unknown cities
+        const temp = Math.floor(Math.random() * 30) + 5;
+        const icons = ['☀️', '⛅', '🌤️', '🌧️', '🌥️'];
+        const conditions = ['Sunny', 'Partly Cloudy', 'Mostly Sunny', 'Light Rain', 'Overcast'];
+        const idx = Math.floor(Math.random() * icons.length);
+        
+        document.getElementById('location').textContent = document.getElementById('cityInput').value;
+        document.getElementById('temp').innerHTML = `${temp}<sup>°C</sup>`;
+        document.getElementById('icon').textContent = icons[idx];
+        document.getElementById('condition').textContent = conditions[idx];
+        document.getElementById('humidity').textContent = `${Math.floor(Math.random() * 50) + 40}%`;
+        document.getElementById('wind').textContent = `${Math.floor(Math.random() * 25) + 5} km/h`;
+        document.getElementById('uv').textContent = Math.floor(Math.random() * 10) + 1;
+        renderForecast(temp);
+      }
+    }
+
+    setDate();
+    searchCity();
+  </script>
+</body>
+</html>

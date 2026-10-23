@@ -1,0 +1,41 @@
+{
+  "apps": [
+    {
+      "id": "todo-app",
+      "name": "Todo App",
+      "description": "A simple and clean todo list application",
+      "path": "/apps/todo.html",
+      "icon": "📝",
+      "category": "Productivity",
+      "color": "from-blue-500 to-blue-600"
+    },
+    {
+      "id": "calculator",
+      "name": "Calculator",
+      "description": "A basic calculator with modern UI",
+      "path": "/apps/calculator.html",
+      "icon": "🧮",
+      "category": "Utility",
+      "color": "from-purple-500 to-purple-600"
+    },
+    {
+      "id": "weather-widget",
+      "name": "Weather Widget",
+      "description": "Display weather information with a beautiful widget",
+      "path": "/apps/weather.html",
+      "icon": "🌤️",
+      "category": "Widget",
+      "color": "from-cyan-500 to-cyan-600"
+    },
+    {
+      "id": "timer",
+      "name": "Pomodoro Timer",
+      "description": "A focus timer using the Pomodoro technique",
+      "path": "/apps/timer.html",
+      "icon": "⏱️",
+      "category": "Productivity",
+      "color": "from-red-500 to-red-600"
+    }
+  ],
+  "categories": ["All", "Productivity", "Utility", "Widget"]
+}
