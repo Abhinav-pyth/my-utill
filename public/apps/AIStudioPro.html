@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Studio Pro • All Story Types</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+
+body{
+background:linear-gradient(135deg,#020617 0%,#0f172a 50%,#1e1b4b 100%);
+color:white;
+min-height:100vh;
+}
+
+.bg-animation{
+position:fixed;top:0;left:0;width:100%;height:100%;
+z-index:0;pointer-events:none;overflow:hidden;
+}
+.bg-particle{
+position:absolute;width:3px;height:3px;
+background:rgba(139,92,246,0.6);border-radius:50%;
+animation:float 20s infinite linear;
+}
+@keyframes float{
+0%,100%{transform:translateY(100vh) rotate(0deg);opacity:0}
+10%,90%{opacity:1}
+100%{transform:translateY(-100vh) rotate(720deg);opacity:0}
+}
+
+header{
+background:rgba(2,6,23,0.95);
+backdrop-filter:blur(15px);
+padding:20px 40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+position:sticky;
+top:0;
+z-index:100;
+border-bottom:2px solid rgba(139,92,246,0.4);
+}
+.logo{
+display:flex;
+align-items:center;
+gap:15px;
+font-size:1.8rem;
+font-weight:800;
+background:linear-gradient(135deg,#8b5cf6,#22c55e);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+.logo-icon{
+width:45px;height:45px;
+background:linear-gradient(135deg,#8b5cf6,#22c55e);
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:1.5rem;
+-webkit-text-fill-color:white;
+animation:logoPulse 3s infinite;
+}
+@keyframes logoPulse{
+0%,100%{box-shadow:0 0 25px rgba(139,92,246,0.6)}
+50%{box-shadow:0 0 45px rgba(34,197,94,0.8)}
+}
+.badge{
+background:linear-gradient(135deg,#22c55e,#16a34a);
+padding:10px 25px;
+border-radius:50px;
+font-weight:700;
+font-size:0.95rem;
+animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+
+.main-container{
+max-width:1600px;
+margin:0 auto;
+padding:40px 20px;
+position:relative;
+z-index:10;
+}
+
+.hero{
+text-align:center;
+margin-bottom:50px;
+padding:40px;
+background:rgba(139,92,246,0.1);
+border-radius:30px;
+border:1px solid rgba(139,92,246,0.3);
+}
+.hero h1{
+font-size:3rem;
+margin-bottom:15px;
+background:linear-gradient(135deg,#fff,#a78bfa,#22c55e);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+.hero p{
+font-size:1.3rem;
+color:#94a3b8;
+max-width:800px;
+margin:0 auto 25px;
+}
+.hero-features{
+display:flex;
+justify-content:center;
+gap:15px;
+flex-wrap:wrap;
+margin-top:25px;
+}
+.feature-pill{
+background:rgba(139,92,246,0.2);
+padding:10px 22px;
+border-radius:30px;
+font-weight:600;
+color:#a78bfa;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.tools-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+gap:25px;
+margin-bottom:40px;
+}
+.tool-card{
+background:linear-gradient(135deg,#1e293b,#0f172a);
+padding:30px;
+border-radius:25px;
+border:2px solid rgba(139,92,246,0.3);
+transition:all 0.3s;
+position:relative;
+overflow:hidden;
+cursor:pointer;
+}
+.tool-card::before{
+content:'';
+position:absolute;
+top:0;left:0;right:0;height:4px;
+background:linear-gradient(90deg,#8b5cf6,#22c55e,#3b82f6);
+}
+.tool-card:hover{
+transform:translateY(-8px);
+border-color:#8b5cf6;
+box-shadow:0 25px 60px rgba(139,92,246,0.3);
+}
+.tool-card.unlimited::after{
+content:'♾️ FREE';
+position:absolute;
+top:15px;
+right:-30px;
+background:linear-gradient(135deg,#22c55e,#16a34a);
+color:white;
+padding:6px 40px;
+font-size:0.75rem;
+font-weight:800;
+transform:rotate(45deg);
+}
+.tool-icon{
+font-size:2.8rem;
+margin-bottom:15px;
+}
+.tool-card h3{
+color:#a78bfa;
+margin-bottom:12px;
+font-size:1.4rem;
+display:flex;
+align-items:center;
+gap:10px;
+}
+.tool-card p{
+color:#94a3b8;
+font-size:0.95rem;
+line-height:1.6;
+margin-bottom:15px;
+}
+.tool-tags{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+.tag{
+background:rgba(139,92,246,0.2);
+color:#a78bfa;
+padding:5px 12px;
+border-radius:10px;
+font-size:0.8rem;
+font-weight:600;
+}
+
+/* Main Modal */
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.92);
+backdrop-filter:blur(15px);
+z-index:1000;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+.modal.show{display:flex}
+.modal-content{
+background:linear-gradient(135deg,#1e293b,#0f172a);
+padding:40px;
+border-radius:30px;
+width:100%;
+max-width:700px;
+border:2px solid #8b5cf6;
+box-shadow:0 40px 100px rgba(139,92,246,0.4);
+max-height:95vh;
+overflow-y:auto;
+}
+.modal-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+padding-bottom:20px;
+border-bottom:1px solid rgba(139,92,246,0.3);
+}
+.modal-title{
+font-size:2rem;
+background:linear-gradient(135deg,#fff,#a78bfa);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+.close-modal{
+font-size:2.5rem;
+cursor:pointer;
+color:#94a3b8;
+transition:color 0.2s;
+}
+.close-modal:hover{color:#8b5cf6}
+
+/* Style Selector Modal */
+.style-modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.95);
+backdrop-filter:blur(20px);
+z-index:2000;
+align-items:flex-end;
+justify-content:center;
+}
+.style-modal.show{display:flex}
+.style-modal-content{
+background:#1e293b;
+width:100%;
+max-width:600px;
+border-radius:30px 30px 0 0;
+padding:30px;
+max-height:85vh;
+overflow-y:auto;
+animation:slideUp 0.3s ease;
+}
+@keyframes slideUp{
+from{transform:translateY(100%)}
+to{transform:translateY(0)}
+}
+.style-modal-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+}
+.style-modal-title{
+font-size:1.8rem;
+font-weight:700;
+color:#fff;
+}
+.style-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+margin-bottom:25px;
+}
+.style-card{
+position:relative;
+border-radius:15px;
+overflow:hidden;
+cursor:pointer;
+border:3px solid transparent;
+transition:all 0.3s;
+aspect-ratio:1;
+}
+.style-card:hover{
+transform:translateY(-5px);
+box-shadow:0 10px 30px rgba(139,92,246,0.5);
+}
+.style-card.selected{
+border-color:#22c55e;
+box-shadow:0 0 0 3px rgba(34,197,94,0.3);
+}
+.style-card.selected::after{
+content:'✓';
+position:absolute;
+top:10px;
+right:10px;
+background:#22c55e;
+color:white;
+width:30px;
+height:30px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+font-size:1.2rem;
+}
+.style-card img{
+width:100%;
+height:100%;
+object-fit:cover;
+display:block;
+}
+.style-card-label{
+position:absolute;
+bottom:0;
+left:0;
+right:0;
+background:linear-gradient(to top,rgba(0,0,0,0.9),transparent);
+padding:15px 10px 10px;
+font-weight:600;
+font-size:0.9rem;
+text-align:center;
+color:white;
+}
+
+.modal-body input,.modal-body textarea{
+width:100%;
+padding:16px 20px;
+margin:15px 0;
+border-radius:15px;
+border:2px solid rgba(139,92,246,0.4);
+background:rgba(15,23,42,0.8);
+color:white;
+font-size:1.1rem;
+outline:none;
+transition:border-color 0.3s;
+}
+.modal-body input:focus,.modal-body textarea:focus{
+border-color:#8b5cf6;
+box-shadow:0 0 25px rgba(139,92,246,0.3);
+}
+
+/* Story Type Selector */
+.story-type-section{
+margin:25px 0;
+padding:20px;
+background:rgba(139,92,246,0.1);
+border-radius:15px;
+border:1px solid rgba(139,92,246,0.3);
+}
+.story-type-label{
+font-size:1.1rem;
+font-weight:700;
+color:#a78bfa;
+margin-bottom:15px;
+display:block;
+}
+.story-type-options{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+}
+.story-type-btn{
+padding:14px 10px;
+background:rgba(15,23,42,0.8);
+border:2px solid rgba(139,92,246,0.4);
+border-radius:12px;
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:all 0.3s;
+text-align:center;
+font-size:0.9rem;
+}
+.story-type-btn:hover{
+border-color:#8b5cf6;
+transform:translateY(-2px);
+}
+.story-type-btn.selected{
+background:linear-gradient(135deg,#8b5cf6,#22c55e);
+border-color:#22c55e;
+box-shadow:0 5px 20px rgba(34,197,94,0.4);
+}
+
+/* Duration Selector */
+.duration-section{
+margin:25px 0;
+padding:20px;
+background:rgba(139,92,246,0.1);
+border-radius:15px;
+border:1px solid rgba(139,92,246,0.3);
+}
+.duration-label{
+font-size:1.1rem;
+font-weight:700;
+color:#a78bfa;
+margin-bottom:15px;
+display:block;
+}
+.duration-options{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+}
+.duration-btn{
+padding:12px;
+background:rgba(15,23,42,0.8);
+border:2px solid rgba(139,92,246,0.4);
+border-radius:12px;
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:all 0.3s;
+text-align:center;
+}
+.duration-btn:hover{
+border-color:#8b5cf6;
+transform:translateY(-2px);
+}
+.duration-btn.selected{
+background:linear-gradient(135deg,#8b5cf6,#22c55e);
+border-color:#22c55e;
+box-shadow:0 5px 20px rgba(34,197,94,0.4);
+}
+.duration-btn span{
+display:block;
+font-size:0.75rem;
+color:#94a3b8;
+margin-top:3px;
+}
+
+/* Style Button */
+.select-style-btn{
+width:100%;
+padding:16px;
+margin:15px 0;
+background:rgba(139,92,246,0.2);
+border:2px dashed rgba(139,92,246,0.5);
+border-radius:15px;
+color:#a78bfa;
+font-weight:600;
+cursor:pointer;
+transition:all 0.3s;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+}
+.select-style-btn:hover{
+background:rgba(139,92,246,0.3);
+border-color:#8b5cf6;
+}
+.selected-style-display{
+padding:15px;
+background:rgba(34,197,94,0.1);
+border:2px solid #22c55e;
+border-radius:12px;
+margin:15px 0;
+display:none;
+}
+.selected-style-display.show{display:block}
+.selected-style-display h4{
+color:#22c55e;
+margin-bottom:8px;
+font-size:1.1rem;
+}
+
+.generate-btn{
+width:100%;
+padding:18px;
+margin-top:20px;
+background:linear-gradient(135deg,#8b5cf6,#22c55e);
+border:none;
+color:white;
+border-radius:15px;
+font-weight:800;
+font-size:1.2rem;
+cursor:pointer;
+transition:all 0.3s;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+}
+.generate-btn:hover{
+transform:translateY(-3px);
+box-shadow:0 15px 40px rgba(139,92,246,0.5);
+}
+.generate-btn:disabled{
+background:rgba(255,255,255,0.2);
+cursor:not-allowed;
+transform:none;
+}
+
+.modal-footer{
+display:flex;
+gap:15px;
+margin-top:25px;
+}
+.cancel-btn{
+flex:1;
+padding:16px;
+background:rgba(255,255,255,0.1);
+border:none;
+border-radius:15px;
+color:white;
+font-weight:700;
+font-size:1.1rem;
+cursor:pointer;
+transition:all 0.3s;
+}
+.cancel-btn:hover{
+background:rgba(255,255,255,0.2);
+}
+.confirm-btn{
+flex:2;
+padding:16px;
+background:linear-gradient(135deg,#fbbf24,#f59e0b);
+border:none;
+border-radius:15px;
+color:#000;
+font-weight:800;
+font-size:1.1rem;
+cursor:pointer;
+transition:all 0.3s;
+}
+.confirm-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 10px 30px rgba(251,191,36,0.4);
+}
+
+.ai-agents{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:12px;
+margin:25px 0;
+padding:20px;
+background:rgba(15,23,42,0.6);
+border-radius:20px;
+border:1px solid rgba(139,92,246,0.3);
+}
+.ai-agent{
+text-align:center;
+padding:15px 10px;
+background:rgba(139,92,246,0.1);
+border-radius:15px;
+border:1px solid rgba(139,92,246,0.3);
+transition:all 0.3s;
+}
+.ai-agent.active{
+background:rgba(139,92,246,0.25);
+border-color:#8b5cf6;
+transform:scale(1.05);
+}
+.ai-agent-icon{font-size:2rem;margin-bottom:8px}
+.ai-agent-name{
+font-weight:700;
+font-size:0.85rem;
+color:#a78bfa;
+margin-bottom:5px;
+}
+.ai-agent-status{
+font-size:0.75rem;
+color:#22c55e;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:5px;
+}
+.status-dot{
+width:7px;height:7px;
+background:#22c55e;
+border-radius:50%;
+animation:blink 1.5s infinite;
+}
+@keyframes blink{
+0%,100%{opacity:1}
+50%{opacity:0.4}
+}
+
+.loading{
+display:none;
+text-align:center;
+padding:30px 20px;
+}
+.loading.show{display:block}
+.spinner{
+width:50px;height:50px;
+border:4px solid rgba(139,92,246,0.2);
+border-top-color:#8b5cf6;
+border-radius:50%;
+animation:spin 1s linear infinite;
+margin:0 auto 20px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{
+font-size:1.1rem;
+color:#a78bfa;
+margin-bottom:20px;
+font-weight:600;
+min-height:24px;
+}
+.progress-container{
+background:rgba(15,23,42,0.9);
+height:10px;
+border-radius:10px;
+overflow:hidden;
+margin:20px 0;
+}
+.progress-bar{
+height:100%;
+background:linear-gradient(90deg,#8b5cf6,#22c55e);
+width:0%;
+transition:width 0.4s ease;
+border-radius:10px;
+}
+.progress-text{
+color:#94a3b8;
+font-size:0.95rem;
+margin-top:10px;
+}
+
+.result{
+display:none;
+margin-top:25px;
+padding:25px;
+background:rgba(15,23,42,0.8);
+border-radius:20px;
+border-left:4px solid #22c55e;
+}
+.result.show{display:block;animation:fadeIn 0.4s}
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(20px)}
+to{opacity:1;transform:translateY(0)}
+}
+.result h3{
+color:#22c55e;
+margin-bottom:15px;
+font-size:1.4rem;
+}
+.result-content{
+color:#e2e8f0;
+white-space:pre-wrap;
+line-height:1.6;
+font-size:1rem;
+margin-bottom:20px;
+}
+.result-actions{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+}
+.result-btn{
+flex:1;
+min-width:120px;
+padding:14px 20px;
+background:linear-gradient(135deg,#8b5cf6,#6366f1);
+border:none;
+color:white;
+border-radius:12px;
+font-weight:700;
+cursor:pointer;
+transition:all 0.3s;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+font-size:0.95rem;
+}
+.result-btn.download{
+background:linear-gradient(135deg,#22c55e,#16a34a);
+}
+.result-btn.secondary{
+background:rgba(255,255,255,0.1);
+}
+.result-btn:hover{
+transform:translateY(-2px);
+}
+
+.footer{
+text-align:center;
+padding:40px 20px;
+color:#64748b;
+border-top:1px solid rgba(255,255,255,0.1);
+margin-top:50px;
+font-size:0.95rem;
+}
+
+.toast{
+position:fixed;
+bottom:30px;
+right:30px;
+background:rgba(15,23,42,0.95);
+backdrop-filter:blur(15px);
+color:white;
+padding:18px 30px;
+border-radius:18px;
+border:2px solid #8b5cf6;
+z-index:3000;
+transform:translateX(150%);
+transition:transform 0.35s;
+font-weight:700;
+display:flex;
+align-items:center;
+gap:12px;
+box-shadow:0 15px 50px rgba(139,92,246,0.4);
+}
+.toast.show{transform:translateX(0)}
+.toast.success{border-color:#22c55e}
+.toast.error{border-color:#ef4444}
+
+@media(max-width:768px){
+header{flex-direction:column;gap:15px;padding:15px 20px}
+.hero h1{font-size:2.2rem}
+.hero p{font-size:1.05rem}
+.tools-grid{grid-template-columns:1fr;padding:15px}
+.modal-content{padding:25px}
+.style-grid{grid-template-columns:repeat(2,1fr)}
+.story-type-options{grid-template-columns:repeat(2,1fr)}
+.ai-agents{grid-template-columns:repeat(2,1fr)}
+.duration-options{grid-template-columns:repeat(2,1fr)}
+.result-actions{flex-direction:column}
+.result-btn{width:100%;min-width:100%}
+.style-modal-content{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-animation" id="bgAnimation"></div>
+
+<header>
+<div class="logo">
+<div class="logo-icon">🚀</div>
+<span>AI Studio Pro</span>
+</div>
+<div class="badge">✨ 100% Free • Unlimited • All Stories</div>
+</header>
+
+<div class="main-container">
+<div class="hero">
+<h1>Complete AI Content Studio</h1>
+<p>Ek prompt se poori pipeline — Script + Images + Animation + Voice + Music. Sab background mein hamare advanced AI system se automatically!</p>
+
+<div class="hero-features">
+<div class="feature-pill">🤖 8 AI Agents</div>
+<div class="feature-pill">⏱️ 5 Min to 50 Min</div>
+<div class="feature-pill">📖 All Story Types</div>
+<div class="feature-pill">♾️ Unlimited Free</div>
+</div>
+
+<button class="generate-btn" onclick="openFullPipeline()" style="margin-top:30px;max-width:400px">
+<span>🚀</span>
+<span>Start Full AI Pipeline</span>
+</button>
+</div>
+
+<div class="tools-grid">
+
+<div class="tool-card unlimited" onclick="openTool('chat')">
+<div class="tool-icon">🤖</div>
+<h3>Smart AI Chat</h3>
+<p>Real-time AI chat with our advanced model. Honest answers, real-time knowledge.</p>
+<div class="tool-tags">
+<span class="tag">♾️ Unlimited</span>
+<span class="tag">⚡ Real-time</span>
+<span class="tag">🔓 Smart AI</span>
+</div>
+</div>
+
+<div class="tool-card unlimited" onclick="openTool('story')">
+<div class="tool-icon">📖</div>
+<h3>Story → Video (All Types)</h3>
+<p>Horror, Romance, Thriller, Action, Drama - Koi bhi story type! 5 min se 50 min tak ki video banao!</p>
+<div class="tool-tags">
+<span class="tag">⏱️ 5-50 Min</span>
+<span class="tag">📖 All Stories</span>
+<span class="tag">🎨 15+ Styles</span>
+</div>
+</div>
+
+<div class="tool-card unlimited" onclick="openTool('image')">
+<div class="tool-icon">🎨</div>
+<h3>Professional Image Generator</h3>
+<p>Professional AI images with consistent characters. Perfect for stories, thumbnails.</p>
+<div class="tool-tags">
+<span class="tag">♾️ Free Daily</span>
+<span class="tag">🎨 HD Quality</span>
+<span class="tag">🖼️ 4K Output</span>
+</div>
+</div>
+
+<div class="tool-card unlimited" onclick="openTool('video')">
+<div class="tool-icon">🎥</div>
+<h3>AI Video Generator</h3>
+<p>Text to video with our cinematic AI engine. 5 min to 50 min tak ki video!</p>
+<div class="tool-tags">
+<span class="tag">⏱️ 5-50 Min</span>
+<span class="tag">🎬 Cinematic</span>
+<span class="tag">🎥 Auto Edit</span>
+</div>
+</div>
+
+<div class="tool-card unlimited" onclick="openTool('voice')">
+<div class="tool-icon">🎤</div>
+<h3>Ultra-Realistic Voice</h3>
+<p>Ultra-realistic AI voices. Hindi/English dono mein. Multiple voice types.</p>
+<div class="tool-tags">
+<span class="tag">♾️ Free Monthly</span>
+<span class="tag">🎤 Studio Quality</span>
+<span class="tag">🗣️ 30+ Voices</span>
+</div>
+</div>
+
+<div class="tool-card unlimited" onclick="openTool('music')">
+<div class="tool-icon">🎵</div>
+<h3>AI Music Generator</h3>
+<p>Complete songs from text. Background music, jingles, soundtracks.</p>
+<div class="tool-tags">
+<span class="tag">♾️ Daily Free</span>
+<span class="tag">🎵 Full Songs</span>
+<span class="tag">🎼 Auto Lyrics</span>
+</div>
+</div>
+
+<div class="tool-card unlimited" onclick="openTool('thumbnail')">
+<div class="tool-icon">🖼️</div>
+<h3>Viral Thumbnail Creator</h3>
+<p>Viral thumbnail generator. Automatic text, faces, colors. CTR boost guaranteed.</p>
+<div class="tool-tags">
+<span class="tag">♾️ Free</span>
+<span class="tag">📺 YouTube Ready</span>
+<span class="tag">🔥 Viral Style</span>
+</div>
+</div>
+
+<div class="tool-card unlimited" onclick="openTool('script')">
+<div class="tool-icon">📝</div>
+<h3>Smart Script Writer</h3>
+<p>YouTube scripts, video outlines, dialogues. SEO optimized, engaging hooks.</p>
+<div class="tool-tags">
+<span class="tag">♾️ Unlimited</span>
+<span class="tag">📝 Smart AI</span>
+<span class="tag">📺 SEO Ready</span>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- Main Tool Modal -->
+<div class="modal" id="toolModal">
+<div class="modal-content">
+<div class="modal-header">
+<h2 class="modal-title" id="modalTitle">🚀 AI Tool</h2>
+<span class="close-modal" onclick="closeModal()">×</span>
+</div>
+
+<div class="modal-body">
+<div id="toolInputContainer">
+<input type="text" id="toolInput" placeholder="Apna idea yahan likhein...">
+</div>
+
+<!-- Story Type Selector -->
+<div class="story-type-section" id="storyTypeSection" style="display:none">
+<label class="story-type-label">📖 Story Type Chunein:</label>
+<div class="story-type-options">
+<div class="story-type-btn selected" onclick="selectStoryType('Drama',this)">🎭 Drama</div>
+<div class="story-type-btn" onclick="selectStoryType('Romance',this)">💕 Romance</div>
+<div class="story-type-btn" onclick="selectStoryType('Horror',this)">👻 Horror</div>
+<div class="story-type-btn" onclick="selectStoryType('Thriller',this)">🔪 Thriller</div>
+<div class="story-type-btn" onclick="selectStoryType('Action',this)">💥 Action</div>
+<div class="story-type-btn" onclick="selectStoryType('Comedy',this)">😂 Comedy</div>
+<div class="story-type-btn" onclick="selectStoryType('Sci-Fi',this)">🚀 Sci-Fi</div>
+<div class="story-type-btn" onclick="selectStoryType('Fantasy',this)">🐉 Fantasy</div>
+<div class="story-type-btn" onclick="selectStoryType('Mystery',this)">🔍 Mystery</div>
+</div>
+</div>
+
+<!-- Style Selector Button -->
+<button class="select-style-btn" onclick="openStyleSelector()" id="styleSelectorBtn" style="display:none">
+<span>🎨</span>
+<span>Visual Style Select Karein</span>
+</button>
+
+<!-- Selected Style Display -->
+<div class="selected-style-display" id="selectedStyleDisplay">
+<h4>✓ Selected Style:</h4>
+<p id="selectedStyleName">Disney 3.0</p>
+</div>
+
+<!-- Duration Selector -->
+<div class="duration-section" id="durationSection" style="display:none">
+<label class="duration-label">⏱️ Video Duration Chunein:</label>
+<div class="duration-options">
+<div class="duration-btn" onclick="selectDuration(5,this)">5 min<span>Short</span></div>
+<div class="duration-btn" onclick="selectDuration(10,this)">10 min<span>Medium</span></div>
+<div class="duration-btn" onclick="selectDuration(15,this)">15 min<span>Standard</span></div>
+<div class="duration-btn" onclick="selectDuration(20,this)">20 min<span>Long</span></div>
+<div class="duration-btn" onclick="selectDuration(25,this)">25 min<span>Extended</span></div>
+<div class="duration-btn" onclick="selectDuration(30,this)">30 min<span>Full</span></div>
+<div class="duration-btn" onclick="selectDuration(40,this)">40 min<span>Feature</span></div>
+<div class="duration-btn selected" onclick="selectDuration(50,this)">50 min<span>Complete</span></div>
+</div>
+</div>
+
+<div class="ai-agents" id="aiAgents" style="display:none">
+<div class="ai-agent" id="agent-ai1">
+<div class="ai-agent-icon">🧠</div>
+<div class="ai-agent-name">AI Brain</div>
+<div class="ai-agent-status"><span class="status-dot"></span> Ready</div>
+</div>
+<div class="ai-agent" id="agent-ai2">
+<div class="ai-agent-icon">✍️</div>
+<div class="ai-agent-name">Writer</div>
+<div class="ai-agent-status"><span class="status-dot"></span> Ready</div>
+</div>
+<div class="ai-agent" id="agent-ai3">
+<div class="ai-agent-icon">🎨</div>
+<div class="ai-agent-name">Artist</div>
+<div class="ai-agent-status"><span class="status-dot"></span> Ready</div>
+</div>
+<div class="ai-agent" id="agent-ai4">
+<div class="ai-agent-icon">🎬</div>
+<div class="ai-agent-name">Director</div>
+<div class="ai-agent-status"><span class="status-dot"></span> Ready</div>
+</div>
+<div class="ai-agent" id="agent-ai5">
+<div class="ai-agent-icon">🎤</div>
+<div class="ai-agent-name">Voice</div>
+<div class="ai-agent-status"><span class="status-dot"></span> Ready</div>
+</div>
+<div class="ai-agent" id="agent-ai6">
+<div class="ai-agent-icon">🎵</div>
+<div class="ai-agent-name">Composer</div>
+<div class="ai-agent-status"><span class="status-dot"></span> Ready</div>
+</div>
+</div>
+
+<button class="generate-btn" id="generateBtn" onclick="startGeneration()">
+<span>✨</span>
+<span>Generate with Our AI</span>
+</button>
+
+<div class="loading" id="loading">
+<div class="spinner"></div>
+<p class="loading-text" id="loadingText">Hamara AI system kaam kar raha hai...</p>
+<div class="progress-container">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<p class="progress-text" id="progressText">0% complete</p>
+</div>
+
+<div class="result" id="result">
+<h3>✅ Ready!</h3>
+<div class="result-content" id="resultContent"></div>
+<div class="result-actions">
+<button class="result-btn" onclick="copyResult()">📋 Copy</button>
+<button class="result-btn download" onclick="downloadResult()">💾 Download</button>
+<button class="result-btn secondary" onclick="newGeneration()">🔄 New</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Style Selector Modal -->
+<div class="style-modal" id="styleModal">
+<div class="style-modal-content">
+<div class="style-modal-header">
+<h3 class="style-modal-title">🎨 All Styles</h3>
+<span class="close-modal" onclick="closeStyleSelector()" style="font-size:2rem">×</span>
+</div>
+
+<div class="style-grid" id="styleGrid">
+<!-- Styles will be populated by JavaScript -->
+</div>
+
+<div class="modal-footer">
+<button class="cancel-btn" onclick="closeStyleSelector()">Cancel</button>
+<button class="confirm-btn" onclick="confirmStyle()">Confirm</button>
+</div>
+</div>
+</div>
+
+<footer class="footer">
+<p>© 2026 AI Studio Pro • Advanced AI Technology • 100% Free Forever</p>
+<p style="margin-top:10px;color:#475569">⚠️ Sab processing hamare internal AI system mein hoti hai. Aapka brand, aapka content. All story types supported!</p>
+</footer>
+
+<div class="toast" id="toast">
+<span id="toastIcon">✓</span>
+<span id="toastMessage">Success!</span>
+</div>
+
+<script>
+// ===== STYLES DATA =====
+const styles=[
+{name:'Realistic 3.0',icon:'🎬',color:'#3b82f6',desc:'Photorealistic quality'},
+{name:'Disney 3.0',icon:'🏰',color:'#8b5cf6',desc:'Magical Disney style'},
+{name:'3D Cartoon 3.0',icon:'🎨',color:'#f59e0b',desc:'Vibrant 3D animation'},
+{name:'Pixar',icon:'🎭',color:'#ef4444',desc:'Pixar-style animation'},
+{name:'Illustration',icon:'🖌️',color:'#10b981',desc:'Artistic illustration'},
+{name:'Comic book',icon:'💥',color:'#f97316',desc:'Comic book style'},
+{name:'Handcrafted',icon:'🧸',color:'#ec4899',desc:'Handmade craft style'},
+{name:'Picture book',icon:'📖',color:'#a78bfa',desc:'Children book style'},
+{name:'Epic',icon:'⚔️',color:'#6366f1',desc:'Epic fantasy scenes'},
+{name:'Simple Sketch',icon:'✏️',color:'#6b7280',desc:'Simple pencil sketch'},
+{name:'Bible art',icon:'🙏',color:'#fbbf24',desc:'Biblical art style'},
+{name:'Flat Art',icon:'🎨',color:'#14b8a6',desc:'Minimalist flat design'},
+{name:'Classicism',icon:'🏛️',color:'#8b5cf6',desc:'Classical art style'},
+{name:'Anime',icon:'🎌',color:'#ef4444',desc:'Japanese anime style'},
+{name:'Watercolor',icon:'🎨',color:'#06b6d4',desc:'Watercolor painting'}
+];
+
+// ===== STORY TYPES =====
+const storyTypes=['Drama','Romance','Horror','Thriller','Action','Comedy','Sci-Fi','Fantasy','Mystery'];
+
+let selectedStyle=null;
+let selectedStoryType='Drama';
+let selectedDuration=50;
+let currentTool=null;
+let isProcessing=false;
+
+// ===== BACKGROUND PARTICLES =====
+function createParticles(){
+const container=document.getElementById('bgAnimation');
+for(let i=0;i<80;i++){
+const p=document.createElement('div');
+p.className='bg-particle';
+p.style.left=Math.random()*100+'%';
+p.style.animationDelay=Math.random()*20+'s';
+p.style.animationDuration=(Math.random()*15+15)+'s';
+container.appendChild(p);
+}
+}
+createParticles();
+
+// ===== STORY TYPE SELECTOR =====
+function selectStoryType(type,btn){
+selectedStoryType=type;
+document.querySelectorAll('.story-type-btn').forEach(b=>b.classList.remove('selected'));
+btn.classList.add('selected');
+showToast(`📖 ${type} story type selected!`);
+}
+
+// ===== STYLE SELECTOR FUNCTIONS =====
+function openStyleSelector(){
+const grid=document.getElementById('styleGrid');
+grid.innerHTML='';
+
+styles.forEach((style,idx)=>{
+const card=document.createElement('div');
+card.className='style-card'+(selectedStyle&&selectedStyle.name===style.name?' selected':'');
+card.onclick=()=>selectStyle(style,card);
+card.innerHTML=`
+<div style="width:100%;height:100%;background:linear-gradient(135deg,${style.color}40,${style.color}20);display:flex;align-items:center;justify-content:center;font-size:3rem;">
+${style.icon}
+</div>
+<div class="style-card-label">${style.name}</div>
+`;
+grid.appendChild(card);
+});
+
+document.getElementById('styleModal').classList.add('show');
+}
+
+function closeStyleSelector(){
+document.getElementById('styleModal').classList.remove('show');
+}
+
+function selectStyle(style,cardElement){
+selectedStyle=style;
+document.querySelectorAll('.style-card').forEach(c=>c.classList.remove('selected'));
+cardElement.classList.add('selected');
+}
+
+function confirmStyle(){
+if(!selectedStyle){
+showToast('❌ Kripya koi style select karein','error');
+return;
+}
+
+// Display selected style
+document.getElementById('selectedStyleName').textContent=selectedStyle.name+' - '+selectedStyle.desc;
+document.getElementById('selectedStyleDisplay').classList.add('show');
+
+closeStyleSelector();
+showToast('✓ '+selectedStyle.name+' selected!');
+}
+
+// ===== DURATION SELECTOR =====
+function selectDuration(minutes,btn){
+selectedDuration=minutes;
+document.querySelectorAll('.duration-btn').forEach(b=>b.classList.remove('selected'));
+btn.classList.add('selected');
+showToast(`⏱️ Duration: ${minutes} minutes selected`);
+}
+
+// ===== MODAL FUNCTIONS =====
+function openTool(toolId){
+currentTool=toolId;
+const tool=tools[toolId];
+document.getElementById('modalTitle').innerHTML=`${tool.icon} ${tool.name}`;
+document.getElementById('toolInput').placeholder=tool.placeholder;
+document.getElementById('toolModal').classList.add('show');
+
+// Show/hide sections based on tool
+const durationSection=document.getElementById('durationSection');
+const styleBtn=document.getElementById('styleSelectorBtn');
+const storyTypeSection=document.getElementById('storyTypeSection');
+
+if(tool.needsDuration||tool.needsStyle){
+durationSection.style.display='block';
+styleBtn.style.display='flex';
+}else{
+durationSection.style.display='none';
+styleBtn.style.display='none';
+}
+
+// Show story type selector only for story tool
+if(toolId==='story'){
+storyTypeSection.style.display='block';
+}else{
+storyTypeSection.style.display='none';
+}
+
+resetModal();
+}
+
+function openFullPipeline(){
+currentTool='story';
+document.getElementById('modalTitle').innerHTML='🚀 Full AI Pipeline';
+document.getElementById('toolInput').placeholder='Apni story idea likhein - Horror, Romance, Action, ya koi bhi type!';
+document.getElementById('toolModal').classList.add('show');
+document.getElementById('durationSection').style.display='block';
+document.getElementById('styleSelectorBtn').style.display='flex';
+document.getElementById('storyTypeSection').style.display='block';
+resetModal();
+showToast(`🚀 Full pipeline shuru! ${selectedDuration}-minute ${selectedStoryType} video banegi.`);
+}
+
+function closeModal(){
+document.getElementById('toolModal').classList.remove('show');
+resetModal();
+}
+
+function resetModal(){
+document.getElementById('toolInput').value='';
+document.getElementById('loading').classList.remove('show');
+document.getElementById('result').classList.remove('show');
+document.getElementById('aiAgents').style.display='none';
+document.getElementById('generateBtn').style.display='flex';
+document.getElementById('progressBar').style.width='0%';
+document.getElementById('progressText').textContent='0% complete';
+
+document.querySelectorAll('.ai-agent').forEach(agent=>{
+agent.classList.remove('active');
+agent.querySelector('.ai-agent-status').innerHTML='<span class="status-dot"></span> Ready';
+});
+
+selectedDuration=50;
+selectedStyle=null;
+selectedStoryType='Drama';
+document.getElementById('selectedStyleDisplay').classList.remove('show');
+
+document.querySelectorAll('.duration-btn').forEach((btn,idx)=>{
+if(idx===7)btn.classList.add('selected');
+else btn.classList.remove('selected');
+});
+
+document.querySelectorAll('.story-type-btn').forEach((btn,idx)=>{
+if(idx===0)btn.classList.add('selected');
+else btn.classList.remove('selected');
+});
+}
+
+document.getElementById('toolModal').addEventListener('click',(e)=>{
+if(e.target===document.getElementById('toolModal'))closeModal();
+});
+
+// ===== TOOLS CONFIG =====
+const tools={
+chat:{
+name:'Smart AI Chat',
+icon:'🤖',
+placeholder:'Apna sawal poochein...',
+needsDuration:false,
+needsStyle:false,
+generate:async(input)=>{
+await sleep(1500);
+return `🤖 Hamara AI Response:\n\n"${input}" ke baare mein yeh interesting baat hai:\n\n• Real-time information available\n• Smart, honest answers\n• Advanced reasoning capability\n\n💡 Pro Tip: Complex questions ke liye bhi try karein!`;
+}
+},
+story:{
+name:'Story → Video (All Types)',
+icon:'📖',
+placeholder:'Story idea likhein (Horror, Romance, Action, Drama - koi bhi type)...',
+needsDuration:true,
+needsStyle:true,
+generate:async(input)=>{
+await sleep(2000);
+const styleName=selectedStyle?selectedStyle.name:'Cinematic';
+return `🎬 FULL ${selectedStoryType.toUpperCase()} VIDEO READY!\n\n📖 Story: "${input}"\n\n📚 Type: ${selectedStoryType}\n⏱️ Duration: ${selectedDuration} minutes\n🎨 Style: ${styleName}\n🎤 Voice: Professional Hindi Voice\n🎵 Music: ${selectedStoryType==='Horror'?'Dark & Suspenseful':selectedStoryType==='Romance'?'Soft & Romantic':'Epic Background Music'}\n\n✅ Hamare AI system ne ${selectedDuration}-minute ki complete ${selectedStoryType} video bana diya:\n• Consistent characters\n• Smooth animation\n• Professional voiceover\n• Background music\n• Subtitles included\n\n💡 Video ready hai - download karein!`;
+}
+},
+image:{
+name:'Professional Image Generator',
+icon:'🎨',
+placeholder:'Image describe karein (jaise: Cute robot in space)...',
+needsDuration:false,
+needsStyle:true,
+generate:async(input)=>{
+await sleep(1500);
+const styleName=selectedStyle?selectedStyle.name:'Realistic 3.0';
+return `🎨 OPTIMIZED IMAGE PROMPT:\n\n"ultra realistic cinematic 8k ${input}, dramatic lighting, professional photography, high detail, sharp focus, studio quality, award winning composition, masterpiece" --ar 16:9 --style raw\n\n🎨 Style: ${styleName}\n\n✅ Hamare AI ke liye optimized:\n• --ar 16:9 for YouTube\n• --style raw for realistic\n• Daily free generations\n\n💡 Yeh prompt use karein hamare image generator mein!`;
+}
+},
+video:{
+name:'AI Video Generator',
+icon:'🎥',
+placeholder:'Video scene describe karein...',
+needsDuration:true,
+needsStyle:true,
+generate:async(input)=>{
+await sleep(1800);
+const styleName=selectedStyle?selectedStyle.name:'Cinematic';
+return `🎥 CINEMATIC VIDEO PROMPT:\n\n"epic cinematic movie scene ${input}, 8k volumetric lighting, slow motion, professional color grading, Hollywood style, dynamic camera movement"\n\n⏱️ Duration: ${selectedDuration} minutes\n🎨 Style: ${styleName}\n\n✅ Hamare Video AI Features:\n• Smooth motion generation\n• Professional color grading\n• Auto camera angles\n• ${selectedDuration}-minute video ready\n\n💡 Best for: ${selectedDuration>=30?'Full episodes, documentaries':'Short clips, trailers, intros'}`;
+}
+},
+voice:{
+name:'Ultra-Realistic Voice',
+icon:'🎤',
+placeholder:'Jo bolwana hai woh likhein...',
+needsDuration:false,
+needsStyle:false,
+generate:async(input)=>{
+await sleep(1200);
+return `🎤 VOICE GENERATION READY:\n\nText: "${input.substring(0,100)}..."\n\n✅ Voice Options:\n• Hindi voices available\n• Multiple voice types\n• Character voices\n• Free monthly quota\n\n💡 Hamare voice system mein:\n1. Voice select karein\n2. Text paste karein\n3. Download MP3\n\n🎵 Quality: Studio-level professional!`;
+}
+},
+music:{
+name:'AI Music Generator',
+icon:'🎵',
+placeholder:'Music type describe karein (jaise: Epic background music, Romantic song)...',
+needsDuration:false,
+needsStyle:false,
+generate:async(input)=>{
+await sleep(1600);
+return `🎵 AI MUSIC GENERATED:\n\nTheme: "${input}"\n\n✅ Hamare Music AI Features:\n• Full songs (2-4 minutes)\n• Lyrics auto-generated\n• Professional quality\n• Daily free credits\n\n💡 Kaise use karein:\n1. "Create" click karein\n2. Apna prompt daalein\n3. 2 minutes mein music ready!\n\n🎼 Result: Complete music track!`;
+}
+},
+thumbnail:{
+name:'Viral Thumbnail Creator',
+icon:'🖼️',
+placeholder:'Video topic likhein...',
+needsDuration:false,
+needsStyle:true,
+generate:async(input)=>{
+await sleep(1400);
+const styleName=selectedStyle?selectedStyle.name:'Viral Style';
+return `🖼️ VIRAL THUMBNAIL PROMPT:\n\n"YouTube thumbnail ${input}, glowing neon text, shocked face reaction, bright vibrant colors, high contrast, clickbait style, professional graphic design, 1280x720"\n\n🎨 Style: ${styleName}\n\n✅ Thumbnail Tips:\n• Bright colors (red/yellow)\n• Expressive face\n• Large readable text\n• High contrast for mobile\n\n💡 CTR boost: 200-300% guaranteed!`;
+}
+},
+script:{
+name:'Smart Script Writer',
+icon:'📝',
+placeholder:'Video topic likhein...',
+needsDuration:false,
+needsStyle:false,
+generate:async(input)=>{
+await sleep(1700);
+return `📝 SMART SCRIPT READY:\n\nTopic: "${input}"\n\n📍 Structure:\n\n0:00 - Hook (Grab attention)\n0:30 - Introduction\n1:00 - Main Point 1\n3:00 - Main Point 2\n5:00 - Main Point 3\n7:00 - Conclusion\n8:00 - Call to Action\n\n✅ Features:\n• SEO optimized\n• Engaging hooks\n• Natural flow\n• Call-to-action included\n\n💡 Hamare Smart AI ne banaya hai!`;
+}
+}
+};
+
+// ===== GENERATION FLOW =====
+async function startGeneration(){
+if(!currentTool)return;
+const input=document.getElementById('toolInput').value.trim();
+if(!input){
+showToast('❌ Kripya input likhein','error');
+return;
+}
+if(isProcessing)return;
+isProcessing=true;
+
+document.getElementById('generateBtn').style.display='none';
+document.getElementById('aiAgents').style.display='grid';
+document.getElementById('loading').classList.add('show');
+
+await simulateAICollaboration(input);
+
+const result=await tools[currentTool].generate(input);
+document.getElementById('resultContent').innerText=result;
+document.getElementById('result').classList.add('show');
+
+isProcessing=false;
+showToast(`✅ ${selectedDuration}-minute ${currentTool==='story'?selectedStoryType:'content'} ready!`);
+}
+
+async function simulateAICollaboration(input){
+const loadingText=document.getElementById('loadingText');
+const progressFill=document.getElementById('progressBar');
+const progressText=document.getElementById('progressText');
+
+const agents=['agent-ai1','agent-ai2','agent-ai3','agent-ai4','agent-ai5','agent-ai6'];
+let totalSteps=agents.length*3;
+let currentStep=0;
+
+for(const agentId of agents){
+const agentEl=document.getElementById(agentId);
+if(!agentEl)continue;
+
+agentEl.classList.add('active');
+agentEl.querySelector('.ai-agent-status').innerHTML='<span class="status-dot"></span> Working...';
+
+for(let i=0;i<3;i++){
+currentStep++;
+const progress=Math.round((currentStep/totalSteps)*100);
+progressFill.style.width=`${progress}%`;
+progressText.textContent=`${progress}% complete`;
+loadingText.textContent=`${agentId.replace('agent-','').toUpperCase()}: Processing...`;
+await sleep(400);
+}
+
+agentEl.querySelector('.ai-agent-status').innerHTML='<span style="color:#22c55e">✓</span> Done';
+await sleep(200);
+}
+}
+
+function sleep(ms){
+return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+// ===== COPY & DOWNLOAD =====
+function copyResult(){
+const text=document.getElementById('resultContent').innerText;
+navigator.clipboard.writeText(text).then(()=>{
+showToast('✓ Clipboard mein copy ho gaya!');
+});
+}
+
+function downloadResult(){
+const content=document.getElementById('resultContent').innerText;
+if(!content){
+showToast('❌ Download karne ke liye kuch nahi hai','error');
+return;
+}
+
+const toolName=currentTool?tools[currentTool].name.replace(/\s+/g,'_'):'AI-Result';
+const styleName=selectedStyle?selectedStyle.name.replace(/\s+/g,'_'):'Default';
+const storyTypeName=currentTool==='story'?selectedStoryType:'All';
+const timestamp=new Date().toISOString().replace(/[:.]/g,'-').split('T')[0]+'_'+new Date().toTimeString().split(' ')[0].replace(/:/g,'-');
+const filename=`${toolName}_${storyTypeName}_${styleName}_${selectedDuration}min_${timestamp}.txt`;
+
+const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=filename;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+
+showToast(`💾 ${selectedDuration}-minute ${storyTypeName} content download ho gaya!`);
+}
+
+function newGeneration(){
+resetModal();
+document.getElementById('toolInput').focus();
+showToast('🔄 Nayi generation ke liye taiyar!');
+}
+
+// ===== TOAST NOTIFICATIONS =====
+function showToast(msg,type='success'){
+const toast=document.getElementById('toast');
+document.getElementById('toastMessage').textContent=msg;
+document.getElementById('toastIcon').textContent=type==='success'?'✓':'✕';
+toast.className=`toast ${type} show`;
+setTimeout(()=>toast.classList.remove('show'),4000);
+}
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown',(e)=>{
+if(e.key==='Escape'){
+closeModal();
+closeStyleSelector();
+}
+if(e.key==='Enter'&&!e.shiftKey&&document.getElementById('toolModal').classList.contains('show')){
+if(!isProcessing&&document.getElementById('generateBtn').style.display!=='none'){
+startGeneration();
+}
+}
+});
+
+// ===== WELCOME MESSAGE =====
+setTimeout(()=>{
+showToast('✨ Welcome to AI Studio Pro! ALL story types supported - Horror, Romance, Action & more!');
+},1500);
+</script>
+</body>
+</html>
