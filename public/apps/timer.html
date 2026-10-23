@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: background 0.5s;
+    }
+    body.break-mode {
+      background: linear-gradient(135deg, #059669 0%, #065f46 100%);
+    }
+    .container {
+      text-align: center;
+      color: white;
+      width: 100%;
+      max-width: 450px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      opacity: 0.8;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    .mode-tab {
+      padding: 10px 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .mode-tab.active {
+      background: rgba(255,255,255,0.2);
+      border-color: white;
+    }
+    .mode-tab:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .timer-display {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin: 0 auto 40px;
+    }
+    .timer-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .timer-circle svg {
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+      transform: rotate(-90deg);
+    }
+    .timer-circle svg circle {
+      fill: none;
+      stroke: white;
+      stroke-width: 4;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    .time {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -2px;
+    }
+    .controls {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .btn {
+      padding: 16px 32px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: white;
+      color: #dc2626;
+      min-width: 140px;
+    }
+    body.break-mode .btn-primary {
+      color: #059669;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .session-counter {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+    .session-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transition: background 0.2s;
+    }
+    .session-dot.completed {
+      background: white;
+    }
+    .session-label {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍅 Pomodoro Timer</h1>
+    <p class="subtitle">Stay focused, take breaks</p>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('focus')">Focus</button>
+      <button class="mode-tab" onclick="setMode('short')">Short Break</button>
+      <button class="mode-tab" onclick="setMode('long')">Long Break</button>
+    </div>
+
+    <div class="timer-display">
+      <div class="timer-circle">
+        <svg viewBox="0 0 288 288">
+          <circle id="progress" cx="144" cy="144" r="136" 
+            stroke-dasharray="854.513" 
+            stroke-dashoffset="0"/>
+        </svg>
+        <div class="time" id="time">25:00</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="startBtn" onclick="toggleTimer()">Start</button>
+      <button class="btn btn-secondary" onclick="resetTimer()">Reset</button>
+    </div>
+
+    <div class="session-counter">
+      <div class="session-dot completed" id="dot1"></div>
+      <div class="session-dot" id="dot2"></div>
+      <div class="session-dot" id="dot3"></div>
+      <div class="session-dot" id="dot4"></div>
+      <span class="session-label" id="sessionLabel">Session 1 of 4</span>
+    </div>
+  </div>
+
+  <script>
+    const MODES = {
+      focus: { time: 25 * 60, label: 'Focus' },
+      short: { time: 5 * 60, label: 'Short Break' },
+      long: { time: 15 * 60, label: 'Long Break' }
+    };
+
+    let currentMode = 'focus';
+    let timeLeft = MODES.focus.time;
+    let totalTime = MODES.focus.time;
+    let isRunning = false;
+    let interval = null;
+    let sessionsCompleted = 0;
+
+    const circumference = 2 * Math.PI * 136;
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+      document.getElementById('time').textContent = formatTime(timeLeft);
+      const progress = (totalTime - timeLeft) / totalTime;
+      const offset = circumference * (1 - progress);
+      document.getElementById('progress').style.strokeDashoffset = offset;
+      document.title = `${formatTime(timeLeft)} - Pomodoro Timer`;
+    }
+
+    function toggleTimer() {
+      if (isRunning) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    }
+
+    function startTimer() {
+      isRunning = true;
+      document.getElementById('startBtn').textContent = 'Pause';
+      interval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          timerComplete();
+        }
+        updateDisplay();
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      isRunning = false;
+      document.getElementById('startBtn').textContent = 'Resume';
+      clearInterval(interval);
+    }
+
+    function resetTimer() {
+      clearInterval(interval);
+      isRunning = false;
+      timeLeft = totalTime;
+      document.getElementById('startBtn').textContent = 'Start';
+      updateDisplay();
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      totalTime = MODES[mode].time;
+      timeLeft = totalTime;
+      clearInterval(interval);
+      isRunning = false;
+      document.getElementById('startBtn').textContent = 'Start';
+      
+      document.querySelectorAll('.mode-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', ['focus', 'short', 'long'][i] === mode);
+      });
+
+      document.body.classList.toggle('break-mode', mode !== 'focus');
+      updateDisplay();
+    }
+
+    function timerComplete() {
+      isRunning = false;
+      document.getElementById('startBtn').textContent = 'Start';
+      
+      if (currentMode === 'focus') {
+        sessionsCompleted++;
+        updateSessionDots();
+        
+        if (sessionsCompleted % 4 === 0) {
+          setMode('long');
+        } else {
+          setMode('short');
+        }
+      } else {
+        setMode('focus');
+      }
+
+      // Simple notification
+      if (Notification.permission === 'granted') {
+        new Notification('Pomodoro Timer', { body: 'Time is up! Take a break.' });
+      }
+    }
+
+    function updateSessionDots() {
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`dot${i}`);
+        dot.classList.toggle('completed', i <= (sessionsCompleted % 4 || (sessionsCompleted > 0 ? 4 : 0)));
+      }
+      document.getElementById('sessionLabel').textContent = 
+        `Session ${(sessionsCompleted % 4) + 1} of 4`;
+    }
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    updateDisplay();
+  </script>
+</body>
+</html>
