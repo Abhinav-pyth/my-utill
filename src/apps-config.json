@@ -44,6 +44,24 @@
       "icon": "⏱️",
       "category": "Productivity",
       "color": "from-red-500 to-red-600"
+    },
+     {
+      "id": "pixelBoost",
+      "name": "pixelBoost",
+      "description": "pixelBoost Image enhancer utill",
+      "path": "/apps/pixelBoost.html",
+      "icon": "⏱️",
+      "category": "Productivity",
+      "color": "from-red-500 to-red-600"
+    },
+     {
+      "id": "story-maker",
+      "name": "Story Maker",
+      "description": "story maker",
+      "path": "/apps/story-maker.html",
+      "icon": "⏱️",
+      "category": "Productivity",
+      "color": "from-red-500 to-red-600"
     }
   ],
   "categories": ["All", "Productivity", "Utility", "Widget"]
