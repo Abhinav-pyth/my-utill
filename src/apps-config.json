@@ -35,6 +35,15 @@
       "icon": "⏱️",
       "category": "Productivity",
       "color": "from-red-500 to-red-600"
+    },
+    {
+      "id": "pdfutil",
+      "name": "PDF utills",
+      "description": "PDF utill",
+      "path": "/apps/pdf-merge.html",
+      "icon": "⏱️",
+      "category": "Productivity",
+      "color": "from-red-500 to-red-600"
     }
   ],
   "categories": ["All", "Productivity", "Utility", "Widget"]
