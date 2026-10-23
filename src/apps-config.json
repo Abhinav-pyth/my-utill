@@ -71,7 +71,17 @@
       "icon": "⏱️",
       "category": "AI",
       "color": "from-cyan-500 to-cyan-600"
-    }
+    },
+     {
+      "id": "WebOS",
+      "name": "WebOS",
+      "description": "WebOS",
+      "path": "/apps/WebOS.html",
+      "icon": "⏱️",
+      "category": "AI",
+      "color": "from-cyan-500 to-cyan-600"
+    },
+    
   ],
   "categories": ["All", "Productivity", "Utility", "Widget", "AI"]
 }
