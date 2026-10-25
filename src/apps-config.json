@@ -98,6 +98,15 @@
       "icon": "⏱️",
       "category": "AI",
       "color": "from-cyan-500 to-cyan-600"
+    },
+    {
+      "id": "DevKit",
+      "name": "DevKit",
+      "description": "DevKit — Developer Utility Suite",
+      "path": "/apps/devkit.html",
+      "icon": "⏱️",
+      "category": "AI",
+      "color": "from-cyan-500 to-cyan-600"
     }
     
   ],
