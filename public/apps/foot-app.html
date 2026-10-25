@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foot App</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 28px; color: #333; margin-bottom: 24px; text-align: center; }
+    .input-group { display: flex; gap: 10px; margin-bottom: 24px; }
+    input[type="text"] {
+      flex: 1; padding: 14px 18px; border: 2px solid #e2e8f0;
+      border-radius: 12px; font-size: 16px; outline: none; transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: #0d9488; }
+    button.add-btn {
+      padding: 14px 24px; background: linear-gradient(135deg, #0d9488, #0f766e);
+      color: white; border: none; border-radius: 12px; font-size: 16px;
+      font-weight: 600; cursor: pointer; transition: transform 0.2s;
+    }
+    button.add-btn:hover { transform: translateY(-2px); }
+    .todo-list { list-style: none; }
+    .todo-item {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      background: #f8fafc; border-radius: 12px; margin-bottom: 10px;
+    }
+    .todo-item.completed span { text-decoration: line-through; color: #94a3b8; }
+    .todo-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: #0d9488; }
+    .todo-item span { flex: 1; font-size: 15px; color: #334155; }
+    .todo-item .delete-btn {
+      background: none; border: none; color: #ef4444; cursor: pointer;
+      font-size: 18px; opacity: 0; transition: opacity 0.2s;
+    }
+    .todo-item:hover .delete-btn { opacity: 1; }
+    .stats { text-align: center; color: #94a3b8; font-size: 14px; margin-top: 16px; }
+    .empty-state { text-align: center; padding: 40px; color: #94a3b8; }
+    .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🦶 Foot App</h1>
+    <div class="input-group">
+      <input type="text" id="todoInput" placeholder="What needs to be done?" onkeypress="if(event.key==='Enter')addTodo()">
+      <button class="add-btn" onclick="addTodo()">Add</button>
+    </div>
+    <ul class="todo-list" id="todoList"></ul>
+    <div class="stats" id="stats"></div>
+  </div>
+  <script>
+    let todos = JSON.parse(localStorage.getItem('foot-todos') || '[]');
+    function render() {
+      const list = document.getElementById('todoList');
+      const stats = document.getElementById('stats');
+      if (todos.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="emoji">📋</div><p>No items yet. Add one above!</p></div>';
+        stats.textContent = '';
+        return;
+      }
+      list.innerHTML = todos.map((todo, i) => `
+        <li class="todo-item ${todo.completed ? 'completed' : ''}">
+          <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${i})">
+          <span>${escapeHtml(todo.text)}</span>
+          <button class="delete-btn" onclick="deleteTodo(${i})">✕</button>
+        </li>
+      `).join('');
+      const done = todos.filter(t => t.completed).length;
+      stats.textContent = `${done} of ${todos.length} completed`;
+    }
+    function addTodo() {
+      const input = document.getElementById('todoInput');
+      const text = input.value.trim();
+      if (!text) return;
+      todos.unshift({ text, completed: false });
+      input.value = '';
+      save(); render();
+    }
+    function toggleTodo(i) { todos[i].completed = !todos[i].completed; save(); render(); }
+    function deleteTodo(i) { todos.splice(i, 1); save(); render(); }
+    function save() { localStorage.setItem('foot-todos', JSON.stringify(todos)); }
+    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pixelBoost — Image Enhancer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .container {
+      background: white; border-radius: 20px; padding: 40px;
+      width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 28px; color: #333; margin-bottom: 8px; text-align: center; }
+    .subtitle { text-align: center; color: #64748b; margin-bottom: 32px; }
+    .upload-zone {
+      border: 3px dashed #fbbf24; border-radius: 16px; padding: 60px 40px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+      background: #fffbeb;
+    }
+    .upload-zone:hover { border-color: #f59e0b; background: #fef3c7; }
+    .upload-zone .icon { font-size: 64px; margin-bottom: 16px; }
+    .upload-zone h3 { color: #333; margin-bottom: 8px; }
+    .upload-zone p { color: #64748b; font-size: 14px; }
+    .features {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px;
+    }
+    .feature { text-align: center; padding: 16px; }
+    .feature .icon { font-size: 32px; margin-bottom: 8px; }
+    .feature h4 { font-size: 14px; color: #333; margin-bottom: 4px; }
+    .feature p { font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ pixelBoost</h1>
+    <p class="subtitle">AI-powered image enhancement tool</p>
+    <div class="upload-zone">
+      <div class="icon">✨</div>
+      <h3>Drop your image here</h3>
+      <p>or click to browse — JPG, PNG, WebP supported</p>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <div class="icon">🔍</div>
+        <h4>Upscale 4×</h4>
+        <p>Increase resolution</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🎨</div>
+        <h4>Enhance</h4>
+        <p>Auto color correction</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🧹</div>
+        <h4>Denoise</h4>
+        <p>Remove noise & artifacts</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

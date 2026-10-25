@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentVerse — AI Agents & MCP Developer Guide</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #d946ef 0%, #a21caf 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .container {
+      background: white; border-radius: 24px; padding: 48px 40px;
+      width: 100%; max-width: 700px; box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; background: #fdf4ff; border-radius: 20px;
+      font-size: 12px; color: #a21caf; font-weight: 600; margin-bottom: 20px;
+    }
+    h1 { font-size: 32px; color: #1e1b4b; margin-bottom: 12px; }
+    .subtitle { color: #64748b; margin-bottom: 40px; line-height: 1.6; }
+    .agents { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .agent {
+      padding: 20px; border: 2px solid #e2e8f0; border-radius: 16px;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .agent:hover { border-color: #d946ef; background: #fdf4ff; transform: translateY(-2px); }
+    .agent .icon { font-size: 32px; margin-bottom: 10px; }
+    .agent h3 { font-size: 14px; color: #1e1b4b; margin-bottom: 4px; }
+    .agent p { font-size: 11px; color: #64748b; }
+    .mcp-section {
+      background: #f8fafc; border-radius: 16px; padding: 24px; margin-bottom: 24px;
+      text-align: left;
+    }
+    .mcp-section h3 { font-size: 16px; color: #1e1b4b; margin-bottom: 12px; }
+    .mcp-code {
+      background: #1e1b4b; color: #e2e8f0; padding: 16px; border-radius: 8px;
+      font-family: monospace; font-size: 12px; overflow-x: auto;
+    }
+    .cta {
+      display: inline-block; padding: 16px 40px;
+      background: linear-gradient(135deg, #d946ef, #a21caf);
+      color: white; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; text-decoration: none;
+    }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(217,70,239,0.4); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">🌐 Interactive Developer Guide</div>
+    <h1>AgentVerse</h1>
+    <p class="subtitle">AI Agents, Agentic AI & MCP (Model Context Protocol) — Everything you need to build intelligent applications</p>
+    <div class="agents">
+      <div class="agent">
+        <div class="icon">🤖</div>
+        <h3>AI Agents</h3>
+        <p>Autonomous task executors</p>
+      </div>
+      <div class="agent">
+        <div class="icon">🔗</div>
+        <h3>MCP Protocol</h3>
+        <p>Standardized AI connections</p>
+      </div>
+      <div class="agent">
+        <div class="icon">🧠</div>
+        <h3>Agentic AI</h3>
+        <p>Reasoning & planning</p>
+      </div>
+      <div class="agent">
+        <div class="icon">🛠️</div>
+        <h3>Tool Use</h3>
+        <p>Function calling patterns</p>
+      </div>
+      <div class="agent">
+        <div class="icon">💾</div>
+        <h3>Memory</h3>
+        <p>Context & state management</p>
+      </div>
+      <div class="agent">
+        <div class="icon">🔄</div>
+        <h3>Multi-Agent</h3>
+        <p>Collaborative AI systems</p>
+      </div>
+    </div>
+    <div class="mcp-section">
+      <h3>🔌 MCP Quick Start</h3>
+      <div class="mcp-code">
+{
+  "name": "my-agent",
+  "tools": ["search", "code", "browse"],
+  "protocol": "mcp-v1"
+}
+      </div>
+    </div>
+    <a href="#" class="cta">🚀 Explore AgentVerse</a>
+  </div>
+</body>
+</html>
