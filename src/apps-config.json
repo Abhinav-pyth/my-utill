@@ -89,6 +89,15 @@
       "icon": "⏱️",
       "category": "AI",
       "color": "from-cyan-500 to-cyan-600"
+    },
+     {
+      "id": "AgentVerse",
+      "name": "AgentVerse",
+      "description": "AgentVerse — AI Agents, Agentic AI & MCP Interactive Developer GuideAgentVerse — AI Agents, Agentic AI & MCP Interactive Developer Guide",
+      "path": "/apps/agentic-ai.html",
+      "icon": "⏱️",
+      "category": "AI",
+      "color": "from-cyan-500 to-cyan-600"
     }
     
   ],
