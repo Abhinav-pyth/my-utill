@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevKit — Developer Utility Suite</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/latin-400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/latin-600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/latin-700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.6/latin-400.css">
+<style>
+:root{
+  --bg:#0b0e14; --panel:#11151f; --panel2:#161b28; --border:#232a3b;
+  --text:#e6e9f0; --muted:#8b93a7; --accent:#4f8cff; --accent2:#7c5cff;
+  --green:#2ecc8f; --red:#ff5f6d; --yellow:#ffc857; --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;display:flex;overflow:hidden}
+code,textarea,input,select,pre,.mono{font-family:'JetBrains Mono',monospace}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2a3247;border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* Sidebar */
+aside{width:236px;min-width:236px;height:100vh;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:margin-left .25s;z-index:50}
+.logo{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--border)}
+.logo-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
+.logo b{font-size:16px}.logo small{display:block;color:var(--muted);font-size:10.5px;font-weight:400}
+nav{flex:1;overflow-y:auto;padding:10px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--muted);cursor:pointer;font-size:13px;margin-bottom:2px;border:1px solid transparent;user-select:none;transition:all .15s}
+.nav-item:hover{color:var(--text);background:var(--panel2)}
+.nav-item.active{color:#fff;background:linear-gradient(90deg,rgba(79,140,255,.18),rgba(124,92,255,.12));border-color:rgba(79,140,255,.35)}
+.nav-item .ic{width:20px;text-align:center;font-size:15px}
+.nav-item kbd{margin-left:auto;font-size:9.5px;background:#1c2333;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#5b6479}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#555e73;padding:12px 12px 6px}
+.side-foot{padding:10px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+.side-foot kbd{background:#1c2333;border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px}
+
+/* Main */
+main{flex:1;height:100vh;overflow-y:auto;padding:22px 26px}
+.page{display:none;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:20px;margin-bottom:4px}
+.sub{color:var(--muted);margin-bottom:18px;font-size:13px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.card h3{font-size:12.5px;margin-bottom:10px;color:#c3cadb;text-transform:uppercase;letter-spacing:.6px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1;min-width:240px}
+label.fld{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+input[type=text],input[type=datetime-local],input[type=number],input[type=search],select,textarea{
+  width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:9px 11px;font-size:13px;outline:none;transition:border .15s, box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.12)}
+textarea{resize:vertical;line-height:1.55}
+button{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:9px 15px;border-radius:8px;cursor:pointer;font-size:13px;font-family:'Inter';font-weight:600;transition:all .15s}
+button:hover{border-color:var(--accent);color:#fff}
+button.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff}
+button.primary:hover{filter:brightness(1.12)}
+button.small{padding:5px 10px;font-size:12px;font-weight:400}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+button.danger:hover{border-color:var(--red);color:var(--red)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.badge.ok{background:rgba(46,204,143,.15);color:var(--green)}
+.badge.err{background:rgba(255,95,109,.15);color:var(--red)}
+.badge.warn{background:rgba(255,200,87,.15);color:var(--yellow)}
+.badge.info{background:rgba(79,140,255,.15);color:var(--accent)}
+.hint{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.5}
+pre.out{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;max-height:360px;font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+pre.out .ln{display:inline-block;min-width:34px;color:#4a5368;text-align:right;margin-right:12px;user-select:none;font-size:11px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.split-2-1{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+@media(max-width:980px){.split,.split-2-1{grid-template-columns:1fr}aside{position:fixed;margin-left:-236px}aside.open{margin-left:0}#menuBtn{display:flex!important}}
+#menuBtn{display:none;position:fixed;top:14px;left:14px;z-index:60;width:38px;height:38px;align-items:center;justify-content:center;font-size:18px;padding:0}
+
+/* toast */
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#1c2333;border:1px solid var(--border);border-left:3px solid var(--green);padding:11px 16px;border-radius:8px;font-size:13px;animation:slideIn .25s;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:340px}
+.toast.err{border-left-color:var(--red)}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+
+/* Command palette */
+#cmdOverlay{position:fixed;inset:0;background:rgba(5,7,12,.65);backdrop-filter:blur(3px);z-index:200;display:none;justify-content:center;padding-top:14vh}
+#cmdOverlay.open{display:flex}
+#cmdBox{width:min(560px,92vw);height:fit-content;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.6);overflow:hidden;animation:fadeIn .18s}
+#cmdInput{border:none;border-bottom:1px solid var(--border);border-radius:0;padding:16px 18px;font-size:15px;background:transparent}
+#cmdList{max-height:340px;overflow:auto;padding:8px}
+.cmd-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;cursor:pointer;font-size:13.5px;color:var(--muted)}
+.cmd-item .ic{font-size:16px;width:22px;text-align:center}
+.cmd-item.sel,.cmd-item:hover{background:rgba(79,140,255,.14);color:#fff}
+.cmd-item .grp{margin-left:auto;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#555e73}
+
+/* syntax tokens */
+.tok-key{color:#79b8ff}.tok-str{color:#9ece6a}.tok-num{color:#ff9e64}.tok-bool{color:#bb9af7}.tok-null{color:#565f89;font-style:italic}
+
+/* JSON tree */
+.jtree{font-size:12.5px;line-height:1.75}
+.jtree ul{list-style:none;padding-left:20px;border-left:1px dashed #2a3247;margin-left:6px}
+.jkey{color:#79b8ff;cursor:pointer;border-radius:4px;padding:0 2px}
+.jkey:hover{background:rgba(121,184,255,.15);text-decoration:underline dotted}
+.jstr{color:#9ece6a}.jnum{color:#ff9e64}.jbool{color:#bb9af7}.jnull{color:#565f89}
+.jtoggle{cursor:pointer;color:var(--muted);display:inline-block;width:16px;user-select:none;text-align:center}
+.jtoggle:hover{color:var(--accent)}
+.jcount{color:var(--muted);font-size:11px}
+.jcopy{opacity:0;cursor:pointer;font-size:11px;color:var(--muted);margin-left:6px;border-radius:4px;padding:0 4px}
+li:hover>.jcopy,li:hover>span>.jcopy{opacity:1}
+.jcopy:hover{color:var(--accent);background:rgba(79,140,255,.15)}
+li.jmatch>span{background:rgba(255,200,87,.14);border-radius:4px}
+.jpanel{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:560px;overflow:auto}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;font-size:12px;padding:6px 14px}
+.seg button.on{background:var(--accent);color:#fff}
+
+/* timezone */
+.tz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.tz-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:13px 15px;position:relative;transition:border .15s}
+.tz-card:hover{border-color:#33405e}
+.tz-card.src{border-color:rgba(79,140,255,.5);background:linear-gradient(135deg,rgba(79,140,255,.08),rgba(124,92,255,.05))}
+.tz-card .tzname{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;padding-right:70px}
+.tz-card .tztime{font-size:20px;font-weight:600;font-family:'JetBrains Mono'}
+.tz-card .tzdate{font-size:11.5px;color:var(--muted);margin-top:2px}
+.tz-card .tzoff{font-size:11px;color:var(--accent);margin-top:4px}
+.tz-acts{position:absolute;top:10px;right:10px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.tz-card:hover .tz-acts{opacity:1}
+.tz-acts button{padding:2px 7px;font-size:11px;border-radius:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:4px 11px;border-radius:20px;font-size:11.5px;background:var(--panel2);border:1px solid var(--border);cursor:pointer;color:var(--muted)}
+.chip:hover{color:#fff;border-color:var(--accent)}
+
+/* diff */
+.diff-wrap{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:520px;background:var(--panel2)}
+.diff-wrap.unified{grid-template-columns:1fr}
+.diff-side{min-width:0}
+.diff-side+.diff-side{border-left:1px solid var(--border)}
+.dline{padding:1px 10px;font-size:12px;white-space:pre-wrap;word-break:break-all;line-height:1.65;border-bottom:1px solid rgba(35,42,59,.3)}
+.dline .ln{display:inline-block;width:34px;color:#4a5368;user-select:none;text-align:right;margin-right:10px;font-size:11px}
+.dline.del{background:rgba(255,95,109,.1)}
+.dline.ins{background:rgba(46,204,143,.1)}
+.dline.empty{background:rgba(255,255,255,.015);min-height:23px}
+.wd{background:rgba(255,95,109,.35);border-radius:3px;text-decoration:none;color:#ffc9ce}
+.wi{background:rgba(46,204,143,.35);border-radius:3px;text-decoration:none;color:#c2f5df}
+.diff-hunk-head{background:#182034;color:var(--accent);padding:4px 10px;font-size:11.5px;display:flex;align-items:center;gap:8px;grid-column:1/-1;position:sticky;left:0}
+.diff-hunk-head .sp{flex:1}
+.diff-hunk-head button{padding:2px 9px;font-size:10.5px}
+.diff-hunk-head button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+@media(max-width:980px){.diff-wrap{grid-template-columns:1fr}.diff-side+.diff-side{border-left:none;border-top:1px solid var(--border)}}
+
+/* pixel */
+.pixel-grid{display:grid;gap:2px;justify-content:start;margin-top:10px}
+.pcell{width:var(--cs,14px);height:var(--cs,14px);border-radius:2px;cursor:pointer;border:1px solid rgba(255,255,255,.06);transition:transform .1s}
+.pcell:hover{transform:scale(1.4);z-index:5;position:relative;border-color:#fff}
+#imgCanvasPreview{max-width:100%;border-radius:8px;border:1px solid var(--border);image-rendering:pixelated;background:repeating-conic-gradient(#1a2030 0 25%,#141926 0 50%) 0/18px 18px}
+input[type=range]{accent-color:var(--accent);width:100%}
+
+/* color */
+.color-big{width:100%;height:120px;border-radius:10px;border:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;font-family:'JetBrains Mono'}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sw{width:50px;height:50px;border-radius:9px;cursor:pointer;border:1px solid rgba(255,255,255,.12);position:relative;transition:transform .12s}
+.sw:hover{transform:scale(1.1)}
+.sw span{position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;color:var(--muted)}
+input[type=color]{width:100%;height:42px;border:1px solid var(--border);border-radius:8px;background:var(--panel2);cursor:pointer;padding:3px}
+.contrast-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:12.5px}
+.contrast-row .ratio{font-family:'JetBrains Mono';font-weight:700;min-width:56px}
+
+/* api */
+.kv-row{display:flex;gap:8px;margin-bottom:6px}
+.kv-row input{flex:1}
+.kv-row button{padding:0 11px;color:var(--muted)}
+.kv-row button:hover{color:var(--red);border-color:var(--red)}
+.resp-head{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.hist-item{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--muted);border:1px solid transparent;display:flex;align-items:center;gap:8px}
+.hist-item:hover{background:var(--panel2);color:var(--text)}
+.hist-item .u{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mtag{font-weight:700;font-size:10px;padding:2px 7px;border-radius:5px;letter-spacing:.4px;flex:none}
+.mtag.GET{background:rgba(46,204,143,.15);color:var(--green)}
+.mtag.POST{background:rgba(255,200,87,.15);color:var(--yellow)}
+.mtag.PUT{background:rgba(79,140,255,.15);color:var(--accent)}
+.mtag.PATCH{background:rgba(187,154,247,.15);color:#bb9af7}
+.mtag.DELETE{background:rgba(255,95,109,.15);color:var(--red)}
+.mtag.HEAD,.mtag.OPTIONS{background:rgba(139,147,167,.15);color:var(--muted)}
+.tabs-mini{display:flex;gap:6px;margin-bottom:10px}
+.tabs-mini button{font-size:12px;padding:5px 13px}
+.tabs-mini button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;color:var(--muted);cursor:pointer;transition:all .2s;font-size:13px}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);color:var(--text);background:rgba(79,140,255,.05)}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+.stat{background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:8px 15px;font-size:11.5px;color:var(--muted)}
+.stat b{display:block;font-size:17px;color:var(--accent);font-family:'JetBrains Mono'}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<button id="menuBtn">☰</button>
+
+<aside id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">DK</div>
+    <div><b>DevKit</b><small>Developer Utility Suite</small></div>
+  </div>
+  <nav id="nav">
+    <div class="nav-label">Data</div>
+    <div class="nav-item active" data-page="jsonview"><span class="ic">🌲</span>JSON Viewer<kbd>1</kbd></div>
+    <div class="nav-item" data-page="jsonparse"><span class="ic">⚙️</span>JSON Parser<kbd>2</kbd></div>
+    <div class="nav-item" data-page="b64"><span class="ic">🔐</span>Base64 ⇄ Text<kbd>3</kbd></div>
+    <div class="nav-item" data-page="b64file"><span class="ic">📄</span>Base64 → File<kbd>4</kbd></div>
+    <div class="nav-label">Converters</div>
+    <div class="nav-item" data-page="tz"><span class="ic">🕐</span>Timezones<kbd>5</kbd></div>
+    <div class="nav-item" data-page="color"><span class="ic">🎨</span>Color Picker<kbd>6</kbd></div>
+    <div class="nav-item" data-page="pixel"><span class="ic">🖼️</span>Image → Pixels<kbd>7</kbd></div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" data-page="api"><span class="ic">🚀</span>API Client<kbd>8</kbd></div>
+    <div class="nav-item" data-page="diff"><span class="ic">🔀</span>Compare &amp; Merge<kbd>9</kbd></div>
+  </nav>
+  <div class="side-foot"><kbd>Ctrl</kbd>+<kbd>K</kbd> command palette</div>
+</aside>
+
+<main>
+
+<!-- ============ JSON VIEWER (default) ============ -->
+<section class="page active" id="page-jsonview">
+  <h1>🌲 JSON Viewer</h1>
+  <p class="sub">Interactive collapsible tree with search, JSON-path copy, and highlighted raw view. Drop a <b>.json</b> file anywhere on the panel or paste &amp; press Render.</p>
+  <div class="split">
+    <div class="card">
+      <div class="drop-zone" id="jvDrop" style="padding:14px;margin-bottom:10px">📁 Drop a JSON file here or click to browse — or paste below</div>
+      <input type="file" id="jvFile" accept=".json,application/json,text/plain" hidden>
+      <label class="fld">Input <span id="jvSize" style="float:none;text-transform:none;letter-spacing:0"></span></label>
+      <textarea id="jvInput" rows="18" spellcheck="false"></textarea>
+      <div class="btn-row">
+        <button class="primary" id="jvRender">▶ Render Tree</button>
+        <button id="jvSample">Load Sample</button>
+        <button id="jvClear">Clear</button>
+        <button id="jvToParser">Send to Parser →</button>
+      </div>
+      <div id="jvError" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:10px">
+        <div class="seg">
+          <button class="on" id="jvTabTree">Tree</button>
+          <button id="jvTabRaw">Raw</button>
+        </div>
+        <div style="flex:1;min-width:150px"><input type="search" id="jvSearch" placeholder="🔍 Search keys &amp; values…" spellcheck="false"></div>
+      </div>
+      <div id="jvToolbar" class="btn-row" style="margin:0 0 10px">
+        <button class="small" id="jvExpand">⊞ Expand All</button>
+        <button class="small" id="jvCollapse">⊟ Collapse All</button>
+        <button class="small" id="jvCopyJson">⧉ Copy JSON</button>
+        <span class="badge info" id="jvCount" style="align-self:center"></span>
+      </div>
+      <div id="jvTreeWrap" class="jpanel"><div id="jvTree" class="jtree"></div></div>
+      <pre class="out jpanel" id="jvRaw" style="display:none;max-height:560px;padding:12px"></pre>
+      <div class="hint">💡 Click a <span class="jkey">key</span> to copy its JSON path · click ⧉ to copy a value · click the grid icon in a cell to send a color to the Color Picker.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ JSON PARSER ============ -->
+<section class="page" id="page-jsonparse">
+  <h1>⚙️ JSON Parser</h1>
+  <p class="sub">Validate with exact error position, format, minify, sort keys, escape, convert to CSV and query by path.</p>
+  <div class="split">
+    <div class="card">
+      <label class="fld">Raw JSON <span id="jpLiveBadge"></span></label>
+      <textarea id="jpInput" rows="17" spellcheck="false"></textarea>
+      <div class="btn-row">
+        <button class="primary" id="jpFormat">Format</button>
+        <button id="jpMinify">Minify</button>
+        <button id="jpValidate">Validate</button>
+        <button id="jpSort">Sort Keys</button>
+        <button id="jpEscape">Escape</button>
+        <button id="jpUnescape">Unescape</button>
+        <button id="jpToCsv">→ CSV</button>
+      </div>
+      <label style="font-size:12px;color:var(--muted);margin-top:10px;display:block"><input type="checkbox" id="jpLive" checked style="width:auto"> Live validate while typing</label>
+      <div id="jpStatus" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <label class="fld">Output</label>
+      <textarea id="jpOutput" rows="12" spellcheck="false" readonly></textarea>
+      <div style="margin-top:12px">
+        <label class="fld">Path query — e.g. <code>users[0].name</code></label>
+        <div class="kv-row">
+          <input type="text" id="jpPath" placeholder="users[0].name" spellcheck="false">
+          <button class="primary" id="jpQuery">Query</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="jpCopy">⧉ Copy</button>
+        <button id="jpDownload">⬇ Download .json</button>
+        <button id="jpToViewer">View as Tree →</button>
+      </div>
+      <div class="stats" id="jpStats"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BASE64 ============ -->
+<section class="page" id="page-b64">
+  <h1>🔐 Base64 Encode / Decode</h1>
+  <p class="sub">UTF-8 &amp; emoji safe. Live mode converts as you type. Also convert whole files to Base64 data URLs.</p>
+  <div class="split">
+    <div class="card">
+      <label class="fld">Text <span id="b64TextLen" style="text-transform:none;letter-spacing:0"></span></label>
+      <textarea id="b64Text" rows="11" spellcheck="false" placeholder="Hello, DevKit! 🚀"></textarea>
+      <div class="btn-row">
+        <button class="primary" id="b64Enc">Encode →</button>
+        <button id="b64EncUrl">Encode (URL-safe)</button>
+      </div>
+    </div>
+    <div class="card">
+      <label class="fld">Base64 <span id="b64DataLen" style="text-transform:none;letter-spacing:0"></span></label>
+      <textarea id="b64Data" rows="11" spellcheck="false" placeholder="SGVsbG8sIERldktpdCEg8J+agA=="></textarea>
+      <div class="btn-row">
+        <button class="primary" id="b64Dec">← Decode</button>
+        <button id="b64DecUrl">Decode (URL-safe)</button>
+        <button id="b64Swap">⇄ Swap</button>
+      </div>
+      <div id="b64Status" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Options &amp; File Tools</h3>
+    <label style="font-size:12.5px;color:var(--muted);display:block;margin-bottom:10px"><input type="checkbox" id="b64Live" style="width:auto"> ⚡ Live mode — convert while typing</label>
+    <div class="row">
+      <div class="col"><button id="b64FilePick" style="width:100%">📁 File → Base64 Data URL</button><input type="file" id="b64File" hidden></div>
+      <div class="col"><button id="b64ImgPick" style="width:100%">🖼️ Image → Data URL (for &lt;img src&gt;)</button><input type="file" id="b64Img" accept="image/*" hidden></div>
+      <div class="col"><button id="b64ToFile" style="width:100%">Go to Base64 → File tool ➜</button></div>
+    </div>
+    <div id="b64FileInfo" class="stats" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ============ BASE64 TO FILE ============ -->
+<section class="page" id="page-b64file">
+  <h1>📄 Base64 → PDF / Image / CSV Generator</h1>
+  <p class="sub">Paste Base64 or a data URL (prefix auto-stripped). Type is auto-detected from magic bytes — preview before download.</p>
+  <div class="split-2-1">
+    <div class="card">
+      <label class="fld">Base64 / Data URL</label>
+      <textarea id="bfInput" rows="8" spellcheck="false" placeholder="data:application/pdf;base64,JVBERi0xLjQK...  or plain base64"></textarea>
+      <div class="row" style="margin-top:12px;align-items:flex-end">
+        <div class="col" style="max-width:200px">
+          <label class="fld">File type</label>
+          <select id="bfType">
+            <option value="auto">🔎 Auto-detect</option>
+            <option value="pdf">PDF (.pdf)</option>
+            <option value="png">PNG (.png)</option>
+            <option value="jpeg">JPEG (.jpg)</option>
+            <option value="gif">GIF (.gif)</option>
+            <option value="svg">SVG (.svg)</option>
+            <option value="webp">WebP (.webp)</option>
+            <option value="csv">CSV (.csv)</option>
+            <option value="txt">Text (.txt)</option>
+            <option value="zip">ZIP (.zip)</option>
+          </select>
+        </div>
+        <div class="col" style="max-width:180px">
+          <label class="fld">Filename</label>
+          <input type="text" id="bfName" value="output" spellcheck="false">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="primary" id="bfGen">Generate</button>
+          <button id="bfDownload">⬇ Download</button>
+        </div>
+      </div>
+      <div id="bfStatus" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h3>Quick Builders</h3>
+      <div class="btn-row" style="margin-top:0;flex-direction:column">
+        <button id="bfMakePdf" style="width:100%">📄 Sample PDF</button>
+        <button id="bfMakeCsv" style="width:100%">📊 Text → CSV file</button>
+        <button id="bfMakePng" style="width:100%">🖼️ Text → PNG image</button>
+      </div>
+      <label class="fld" style="margin-top:12px">Builder input</label>
+      <textarea id="bfBuilderText" rows="4" placeholder="CSV: comma separated lines&#10;PNG: text to render"></textarea>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Preview</h3>
+    <div id="bfPreview" class="hint">Nothing generated yet.</div>
+  </div>
+</section>
+
+<!-- ============ TIMEZONE ============ -->
+<section class="page" id="page-tz">
+  <h1>🕐 Timezone Converter</h1>
+  <p class="sub">IST ⇄ UTC ⇄ EST and every IANA zone. All clocks tick live. Hover a card to set it as source or copy its time.</p>
+  <div class="card">
+    <div class="row">
+      <div class="col" style="max-width:270px">
+        <label class="fld">Source Timezone</label>
+        <select id="tzSource"></select>
+      </div>
+      <div class="col" style="max-width:270px">
+        <label class="fld">Date &amp; Time (in source zone)</label>
+        <input type="datetime-local" id="tzInput" step="1">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button class="primary" id="tzNow">⟳ Now</button>
+      </div>
+    </div>
+    <div class="chips" id="tzChips"></div>
+    <div class="hint" id="tzSummary"></div>
+  </div>
+  <div class="card">
+    <div class="row" style="align-items:center;margin-bottom:12px">
+      <h3 style="margin:0">World Clocks <span class="badge info" id="tzEpoch"></span></h3>
+      <div style="flex:1"></div>
+      <select id="tzAddSel" style="max-width:250px"></select>
+      <button id="tzAdd">+ Add</button>
+      <button class="danger small" id="tzReset">Reset</button>
+    </div>
+    <div class="tz-grid" id="tzGrid"></div>
+  </div>
+</section>
+
+<!-- ============ COLOR ============ -->
+<section class="page" id="page-color">
+  <h1>🎨 Color Picker</h1>
+  <p class="sub">All formats, WCAG contrast checks, shades &amp; harmony palettes. Click any swatch or format row to copy.</p>
+  <div class="split">
+    <div class="card">
+      <div class="color-big" id="colPreview">Aa</div>
+      <label class="fld">Native Picker</label>
+      <input type="color" id="colPicker" value="#4f8cff">
+      <div style="margin-top:12px">
+        <label class="fld">HEX</label>
+        <div class="kv-row"><input type="text" id="colHex" value="#4f8cff" spellcheck="false"><button class="primary" id="colApply">Apply</button></div>
+      </div>
+      <div class="btn-row">
+        <button id="colRandom">🎲 Random</button>
+        <button id="colEyedrop">💧 Screen Picker</button>
+      </div>
+      <h3 style="margin-top:18px">Contrast (WCAG 2.1)</h3>
+      <div id="colContrast"></div>
+    </div>
+    <div class="card">
+      <h3>Formats — click row to copy</h3>
+      <div id="colFormats"></div>
+      <h3 style="margin-top:20px">Shades &amp; Tints</h3>
+      <div class="swatches" id="colShades" style="margin-bottom:26px"></div>
+      <h3 style="margin-top:12px">Harmony</h3>
+      <div class="swatches" id="colHarmony" style="margin-bottom:26px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PIXEL ============ -->
+<section class="page" id="page-pixel">
+  <h1>🖼️ Image → Pixel Converter</h1>
+  <p class="sub">Downscale any image to a pixel matrix (perfect for LED matrices, sprites, ASCII art). Export RGBA JSON / CSV / C-array. Click a cell to send its color to the Color Picker.</p>
+  <div class="split">
+    <div class="card">
+      <div class="drop-zone" id="pxDrop">📁 Drop an image, click to browse, or paste (Ctrl+V)</div>
+      <input type="file" id="pxFile" accept="image/*" hidden>
+      <div style="margin-top:12px"><canvas id="imgCanvasPreview"></canvas></div>
+      <div id="pxInfo" class="stats" style="display:none"></div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="col">
+          <label class="fld">Resize width (1–64 px)</label>
+          <input type="number" id="pxWidth" value="16" min="1" max="64">
+        </div>
+        <div class="col">
+          <label class="fld">Mode</label>
+          <select id="pxMode">
+            <option value="rgba">RGBA</option>
+            <option value="gray">Grayscale</option>
+            <option value="bw">1-bit B/W</option>
+            <option value="hex">HEX colors</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;align-items:center">
+        <div class="col"><label class="fld">Cell zoom</label><input type="range" id="pxZoom" min="6" max="30" value="14"></div>
+        <label style="font-size:12px;color:var(--muted);padding-top:16px"><input type="checkbox" id="pxKeepRatio" checked style="width:auto"> Keep aspect ratio</label>
+      </div>
+      <div class="btn-row">
+        <button class="primary" id="pxConvert">Convert →</button>
+        <button id="pxCopyJson">⧉ JSON</button>
+        <button id="pxCopyCsv">⧉ CSV</button>
+        <button id="pxCopyC">⧉ C Array</button>
+        <button id="pxDlCsv">⬇ CSV</button>
+      </div>
+      <h3 style="margin-top:14px">Pixel Grid — hover for values, click to pick color</h3>
+      <div class="pixel-grid" id="pxGrid"></div>
+      <div class="hint" id="pxHover">—</div>
+      <h3 style="margin-top:10px">Output</h3>
+      <pre class="out" id="pxOut">Load an image and hit Convert.</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ API CLIENT ============ -->
+<section class="page" id="page-api">
+  <h1>🚀 API Client</h1>
+  <p class="sub">Postman-style requests from the browser (subject to the target's CORS policy). Save requests locally, export cURL, pretty-printed responses.</p>
+  <div class="card">
+    <div class="row">
+      <div style="width:112px"><select id="apiMethod"><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option></select></div>
+      <div class="col"><input type="text" id="apiUrl" placeholder="https://api.example.com/v1/resource" spellcheck="false" value="https://jsonplaceholder.typicode.com/todos/1"></div>
+      <button class="primary" id="apiSend" style="height:38px;min-width:96px">Send ➤</button>
+    </div>
+    <div class="tabs-mini" style="margin-top:14px">
+      <button class="on" data-atab="Headers">Headers</button>
+      <button data-atab="Body">Body</button>
+      <button data-atab="Auth">Auth</button>
+    </div>
+    <div id="apiTabHeaders">
+      <div id="apiHeaderRows"></div>
+      <button class="small" id="apiAddHeader">+ Add Header</button>
+    </div>
+    <div id="apiTabBody" style="display:none">
+      <select id="apiBodyType" style="max-width:280px;margin-bottom:8px">
+        <option value="none">None</option>
+        <option value="json">JSON</option>
+        <option value="text">Raw Text</option>
+        <option value="form">Form URL-encoded (k=v per line)</option>
+      </select>
+      <textarea id="apiBody" rows="6" spellcheck="false"></textarea>
+    </div>
+    <div id="apiTabAuth" style="display:none">
+      <div class="row">
+        <div class="col"><label class="fld">Bearer Token</label><input type="text" id="apiBearer" placeholder="token…" spellcheck="false"></div>
+        <div class="col"><label class="fld">Basic — Username</label><input type="text" id="apiUser" spellcheck="false"></div>
+        <div class="col"><label class="fld">Basic — Password</label><input type="text" id="apiPass" type="password" spellcheck="false"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="small" id="apiSave">💾 Save Request</button>
+      <button class="small" id="apiCurl">⧉ Copy as cURL</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="card">
+      <h3>Response</h3>
+      <div class="resp-head" id="apiRespHead"><span class="hint">Send a request…</span></div>
+      <pre class="out" id="apiRespBody" style="max-height:420px"></pre>
+    </div>
+    <div class="card">
+      <h3>Saved Requests <span class="badge info" id="apiSavedCount"></span></h3>
+      <div id="apiSaved" style="max-height:170px;overflow:auto;margin-bottom:14px"></div>
+      <h3>Response Headers</h3>
+      <pre class="out" id="apiRespHeaders" style="max-height:130px"></pre>
+      <h3 style="margin-top:14px">History <button class="small danger" id="apiClearHist" style="float:right;padding:2px 8px">Clear</button></h3>
+      <div id="apiHistory" style="max-height:170px;overflow:auto"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DIFF ============ -->
+<section class="page" id="page-diff">
+  <h1>🔀 Code Compare &amp; Merge</h1>
+  <p class="sub">Diffchecker-style comparison: ignore whitespace / blank lines / case, word-level change highlighting, and per-hunk merge buttons to build the merged result.</p>
+  <div class="split">
+    <div class="card">
+      <label class="fld">Original (Left) <button class="small" id="dfLoadL" style="float:right;padding:2px 8px">📁 load file</button><input type="file" id="dfFileL" hidden></label>
+      <textarea id="dfLeft" rows="10" spellcheck="false"></textarea>
+    </div>
+    <div class="card">
+      <label class="fld">Changed (Right) <button class="small" id="dfLoadR" style="float:right;padding:2px 8px">📁 load file</button><input type="file" id="dfFileR" hidden></label>
+      <textarea id="dfRight" rows="10" spellcheck="false"></textarea>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row" style="align-items:center">
+      <label class="fld" style="margin:0"><input type="checkbox" id="dfIgnoreWs" checked style="width:auto"> Ignore whitespace</label>
+      <label class="fld" style="margin:0"><input type="checkbox" id="dfIgnoreBlank" checked style="width:auto"> Ignore blank lines</label>
+      <label class="fld" style="margin:0"><input type="checkbox" id="dfIgnoreCase" style="width:auto"> Ignore case</label>
+      <label class="fld" style="margin:0"><input type="checkbox" id="dfOptimize" style="width:auto"> Optimize (collapse tokens)</label>
+      <div style="flex:1"></div>
+      <div class="seg"><button class="on" id="dfViewSplit">Split</button><button id="dfViewUnified">Unified</button></div>
+      <button id="dfSwapSides">⇄ Swap</button>
+      <button class="primary" id="dfRun">Compare</button>
+      <button id="dfSample">Sample</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="resp-head">
+      <h3 style="margin:0">Differences</h3>
+      <span id="dfStats" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+      <div style="flex:1"></div>
+      <button class="small" id="dfMergeAllLeft">Accept All Left ←</button>
+      <button class="small" id="dfMergeAllRight">Accept All Right →</button>
+      <button class="small" id="dfCopyMerged">⧉ Copy Merged</button>
+      <button class="small primary" id="dfDownloadMerged">⬇ Download</button>
+    </div>
+    <div class="diff-wrap" id="dfResult"><div class="dline empty" style="grid-column:1/-1">Run a comparison…</div></div>
+    <h3 style="margin-top:16px">Merged Output <span class="hint" style="display:inline;text-transform:none;letter-spacing:0">— uses per-hunk choices above (default: accept right)</span></h3>
+    <textarea id="dfMerged" rows="8" spellcheck="false" readonly></textarea>
+  </div>
+</section>
+
+</main>
+
+<!-- Command Palette -->
+<div id="cmdOverlay">
+  <div id="cmdBox">
+    <input id="cmdInput" type="text" placeholder="Jump to a tool… (Esc to close)" spellcheck="false">
+    <div id="cmdList"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ================= Core helpers ================= */
+const $=id=>document.getElementById(id);
+function toast(msg,isErr){
+  const t=document.createElement('div');t.className='toast'+(isErr?' err':'');t.textContent=(isErr?'✗ ':'✓ ')+msg;
+  $('toast').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),320)},2400);
+}
+function copy(text,label){navigator.clipboard.writeText(text).then(()=>toast((label||'Copied to clipboard'))).catch(()=>toast('Copy failed',true));}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);}
+const store={
+  get(k,d){try{const v=localStorage.getItem('dk.'+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem('dk.'+k,JSON.stringify(v));}catch(e){}},
+};
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+
+/* JSON syntax highlighter (raw text in, safe HTML out) */
+function hlJson(text){
+  return text.replace(/("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g,(m,str,colon,bool)=>{
+    if(str)return colon?`<span class="tok-key">${esc(str)}</span>${esc(colon)}`:`<span class="tok-str">${esc(str)}</span>`;
+    if(bool)return `<span class="tok-bool">${bool}</span>`;
+    if(m==='null')return '<span class="tok-null">null</span>';
+    return `<span class="tok-num">${esc(m)}</span>`;
+  });
+}
+function hlWithLineNumbers(text){
+  return text.split('\n').map((l,i)=>`<span class="ln">${i+1}</span>${hlJson(l)}`).join('\n');
+}
+
+/* ================= Navigation + Command Palette ================= */
+function goTo(page){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));
+  $('sidebar').classList.remove('open');
+  $('cmdOverlay').classList.remove('open');
+  document.querySelector('main').scrollTop=0;
+}
+document.querySelectorAll('.nav-item').forEach(it=>it.onclick=()=>goTo(it.dataset.page));
+$('menuBtn').onclick=()=>$('sidebar').classList.toggle('open');
+
+const PAGES=[...document.querySelectorAll('.nav-item')].map(n=>({page:n.dataset.page,label:n.textContent.trim().replace(/\d$/,''),icon:n.querySelector('.ic').textContent,grp:n.previousElementSibling&&n.previousElementSibling.classList.contains('nav-label')?n.previousElementSibling.textContent:''}));
+let cmdSel=0,cmdFiltered=[];
+function renderCmd(){
+  const q=$('cmdInput').value.toLowerCase();
+  cmdFiltered=PAGES.filter(p=>p.label.toLowerCase().includes(q));
+  cmdSel=Math.min(cmdSel,Math.max(0,cmdFiltered.length-1));
+  $('cmdList').innerHTML=cmdFiltered.map((p,i)=>`<div class="cmd-item ${i===cmdSel?'sel':''}" data-i="${i}"><span class="ic">${p.icon}</span>${esc(p.label)}<span class="grp">${esc(p.grp)}</span></div>`).join('')||'<div class="cmd-item">No matches</div>';
+  $('cmdList').querySelectorAll('.cmd-item[data-i]').forEach(el=>{
+    el.onclick=()=>goTo(cmdFiltered[+el.dataset.i].page);
+    el.onmouseenter=()=>{cmdSel=+el.dataset.i;renderCmd();};
+  });
+}
+$('cmdInput').addEventListener('input',()=>{cmdSel=0;renderCmd();});
+$('cmdInput').addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'){e.preventDefault();cmdSel=Math.min(cmdSel+1,cmdFiltered.length-1);renderCmd();}
+  if(e.key==='ArrowUp'){e.preventDefault();cmdSel=Math.max(cmdSel-1,0);renderCmd();}
+  if(e.key==='Enter'&&cmdFiltered[cmdSel])goTo(cmdFiltered[cmdSel].page);
+});
+$('cmdOverlay').addEventListener('click',e=>{if(e.target===$('cmdOverlay'))$('cmdOverlay').classList.remove('open');});
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('cmdOverlay').classList.add('open');$('cmdInput').value='';cmdSel=0;renderCmd();$('cmdInput').focus();}
+  if(e.key==='Escape')$('cmdOverlay').classList.remove('open');
+  if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&/^[1-9]$/.test(e.key)&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)&&!$('cmdOverlay').classList.contains('open')){
+    const item=document.querySelectorAll('.nav-item')[+e.key-1];if(item)goTo(item.dataset.page);
+  }
+});
+
+/* ================= TIMEZONE ================= */
+const TZ_COMMON=[
+  ["UTC","UTC — Universal"],["Asia/Kolkata","IST — India"],["America/New_York","EST/EDT — New York"],
+  ["America/Chicago","CST/CDT — Chicago"],["America/Denver","MST/MDT — Denver"],["America/Los_Angeles","PST/PDT — Los Angeles"],
+  ["Europe/London","GMT/BST — London"],["Europe/Berlin","CET/CEST — Berlin"],["Europe/Paris","CET/CEST — Paris"],
+  ["Europe/Moscow","MSK — Moscow"],["Asia/Dubai","GST — Dubai"],["Asia/Singapore","SGT — Singapore"],
+  ["Asia/Tokyo","JST — Tokyo"],["Asia/Shanghai","CST — China"],["Asia/Karachi","PKT — Pakistan"],
+  ["Asia/Dhaka","BST — Dhaka"],["Asia/Kathmandu","NPT — Nepal"],["Australia/Sydney","AEST/AEDT — Sydney"],
+  ["Pacific/Auckland","NZST/NZDT — Auckland"],["America/Sao_Paulo","BRT — São Paulo"],["Africa/Cairo","EET — Cairo"],["Asia/Seoul","KST — Seoul"],
+];
+const ALL_TZ=(Intl.supportedValuesOf?Intl.supportedValuesOf('timeZone'):TZ_COMMON.map(t=>t[0]));
+const tzLabel=tz=>{const f=TZ_COMMON.find(t=>t[0]===tz);return f?f[1]:tz.replace(/_/g,' ');};
+let tzTargets=store.get('tz.targets',["UTC","Asia/Kolkata","America/New_York","Europe/London","Asia/Tokyo","America/Los_Angeles"]);
+function tzOptions(){
+  return TZ_COMMON.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')
+    +`<optgroup label="All IANA zones">`+ALL_TZ.filter(tz=>!TZ_COMMON.some(c=>c[0]===tz)).map(tz=>`<option value="${tz}">${tz.replace(/_/g,' ')}</option>`).join('')+`</optgroup>`;
+}
+function fmtInTz(date,tz){
+  const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZoneName:'short'}).formatToParts(date).map(x=>[x.type,x.value]));
+  return {time:`${p.hour}:${p.minute}:${p.second}`,date:`${p.weekday}, ${p.day} ${p.month} ${p.year}`,zname:p.timeZoneName||''};
+}
+function tzOffsetStr(date,tz){
+  const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(date).map(x=>[x.type,x.value]));
+  const asUTC=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second);
+  const dm=Math.round((asUTC-date.getTime())/60000),s=dm<0?'-':'+',a=Math.abs(dm);
+  return `UTC${s}${String(Math.floor(a/60)).padStart(2,'0')}:${String(a%60).padStart(2,'0')}`;
+}
+function wallParts(date,tz){return Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(date).map(x=>[x.type,x.value]));}
+function getSourceDate(){
+  const v=$('tzInput').value,tz=$('tzSource').value;
+  if(!v)return new Date();
+  const naive=new Date(v);if(isNaN(naive))return new Date();
+  let guess=naive.getTime();
+  const naiveUTC=Date.UTC(naive.getFullYear(),naive.getMonth(),naive.getDate(),naive.getHours(),naive.getMinutes(),naive.getSeconds());
+  for(let i=0;i<3;i++){const p=wallParts(new Date(guess),tz);guess+=naiveUTC-Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second);}
+  return new Date(guess);
+}
+function setNowInput(){const p=wallParts(new Date(),$('tzSource').value);$('tzInput').value=`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;}
+function renderTz(){
+  const date=getSourceDate(),src=$('tzSource').value;
+  const grid=$('tzGrid');grid.innerHTML='';
+  [src,...tzTargets.filter(t=>t!==src)].forEach((tz,i)=>{
+    const f=fmtInTz(date,tz);
+    const d=document.createElement('div');d.className='tz-card'+(i===0?' src':'');d.dataset.tz=tz;
+    d.innerHTML=`<div class="tzname">${i===0?'📍 SOURCE · ':''}${esc(tzLabel(tz))} <span style="opacity:.6">${esc(tz)}</span></div>
+      <div class="tztime">${f.time} <span style="font-size:11px;color:var(--muted)">${esc(f.zname)}</span></div>
+      <div class="tzdate">${f.date}</div><div class="tzoff">${tzOffsetStr(date,tz)}</div>
+      <div class="tz-acts">${i===0?'':`<button data-act="src" title="Set as source">📍</button>`}<button data-act="copy" title="Copy time">⧉</button>${i===0?'':`<button data-act="rm" title="Remove">✕</button>`}</div>`;
+    grid.appendChild(d);
+  });
+  const sf=fmtInTz(date,src);
+  $('tzSummary').innerHTML=`<b>${sf.date} ${sf.time}</b> in <b>${esc(tzLabel(src))}</b> → ${tzTargets.filter(t=>t!==src).length} target zones · epoch <code>${Math.floor(date.getTime()/1000)}</code>`;
+  $('tzEpoch').textContent='epoch '+Math.floor(date.getTime()/1000);
+}
+$('tzGrid').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-act]');if(!btn)return;
+  const card=btn.closest('.tz-card'),tz=card.dataset.tz,date=getSourceDate();
+  if(btn.dataset.act==='src'){
+    $('tzSource').value=tz;tzTargets=tzTargets.filter(t=>t!==tz);setNowInput();renderTz();store.set('tz.targets',tzTargets);toast(tz+' is now the source');
+  }else if(btn.dataset.act==='rm'){
+    tzTargets=tzTargets.filter(t=>t!==tz);renderTz();store.set('tz.targets',tzTargets);
+  }else{
+    copy(fmtInTz(date,tz).date+' '+fmtInTz(date,tz).time+' '+tz,tz+' time');
+  }
+});
+(function initTz(){
+  $('tzSource').innerHTML=tzOptions();$('tzSource').value=store.get('tz.source','Asia/Kolkata');
+  $('tzAddSel').innerHTML=tzOptions();$('tzAddSel').value='Asia/Dubai';
+  const presets=[["Asia/Kolkata","UTC"],["Asia/Kolkata","America/New_York"],["UTC","Asia/Kolkata"],["America/New_York","UTC"],["UTC","Asia/Tokyo"],["Europe/London","Asia/Kolkata"]];
+  $('tzChips').innerHTML='<span style="font-size:11px;color:var(--muted);align-self:center">Quick:</span>'+presets.map(([a,b])=>`<span class="chip" data-a="${a}" data-b="${b}">${a==='UTC'?'UTC':a.split('/')[1].replace(/_/g,' ')} → ${b==='UTC'?'UTC':b.split('/')[1].replace(/_/g,' ')}</span>`).join('');
+  $('tzChips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    $('tzSource').value=c.dataset.a;
+    if(!tzTargets.includes(c.dataset.b))tzTargets.unshift(c.dataset.b);
+    setNowInput();renderTz();store.set('tz.targets',tzTargets);
+  });
+  setNowInput();renderTz();
+})();
+$('tzNow').onclick=()=>{setNowInput();renderTz();};
+$('tzSource').addEventListener('change',()=>{setNowInput();renderTz();store.set('tz.source',$('tzSource').value);});
+$('tzInput').addEventListener('input',renderTz);
+$('tzAdd').onclick=()=>{const v=$('tzAddSel').value;if(!tzTargets.includes(v)){tzTargets.push(v);store.set('tz.targets',tzTargets);}renderTz();};
+$('tzReset').onclick=()=>{tzTargets=["UTC","Asia/Kolkata","America/New_York","Europe/London","Asia/Tokyo","America/Los_Angeles"];store.set('tz.targets',tzTargets);renderTz();};
+setInterval(renderTz,1000);
+
+/* ================= COLOR ================= */
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
+function rgbToHex(r,g,b){return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');}
+function rgbToHsl(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,s=0;const l=(mx+mn)/2;
+ if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?((g-b)/d+(g<b?6:0)):mx===g?((b-r)/d+2):((r-g)/d+4);h*=60;}
+ return{h:Math.round(h),s:Math.round(s*100),l:Math.round(l*100)};}
+function hslToRgb(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+ return{r:Math.round(255*f(0)),g:Math.round(255*f(8)),b:Math.round(255*f(4))};}
+function lum(r,g,b){const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);};return .2126*f(r)+.7152*f(g)+.0722*f(b);}
+function contrast(hex1,hex2){const a=hexToRgb(hex1),b=hexToRgb(hex2);const l1=lum(a.r,a.g,a.b),l2=lum(b.r,b.g,b.b);return (Math.max(l1,l2)+.05)/(Math.min(l1,l2)+.05);}
+function wcag(ratio){const aa=ratio>=4.5,aaa=ratio>=7,large=ratio>=3;
+  return `${aa?'<span class="badge ok">AA</span>':'<span class="badge err">AA ✗</span>'} ${aaa?'<span class="badge ok">AAA</span>':'<span class="badge warn">AAA ✗</span>'} ${large&&!aa?'<span class="badge warn">large text ok</span>':''}`;}
+function setColor(hex,fromPicker){
+  hex=rgbToHex(...Object.values(hexToRgb(hex)));
+  if(!fromPicker)$('colPicker').value=hex;
+  $('colHex').value=hex;
+  const {r,g,b}=hexToRgb(hex),{h,s,l}=rgbToHsl(r,g,b);
+  const best=contrast(hex,'#ffffff')>contrast(hex,'#000000')?'#ffffff':'#111111';
+  $('colPreview').style.background=hex;$('colPreview').style.color=best;$('colPreview').textContent=hex.toUpperCase();
+  const cmyk=(()=>{const rr=r/255,gg=g/255,bb=b/255,k=1-Math.max(rr,gg,bb);if(k===1)return{c:0,m:0,y:0,k:100};
+    return{c:Math.round((1-rr-k)/(1-k)*100),m:Math.round((1-gg-k)/(1-k)*100),y:Math.round((1-bb-k)/(1-k)*100),k:Math.round(k*100)};})();
+  const fmts=[['HEX',hex.toUpperCase()],['RGB',`rgb(${r}, ${g}, ${b})`],['HSL',`hsl(${h}, ${s}%, ${l}%)`],
+    ['CMYK',`cmyk(${cmyk.c}%, ${cmyk.m}%, ${cmyk.y}%, ${cmyk.k}%)`],['Decimal',String((r<<16)|(g<<8)|b)],
+    ['CSS var',`--color: ${hex};`],['Android',`#FF${hex.slice(1).toUpperCase()}`],['Swift',`UIColor(red: ${(r/255).toFixed(3)}, green: ${(g/255).toFixed(3)}, blue: ${(b/255).toFixed(3)}, alpha: 1.0)`]];
+  const fw=$('colFormats');fw.innerHTML='';
+  fmts.forEach(([k,v])=>{
+    const row=document.createElement('div');row.className='kv-row';row.style.marginBottom='4px';row.style.cursor='pointer';
+    row.innerHTML=`<input type="text" readonly value="${esc(v)}" tabindex="-1"><button class="small">⧉</button>`;
+    const doCopy=()=>copy(v,k);
+    row.onclick=doCopy;fw.appendChild(row);
+  });
+  // contrast
+  const cw=contrast(hex,'#ffffff'),cb=contrast(hex,'#000000');
+  $('colContrast').innerHTML=`
+    <div class="contrast-row" style="background:#fff;color:${hex}"><span class="ratio">${cw.toFixed(2)}</span>vs White — sample text <span style="margin-left:auto">${wcag(cw)}</span></div>
+    <div class="contrast-row" style="background:#000;color:${hex}"><span class="ratio">${cb.toFixed(2)}</span>vs Black — sample text <span style="margin-left:auto">${wcag(cb)}</span></div>`;
+  // shades
+  const sh=$('colShades');sh.innerHTML='';
+  for(let i=9;i>=1;i--){const c=hslToRgb(h,s,i*10),hx=rgbToHex(c.r,c.g,c.b);
+    const d=document.createElement('div');d.className='sw';d.style.background=hx;d.title=hx;d.innerHTML=`<span>${i*10}</span>`;
+    d.onclick=()=>{setColor(hx);copy(hx,'Shade');};sh.appendChild(d);}
+  const harmony=[['Complement',180],['Triad',120],['Triad',240],['Analog',30],['Analog',-30],['Split',150],['Split',210]];
+  const hw=$('colHarmony');hw.innerHTML='';
+  harmony.forEach(([n,off])=>{const c=hslToRgb((((h+off)%360)+360)%360,s,l),hx=rgbToHex(c.r,c.g,c.b);
+    const d=document.createElement('div');d.className='sw';d.style.background=hx;d.title=n+' '+hx;d.innerHTML=`<span>${n.split(' ')[0]}</span>`;
+    d.onclick=()=>{setColor(hx);copy(hx,n);};hw.appendChild(d);});
+  store.set('color',hex);
+}
+$('colPicker').addEventListener('input',e=>setColor(e.target.value,true));
+$('colApply').onclick=()=>{let v=$('colHex').value.trim();if(!v.startsWith('#'))v='#'+v;
+  /^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/.test(v)?setColor(v):toast('Invalid HEX',true);};
+$('colHex').addEventListener('keydown',e=>{if(e.key==='Enter')$('colApply').click();});
+$('colRandom').onclick=()=>setColor(rgbToHex(Math.random()*255|0,Math.random()*255|0,Math.random()*255|0));
+$('colEyedrop').onclick=async()=>{
+  try{if(!window.EyeDropper){toast('EyeDropper API unsupported — try Chrome/Edge',true);return;}
+    const res=await new EyeDropper().open();setColor(res.sRGBHex);toast('Picked '+res.sRGBHex);}catch(e){}
+};
+setColor(store.get('color','#4f8cff'));
+
+/* ================= PIXEL ================= */
+let pxImg=null;
+const pxCv=$('imgCanvasPreview'),pxCtx=pxCv.getContext('2d',{willReadFrequently:true});
+function loadPxImage(src){
+  const img=new Image();
+  img.onload=()=>{pxImg=img;
+    const scale=Math.min(1,380/img.width);
+    pxCv.width=Math.max(1,Math.round(img.width*scale));pxCv.height=Math.max(1,Math.round(img.height*scale));
+    pxCtx.drawImage(img,0,0,pxCv.width,pxCv.height);
+    $('pxInfo').style.display='flex';
+    $('pxInfo').innerHTML=`<div class="stat"><b>${img.width}×${img.height}</b>original size</div><div class="stat"><b>${(img.width*img.height/1e6).toFixed(2)}MP</b>pixels</div>`;
+    toast('Image loaded');convertPixels();};
+  img.onerror=()=>toast('Could not load image',true);
+  img.src=src;
+}
+$('pxDrop').onclick=()=>$('pxFile').click();
+$('pxFile').onchange=e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=()=>loadPxImage(r.result);r.readAsDataURL(f);}};
+['dragover','dragenter'].forEach(ev=>$('pxDrop').addEventListener(ev,e=>{e.preventDefault();$('pxDrop').classList.add('over');}));
+['dragleave','drop'].forEach(ev=>$('pxDrop').addEventListener(ev,e=>{e.preventDefault();$('pxDrop').classList.remove('over');}));
+$('pxDrop').addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/')){const r=new FileReader();r.onload=()=>loadPxImage(r.result);r.readAsDataURL(f);}});
+document.addEventListener('paste',e=>{
+  if(!$('page-pixel').classList.contains('active'))return;
+  const items=e.clipboardData?.items;if(!items)return;
+  for(const it of items)if(it.type.startsWith('image/')){const r=new FileReader();r.onload=()=>loadPxImage(r.result);r.readAsDataURL(it.getAsFile());break;}
+});
+$('pxZoom').addEventListener('input',()=>{if(window._pxData)convertPixels();});
+function convertPixels(){
+  if(!pxImg){toast('Load an image first',true);return;}
+  const W=Math.max(1,Math.min(64,+$('pxWidth').value||16));
+  const H=$('pxKeepRatio').checked?Math.max(1,Math.round(W*pxImg.height/pxImg.width)):W;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(pxImg,0,0,W,H);
+  const data=cx.getImageData(0,0,W,H).data,mode=$('pxMode').value;
+  const grid=$('pxGrid'),cs=+$('pxZoom').value+'px';
+  grid.style.gridTemplateColumns=`repeat(${W},var(--cs))`;grid.style.setProperty('--cs',cs);grid.innerHTML='';
+  const pixels=[];
+  for(let y=0;y<H;y++){const row=[];
+    for(let x=0;x<W;x++){const i=(y*W+x)*4;let r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];
+      if(mode==='gray'){const v=Math.round(.299*r+.587*g+.114*b);r=g=b=v;}
+      if(mode==='bw'){const v=(.299*r+.587*g+.114*b)>=128?255:0;r=g=b=v;}
+      const hex=rgbToHex(r,g,b);row.push({r,g,b,a,hex});
+      const c=document.createElement('div');c.className='pcell';c.style.background=`rgba(${r},${g},${b},${a/255})`;
+      c.onmouseenter=()=>$('pxHover').textContent=`(${x},${y}) rgba(${r},${g},${b},${a}) ${hex}`;
+      c.onclick=()=>{setColor(hex);copy(hex,'Pixel color → also sent to Color Picker');};
+      grid.appendChild(c);}
+    pixels.push(row);}
+  window._pxData=pixels;
+  const out=$('pxOut');
+  if(mode==='hex')out.textContent=pixels.map(row=>'['+row.map(p=>'"'+p.hex+'"').join(', ')+']').join(',\n');
+  else if(mode==='bw'||mode==='gray')out.textContent=pixels.map(row=>row.map(p=>String(mode==='bw'?(p.r?1:0):p.r).padStart(3)).join(' ')).join('\n');
+  else out.textContent=JSON.stringify(pixels.map(row=>row.map(p=>[p.r,p.g,p.b,p.a])));
+  toast(`Converted → ${W}×${H} (${W*H} pixels)`);
+}
+$('pxConvert').onclick=convertPixels;
+['pxWidth','pxMode','pxKeepRatio'].forEach(id=>$(id).addEventListener('change',()=>{if(pxImg)convertPixels();}));
+function pxCsv(){return 'x,y,r,g,b,a,hex\n'+window._pxData.flatMap((row,y)=>row.map((p,x)=>`${x},${y},${p.r},${p.g},${p.b},${p.a},${p.hex}`)).join('\n');}
+$('pxCopyJson').onclick=()=>window._pxData?copy(JSON.stringify(window._pxData.map(r=>r.map(p=>({r:p.r,g:p.g,b:p.b,a:p.a})))),'Pixel JSON'):toast('No data',true);
+$('pxCopyCsv').onclick=()=>window._pxData?copy(pxCsv(),'Pixel CSV'):toast('No data',true);
+$('pxDlCsv').onclick=()=>window._pxData?download(new Blob([pxCsv()],{type:'text/csv'}),'pixels.csv'):toast('No data',true);
+$('pxCopyC').onclick=()=>{if(!window._pxData)return toast('No data',true);
+  const h=window._pxData.length,w=window._pxData[0].length;
+  copy(`// ${w}x${h} RGBA\nconst uint8_t img[${w*h*4}] = {\n  ${window._pxData.flat().map(p=>`${p.r},${p.g},${p.b},${p.a}`).join(',')}\n};`,'C array');};
+
+/* ================= JSON VIEWER ================= */
+function jsonErrInfo(msg,src){
+  let pos=null;
+  const m1=msg.match(/position (\d+)/),m2=msg.match(/line (\d+) column (\d+)/);
+  if(m2)return `line ${m2[1]}, column ${m2[2]}`;
+  if(m1){pos=+m1[1];const before=src.slice(0,pos);return `line ${before.split('\n').length}, column ${pos-before.lastIndexOf('\n')}`;}
+  return '';
+}
+function buildTree(key,val,depth,path){
+  const li=document.createElement('li');
+  if(val!==null&&typeof val==='object'){
+    const isArr=Array.isArray(val),keys=Object.keys(val);
+    const tog=document.createElement('span');tog.className='jtoggle';tog.textContent='▾';
+    const label=document.createElement('span');
+    label.innerHTML=(key!==null?`<span class="jkey" title="Click to copy path: ${esc(path)}">${isArr&&key!==null?esc(key):'"'+esc(key)+'"'}</span>: `:'')+
+      `<span class="jcount">${isArr?'[':'{'} ${keys.length} ${isArr?'items':'keys'} ${isArr?']':'}'}</span>`;
+    const cp=document.createElement('span');cp.className='jcopy';cp.textContent='⧉';cp.title='Copy this subtree';
+    cp.onclick=e=>{e.stopPropagation();copy(JSON.stringify(val,null,2),(key||'value')+' subtree');};
+    const ul=document.createElement('ul');
+    keys.forEach(k=>ul.appendChild(buildTree(k,val[k],depth+1,isArr?`${path}[${k}]`:path?`${path}.${k}`:k)));
+    li.appendChild(tog);li.appendChild(label);li.appendChild(cp);li.appendChild(ul);
+    const kp=label.querySelector('.jkey');
+    if(kp)kp.onclick=e=>{e.stopPropagation();copy(path,'Path');};
+    tog.onclick=()=>{const open=ul.style.display!=='none';ul.style.display=open?'none':'';tog.textContent=open?'▸':'▾';};
+    if(depth>4){ul.style.display='none';tog.textContent='▸';}
+    li.dataset.search=(String(key)+' '+keys.join(' ')).toLowerCase();
+  }else{
+    let cls='jnull',disp='null';
+    if(typeof val==='string'){cls='jstr';disp=`"${esc(val)}"`;}
+    else if(typeof val==='number'){cls='jnum';disp=val;}
+    else if(typeof val==='boolean'){cls='jbool';disp=val;}
+    const sp=document.createElement('span');
+    sp.innerHTML=(key!==null?`<span class="jkey" title="Click to copy path: ${esc(path)}">"${esc(key)}"</span>: `:'')+`<span class="${cls}">${disp}</span>`;
+    const cp=document.createElement('span');cp.className='jcopy';cp.textContent='⧉';cp.title='Copy value';
+    cp.onclick=e=>{e.stopPropagation();copy(typeof val==='string'?val:JSON.stringify(val),'Value');};
+    const kp=sp.querySelector('.jkey');if(kp)kp.onclick=e=>{e.stopPropagation();copy(path,'Path');};
+    li.appendChild(sp);li.appendChild(cp);
+    li.dataset.search=(String(key)+' '+String(val)).toLowerCase();
+  }
+  return li;
+}
+let jvData=null;
+function countNodes(v){if(v&&typeof v==='object')return Object.values(v).reduce((a,b)=>a+countNodes(b),0)+1;return 1;}
+function renderJsonTree(){
+  const err=$('jvError');err.innerHTML='';const src=$('jvInput').value;
+  $('jvSize').textContent=src?`· ${(new Blob([src]).size/1024).toFixed(1)} KB`:'';
+  if(!src.trim()){$('jvTree').innerHTML='<span class="hint">Paste JSON on the left and hit Render.</span>';$('jvRaw').textContent='';$('jvCount').textContent='';jvData=null;return;}
+  try{
+    jvData=JSON.parse(src);
+    const pretty=JSON.stringify(jvData,null,2);
+    const root=document.createElement('ul');root.style.cssText='padding-left:0;border-left:none';
+    if(jvData!==null&&typeof jvData==='object')Object.keys(jvData).forEach(k=>root.appendChild(buildTree(k,jvData[k],5,Array.isArray(jvData)?`[${k}]`:k)));
+    else root.appendChild(buildTree(null,jvData,5,'$'));
+    const tw=$('jvTree');tw.innerHTML='';tw.appendChild(root);
+    $('jvRaw').innerHTML=hlWithLineNumbers(pretty);
+    err.innerHTML='<span class="badge ok">✓ Valid JSON</span>';
+    $('jvCount').textContent=`${countNodes(jvData)} nodes`;
+    jvFilter();
+  }catch(e){
+    jvData=null;$('jvTree').innerHTML='';$('jvRaw').textContent='';$('jvCount').textContent='';
+    const where=jsonErrInfo(e.message,src);
+    err.innerHTML=`<span class="badge err">✗ ${esc(e.message)}${where?' — '+esc(where):''}</span>`;
+  }
+}
+function jvFilter(){
+  const q=$('jvSearch').value.trim().toLowerCase();
+  const lis=$('jvTree').querySelectorAll('li');
+  lis.forEach(li=>li.classList.remove('jmatch'));
+  if(!q){lis.forEach(li=>{li.style.display='';});return;}
+  function walk(li){
+    const ul=li.querySelector(':scope > ul');let childHit=false;
+    if(ul)[...ul.children].forEach(c=>{if(walk(c))childHit=true;});
+    const self=(li.dataset.search||'').includes(q);
+    const vis=self||childHit;
+    li.style.display=vis?'':'none';
+    if(self)li.classList.add('jmatch');
+    if(ul&&(self||childHit)){ul.style.display='';const t=li.querySelector(':scope > .jtoggle');if(t)t.textContent='▾';}
+    return vis;
+  }
+  [...$('jvTree').querySelector(':scope > ul').children].forEach(walk);
+}
+$('jvSearch').addEventListener('input',debounce(jvFilter,150));
+$('jvRender').onclick=renderJsonTree;
+$('jvInput').addEventListener('input',debounce(()=>{$('jvSize').textContent=$('jvInput').value?`· ${(new Blob([$('jvInput').value]).size/1024).toFixed(1)} KB`:'';},300));
+$('jvInput').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')renderJsonTree();});
+$('jvSample').onclick=()=>{
+  $('jvInput').value=JSON.stringify({
+    project:"DevKit",version:"2.0.0",active:true,license:"MIT",
+    tools:[{name:"timezone",zones:["UTC","Asia/Kolkata","America/New_York"],live:true},
+           {name:"base64",encodings:["standard","url-safe"],maxSizeKB:5120},
+           {name:"diff",features:["word-level","ignore-whitespace","merge"]}],
+    author:{name:"Dev",email:"dev@example.com",social:{github:"devkit",twitter:null}},
+    stats:{downloads:184320,rating:4.8,tags:["dev","utility","offline"]},
+    limits:{maxDepth:10,rates:[1,2,3],enforced:false}},null,2);
+  renderJsonTree();store.set('jv.input',$('jvInput').value);toast('Sample loaded');
+};
+$('jvClear').onclick=()=>{$('jvInput').value='';renderJsonTree();};
+$('jvToParser').onclick=()=>{$('jpInput').value=$('jvInput').value;goTo('jsonparse');$('jpFormat').click();};
+$('jvCopyJson').onclick=()=>{if(!jvData)return toast('Nothing to copy',true);copy(JSON.stringify(jvData,null,2),'Formatted JSON');};
+$('jvExpand').onclick=()=>$('jvTree').querySelectorAll('ul').forEach(u=>{u.style.display='';const t=u.parentElement.querySelector(':scope > .jtoggle');if(t)t.textContent='▾';});
+$('jvCollapse').onclick=()=>$('jvTree').querySelectorAll('ul ul').forEach(u=>{u.style.display='none';const t=u.parentElement.querySelector(':scope > .jtoggle');if(t)t.textContent='▸';});
+function jvTab(raw){
+  $('jvTabTree').classList.toggle('on',!raw);$('jvTabRaw').classList.toggle('on',raw);
+  $('jvTreeWrap').style.display=raw?'none':'';$('jvRaw').style.display=raw?'':'none';
+  $('jvToolbar').style.display=raw?'none':'';$('jvSearch').parentElement.style.display=raw?'none':'';
+}
+$('jvTabTree').onclick=()=>jvTab(false);
+$('jvTabRaw').onclick=()=>jvTab(true);
+$('jvDrop').onclick=()=>$('jvFile').click();
+$('jvFile').onchange=e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=()=>{$('jvInput').value=r.result;renderJsonTree();toast('Loaded '+f.name);};r.readAsText(f);}};
+['dragover','dragenter'].forEach(ev=>$('jvDrop').addEventListener(ev,e=>{e.preventDefault();$('jvDrop').classList.add('over');}));
+['dragleave','drop'].forEach(ev=>$('jvDrop').addEventListener(ev,e=>{e.preventDefault();$('jvDrop').classList.remove('over');}));
+$('jvDrop').addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f){const r=new FileReader();r.onload=()=>{$('jvInput').value=r.result;renderJsonTree();toast('Loaded '+f.name);};r.readAsText(f);}});
+if(!$('jvInput').value){
+  const saved=store.get('jv.input','');
+  if(saved)$('jvInput').value=saved;else $('jvSample').click();
+}
+renderJsonTree();
+
+/* ================= JSON PARSER ================= */
+function jpSetStatus(ok,msg){$('jpStatus').innerHTML=`<span class="badge ${ok?'ok':'err'}">${ok?'✓':'✗'} ${esc(msg)}</span>`;$('jpLiveBadge').innerHTML=ok?'<span class="badge ok" style="float:right">valid</span>':'<span class="badge err" style="float:right">invalid</span>';}
+function jpUpdateStats(txt){
+  try{const o=JSON.parse(txt);
+    const count=v=>v&&typeof v==='object'?Object.values(v).reduce((a,b)=>a+count(b),0)+Object.keys(v).length:1;
+    $('jpStats').innerHTML=`<div class="stat"><b>${txt.length.toLocaleString()}</b>chars</div>
+      <div class="stat"><b>${count(o)}</b>nodes</div>
+      <div class="stat"><b>${Array.isArray(o)?o.length:'—'}</b>top items</div>
+      <div class="stat"><b>${(new Blob([txt]).size/1024).toFixed(2)} KB</b>size</div>`;
+  }catch(e){$('jpStats').innerHTML='';}
+}
+function jpDo(fn,label){
+  try{const res=fn($('jpInput').value);$('jpOutput').value=res;jpSetStatus(true,label+' successful');jpUpdateStats(res);}
+  catch(e){jpSetStatus(false,e.message);}
+}
+$('jpFormat').onclick=()=>jpDo(t=>JSON.stringify(JSON.parse(t),null,2),'Format');
+$('jpMinify').onclick=()=>jpDo(t=>JSON.stringify(JSON.parse(t)),'Minify');
+$('jpValidate').onclick=()=>{try{JSON.parse($('jpInput').value);jpSetStatus(true,'Valid JSON');}catch(e){jpSetStatus(false,e.message);}};
+$('jpEscape').onclick=()=>{$('jpOutput').value=JSON.stringify($('jpInput').value);jpSetStatus(true,'Escaped');};
+$('jpUnescape').onclick=()=>jpDo(t=>JSON.parse('"'+t.trim().replace(/^"|"$/g,'')+'"'),'Unescape');
+$('jpSort').onclick=()=>jpDo(t=>{const sort=v=>Array.isArray(v)?v.map(sort):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,sort(v[k])])):v;
+  return JSON.stringify(sort(JSON.parse(t)),null,2);},'Sort keys');
+$('jpToCsv').onclick=()=>jpDo(t=>{
+  let data=JSON.parse(t);
+  let arr=Array.isArray(data)?data:Object.values(data).find(v=>Array.isArray(v)&&v.length&&typeof v[0]==='object');
+  if(!Array.isArray(arr))arr=[data];
+  const keys=[...new Set(arr.flatMap(o=>o&&typeof o==='object'?Object.keys(o):[]))];
+  if(!keys.length)throw new Error('No object rows found to convert');
+  const cell=v=>{if(v===null||v===undefined)return '';if(typeof v==='object')return '"'+JSON.stringify(v).replace(/"/g,'""')+'"';
+    const s=String(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  return keys.join(',')+'\n'+arr.map(o=>keys.map(k=>cell(o?o[k]:'')).join(',')).join('\n');
+},'CSV conversion');
+$('jpCopy').onclick=()=>copy($('jpOutput').value,'Output');
+$('jpDownload').onclick=()=>download(new Blob([$('jpOutput').value||$('jpInput').value],{type:'application/json'}),'parsed.json');
+$('jpQuery').onclick=()=>{
+  try{
+    const data=JSON.parse($('jpInput').value);
+    let cur=data;
+    for(const tk of $('jpPath').value.trim().replace(/\[(\d+)\]/g,'.$1').split('.').filter(Boolean)){
+      if(cur==null)throw new Error(`Cannot read "${tk}" of null`);cur=cur[tk];
+    }
+    if(cur===undefined)throw new Error('Path not found');
+    $('jpOutput').value=typeof cur==='object'&&cur!==null?JSON.stringify(cur,null,2):String(cur);
+    jpSetStatus(true,'Query result');
+  }catch(e){jpSetStatus(false,e.message);}
+};
+$('jpPath').addEventListener('keydown',e=>{if(e.key==='Enter')$('jpQuery').click();});
+$('jpLive')&&$('jpInput').addEventListener('input',debounce(()=>{
+  if(!$('jpLive').checked)return;
+  try{JSON.parse($('jpInput').value);jpSetStatus(true,'Valid JSON');jpUpdateStats($('jpInput').value);}catch(e){jpSetStatus(false,e.message);}
+},400));
+$('jpToViewer').onclick=()=>{$('jvInput').value=$('jpOutput').value||$('jpInput').value;goTo('jsonview');renderJsonTree();};
+(function initJp(){
+  const saved=store.get('jp.input','');
+  $('jpInput').value=saved||'{"users":[{"name":"Alice","age":30,"role":"admin"},{"name":"Bob","age":25,"role":"dev"}],"total":2,"meta":{"generated":"2024-01-01"}}';
+  $('jpFormat').click();
+})();
+$('jpInput').addEventListener('input',debounce(()=>store.set('jp.input',$('jpInput').value),700));
+
+/* ================= BASE64 ================= */
+function b64Encode(str){const b=new TextEncoder().encode(str);let s='';b.forEach(x=>s+=String.fromCharCode(x));return btoa(s);}
+function b64ToBytes(b64){const bin=atob(b64.trim().replace(/\s/g,''));return Uint8Array.from(bin,c=>c.charCodeAt(0));}
+function b64DecodeStr(b64){return new TextDecoder().decode(b64ToBytes(b64));}
+function b64Lens(){
+  $('b64TextLen').textContent=$('b64Text').value?`· ${$('b64Text').value.length} chars`:'';
+  $('b64DataLen').textContent=$('b64Data').value?`· ${$('b64Data').value.length} chars`:'';
+}
+function b64Status(ok,msg){$('b64Status').innerHTML=`<span class="badge ${ok?'ok':'err'}">${ok?'✓':'✗'} ${esc(msg)}</span>`;}
+$('b64Enc').onclick=()=>{try{$('b64Data').value=b64Encode($('b64Text').value);b64Status(true,'Encoded '+($('b64Text').value.length)+' chars (UTF-8 safe)');b64Lens();}catch(e){b64Status(false,e.message);}};
+$('b64EncUrl').onclick=()=>{try{$('b64Data').value=b64Encode($('b64Text').value).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');b64Status(true,'Encoded (URL-safe, no padding)');b64Lens();}catch(e){b64Status(false,e.message);}};
+$('b64Dec').onclick=()=>{try{$('b64Text').value=b64DecodeStr($('b64Data').value);b64Status(true,'Decoded (UTF-8)');b64Lens();}catch(e){b64Status(false,'Invalid Base64 — '+e.message);}};
+$('b64DecUrl').onclick=()=>{try{let v=$('b64Data').value.trim().replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';$('b64Text').value=b64DecodeStr(v);b64Status(true,'Decoded (URL-safe)');b64Lens();}catch(e){b64Status(false,'Invalid URL-safe Base64 — '+e.message);}};
+$('b64Swap').onclick=()=>{const t=$('b64Text').value;$('b64Text').value=$('b64Data').value;$('b64Data').value=t;b64Lens();};
+$('b64Text').addEventListener('input',()=>{b64Lens();if($('b64Live').checked)$('b64Enc').click();debounceStore();});
+$('b64Data').addEventListener('input',()=>{b64Lens();if($('b64Live').checked)$('b64Dec').click();debounceStore();});
+const debounceStore=debounce(()=>{store.set('b64.text',$('b64Text').value);store.set('b64.data',$('b64Data').value);},700);
+function fileToB64(file,asDataUrl){
+  const r=new FileReader();
+  r.onload=()=>{
+    const res=r.result;
+    $('b64Data').value=res;
+    $('b64Text').value='';
+    $('b64FileInfo').style.display='flex';
+    $('b64FileInfo').innerHTML=`<div class="stat"><b>${esc(file.name.slice(0,18))}</b>file</div><div class="stat"><b>${(file.size/1024).toFixed(1)} KB</b>size</div><div class="stat"><b>${esc(file.type||'—')}</b>MIME</div>`;
+    b64Status(true,(asDataUrl?'Data URL':'Base64')+' generated — '+(res.length/1024).toFixed(1)+' KB of text');
+    b64Lens();
+  };
+  asDataUrl?r.readAsDataURL(file):r.readAsDataURL(file);
+}
+$('b64FilePick').onclick=()=>$('b64File').click();
+$('b64ImgPick').onclick=()=>$('b64Img').click();
+$('b64File').onchange=e=>{if(e.target.files[0])fileToB64(e.target.files[0],true);};
+$('b64Img').onchange=e=>{if(e.target.files[0])fileToB64(e.target.files[0],true);};
+$('b64ToFile').onclick=()=>{$('bfInput').value=$('b64Data').value;goTo('b64file');};
+$('b64Text').value=store.get('b64.text','');$('b64Data').value=store.get('b64.data','');b64Lens();
+
+/* ================= BASE64 → FILE ================= */
+const MIME={pdf:'application/pdf',png:'image/png',jpeg:'image/jpeg',gif:'image/gif',svg:'image/svg+xml',webp:'image/webp',csv:'text/csv',txt:'text/plain',zip:'application/zip'};
+const EXT={pdf:'pdf',png:'png',jpeg:'jpg',gif:'gif',svg:'svg',webp:'webp',csv:'csv',txt:'txt',zip:'zip'};
+let bfBlob=null,bfNameFinal='output';
+function detectType(b64){
+  try{
+    const head=atob(b64.slice(0,16));
+    if(head.startsWith('%PDF'))return 'pdf';
+    if(head.startsWith('\x89PNG'))return 'png';
+    if(head.charCodeAt(0)===0xFF&&head.charCodeAt(1)===0xD8)return 'jpeg';
+    if(head.startsWith('GIF8'))return 'gif';
+    if(head.startsWith('PK'))return 'zip';
+    if(head.startsWith('RIFF')&&b64.length>16&&atob(b64.slice(8,16)).includes('WEBP'))return 'webp';
+    const txt=b64DecodeStr(b64);
+    if(txt.trim().startsWith('<svg'))return 'svg';
+    if(!txt.includes('\uFFFD')&&/^([^\n]*,)+[^\n]*(\n|$)/.test(txt))return 'csv';
+    return 'txt';
+  }catch(e){return 'txt';}
+}
+function bfGenerate(){
+  let raw=$('bfInput').value.trim();
+  if(!raw){$('bfStatus').innerHTML='<span class="badge err">✗ Paste some Base64 first</span>';return;}
+  const m=raw.match(/^data:([^;,]+)[^,]*,([\s\S]*)$/);
+  let mimeHint=null;
+  if(m){mimeHint=m[1];raw=m[2];}
+  raw=raw.replace(/\s/g,'');
+  try{
+    const bytes=b64ToBytes(raw);
+    let type=$('bfType').value;
+    if(type==='auto'){
+      type=detectType(raw);
+      if(mimeHint){const g=Object.keys(MIME).find(k=>MIME[k]===mimeHint);if(g)type=g;}
+    }
+    bfBlob=new Blob([bytes],{type:MIME[type]||'application/octet-stream'});
+    bfNameFinal=($('bfName').value.trim()||'output')+'.'+(EXT[type]||'bin');
+    $('bfStatus').innerHTML=`<span class="badge ok">✓ ${type.toUpperCase()}</span> <span class="badge info">${bytes.length.toLocaleString()} bytes</span> <span class="badge info">${esc(bfNameFinal)}</span>`;
+    const url=URL.createObjectURL(bfBlob),pv=$('bfPreview');pv.innerHTML='';
+    if(['png','jpeg','gif','svg','webp'].includes(type)){
+      const img=document.createElement('img');img.src=url;img.style.cssText='max-width:100%;max-height:340px;border-radius:8px;border:1px solid var(--border);background:repeating-conic-gradient(#1a2030 0 25%,#141926 0 50%) 0/20px 20px';pv.appendChild(img);
+    }else if(type==='pdf'){
+      pv.innerHTML=`<iframe src="${url}" style="width:100%;height:440px;border:1px solid var(--border);border-radius:8px;background:#fff"></iframe>`;
+    }else{
+      pv.innerHTML=`<pre class="out">${esc(new TextDecoder().decode(bytes.slice(0,5000)))}${bytes.length>5000?'\n… (truncated preview)':''}</pre>`;
+    }
+    toast('File generated — '+type.toUpperCase());
+  }catch(e){
+    bfBlob=null;$('bfStatus').innerHTML=`<span class="badge err">✗ Invalid Base64: ${esc(e.message)}</span>`;$('bfPreview').innerHTML='<span class="hint">—</span>';
+  }
+}
+$('bfGen').onclick=bfGenerate;
+$('bfInput').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')bfGenerate();});
+$('bfDownload').onclick=()=>{if(!bfBlob)return toast('Generate a file first',true);download(bfBlob,bfNameFinal);toast('Downloading '+bfNameFinal);};
+$('bfMakePdf').onclick=()=>{
+  const content="BT /F1 24 Tf 72 720 Td (DevKit Sample PDF) Tj ET\nBT /F1 12 Tf 72 690 Td (Generated by the Base64 to File tool.) Tj ET";
+  const objs=["1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n","2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
+    "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n",
+    `4 0 obj\n<< /Length ${content.length} >>\nstream\n${content}\nendstream\nendobj\n`,
+    "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n"];
+  let pdf="%PDF-1.4\n";const offs=[];objs.forEach(o=>{offs.push(pdf.length);pdf+=o;});
+  const xref=pdf.length;
+  pdf+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('');
+  pdf+=`trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  let bin='';new TextEncoder().encode(pdf).forEach(b=>bin+=String.fromCharCode(b));
+  $('bfInput').value='data:application/pdf;base64,'+btoa(bin);$('bfType').value='auto';$('bfName').value='sample';bfGenerate();
+};
+$('bfMakeCsv').onclick=()=>{
+  const txt=$('bfBuilderText').value.trim()||"name,role,city\nAlice,Developer,Bengaluru\nBob,DevOps,NYC";
+  $('bfInput').value='data:text/csv;base64,'+b64Encode(txt);$('bfType').value='auto';$('bfName').value='data';bfGenerate();
+};
+$('bfMakePng').onclick=()=>{
+  const txt=$('bfBuilderText').value.trim()||'DevKit PNG!';
+  const cv=document.createElement('canvas');cv.width=Math.max(360,txt.length*17+48);cv.height=120;
+  const cx=cv.getContext('2d');
+  const g=cx.createLinearGradient(0,0,cv.width,cv.height);g.addColorStop(0,'#4f8cff');g.addColorStop(1,'#7c5cff');
+  cx.fillStyle=g;cx.fillRect(0,0,cv.width,cv.height);
+  cx.fillStyle='#fff';cx.font='bold 40px monospace';cx.textBaseline='middle';cx.fillText(txt,24,62);
+  $('bfInput').value=cv.toDataURL('image/png');$('bfType').value='auto';$('bfName').value='generated';bfGenerate();
+};
+
+/* ================= API CLIENT ================= */
+function addHeaderRow(k='',v=''){
+  const row=document.createElement('div');row.className='kv-row';
+  const kI=document.createElement('input');kI.placeholder='Header name';kI.value=k;kI.spellcheck=false;
+  const vI=document.createElement('input');vI.placeholder='Value';vI.value=v;vI.spellcheck=false;
+  const del=document.createElement('button');del.textContent='✕';del.title='Remove header';del.onclick=()=>row.remove();
+  row.append(kI,vI,del);$('apiHeaderRows').appendChild(row);
+}
+addHeaderRow('Content-Type','application/json');
+$('apiAddHeader').onclick=()=>addHeaderRow();
+document.querySelectorAll('[data-atab]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-atab]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  ['Headers','Body','Auth'].forEach(t=>$('apiTab'+t).style.display=t===b.dataset.atab?'':'none');
+});
+function collectRequest(){
+  const headers={};
+  $('apiHeaderRows').querySelectorAll('.kv-row').forEach(r=>{const [k,v]=r.querySelectorAll('input');if(k.value.trim())headers[k.value.trim()]=v.value;});
+  if($('apiBearer').value.trim())headers['Authorization']='Bearer '+$('apiBearer').value.trim();
+  else if($('apiUser').value)headers['Authorization']='Basic '+b64Encode($('apiUser').value+':'+$('apiPass').value);
+  return {method:$('apiMethod').value,url:$('apiUrl').value.trim(),headers,bodyType:$('apiBodyType').value,body:$('apiBody').value};
+}
+function buildFetchOpts(req){
+  const opts={method:req.method,headers:{...req.headers}};
+  if(!['GET','HEAD'].includes(req.method)&&req.bodyType!=='none'){
+    if(req.bodyType==='json'){opts.body=req.body;if(!opts.headers['Content-Type'])opts.headers['Content-Type']='application/json';}
+    else if(req.bodyType==='text')opts.body=req.body;
+    else{const p=new URLSearchParams();req.body.split('\n').forEach(l=>{const i=l.indexOf('=');if(i>0)p.append(l.slice(0,i).trim(),l.slice(i+1).trim());});opts.body=p;}
+  }
+  return opts;
+}
+let apiHist=[],apiSaved=store.get('api.saved',[]);
+$('apiSend').onclick=async()=>{
+  const req=collectRequest();
+  if(!req.url){toast('Enter a URL',true);return;}
+  store.set('api.url',req.url);store.set('api.method',req.method);
+  $('apiRespHead').innerHTML='<span class="badge info"><span class="spinner"></span> Sending…</span>';
+  $('apiRespBody').textContent='';
+  const t0=performance.now();
+  try{
+    const res=await fetch(req.url,buildFetchOpts(req));
+    const ms=Math.round(performance.now()-t0);
+    const text=await res.text();
+    const cls=res.ok?'ok':res.status>=400?'err':'warn';
+    $('apiRespHead').innerHTML=`<span class="mtag ${req.method}">${req.method}</span><span class="badge ${cls}">${res.status} ${esc(res.statusText)}</span><span class="badge info">⏱ ${ms} ms</span><span class="badge info">📦 ${(text.length/1024).toFixed(2)} KB</span>`;
+    let isJson=false;try{JSON.parse(text);isJson=true;}catch(e){}
+    $('apiRespBody').innerHTML=isJson?hlWithLineNumbers(JSON.stringify(JSON.parse(text),null,2)):esc(text)||'(empty body)';
+    let hh='';res.headers.forEach((v,k)=>hh+=k+': '+v+'\n');
+    $('apiRespHeaders').textContent=hh||'(none exposed by CORS)';
+    apiHist.unshift({method:req.method,url:req.url,status:res.status,ms});
+    if(apiHist.length>25)apiHist.pop();renderApiHist();
+  }catch(e){
+    const ms=Math.round(performance.now()-t0);
+    $('apiRespHead').innerHTML=`<span class="mtag ${req.method}">${req.method}</span><span class="badge err">NETWORK / CORS ERROR</span><span class="badge info">⏱ ${ms} ms</span>`;
+    $('apiRespBody').textContent=e.message+'\n\nTip: many servers block browser cross-origin requests (CORS). Try a CORS-friendly API like jsonplaceholder.typicode.com or httpbin.org.';
+    apiHist.unshift({method:req.method,url:req.url,status:'ERR',ms});renderApiHist();
+  }
+};
+$('apiUrl').addEventListener('keydown',e=>{if(e.key==='Enter')$('apiSend').click();});
+function renderApiHist(){
+  const h=$('apiHistory');h.innerHTML='';
+  apiHist.forEach(item=>{
+    const d=document.createElement('div');d.className='hist-item';
+    d.innerHTML=`<span class="mtag ${item.method}">${item.method}</span><span class="u">${esc(item.url)}</span><span class="badge ${item.status==='ERR'?'err':item.status<400?'ok':'warn'}">${item.status}</span>`;
+    d.onclick=()=>{$('apiUrl').value=item.url;$('apiMethod').value=item.method;};
+    h.appendChild(d);
+  });
+}
+function renderApiSaved(){
+  const c=$('apiSaved');c.innerHTML='';
+  $('apiSavedCount').textContent=apiSaved.length;
+  apiSaved.forEach((s,i)=>{
+    const d=document.createElement('div');d.className='hist-item';
+    d.innerHTML=`<span class="mtag ${s.method}">${s.method}</span><span class="u"><b style="color:var(--text)">${esc(s.name)}</b> · ${esc(s.url)}</span>`;
+    const del=document.createElement('button');del.className='small danger';del.textContent='✕';del.style.cssText='padding:1px 7px;flex:none';
+    del.onclick=e=>{e.stopPropagation();apiSaved.splice(i,1);store.set('api.saved',apiSaved);renderApiSaved();};
+    d.onclick=()=>{
+      $('apiMethod').value=s.method;$('apiUrl').value=s.url;$('apiBody').value=s.body||'';$('apiBodyType').value=s.bodyType||'none';$('apiBearer').value=s.bearer||'';
+      $('apiHeaderRows').innerHTML='';(s.headers||[]).forEach(([k,v])=>addHeaderRow(k,v));
+      toast('Loaded "'+s.name+'"');
+    };
+    d.appendChild(del);c.appendChild(d);
+  });
+  if(!apiSaved.length)c.innerHTML='<div class="hint">No saved requests yet — hit 💾 Save Request.</div>';
+}
+$('apiSave').onclick=()=>{
+  const req=collectRequest();if(!req.url)return toast('Enter a URL first',true);
+  const name=prompt('Name this request:',req.url.split('/').slice(-1)[0]||'request');
+  if(!name)return;
+  const headerPairs=[...$('apiHeaderRows').querySelectorAll('.kv-row')].map(r=>{const [k,v]=r.querySelectorAll('input');return [k.value,v.value];});
+  apiSaved.unshift({name,method:req.method,url:req.url,headers:headerPairs,body:req.body,bodyType:req.bodyType,bearer:$('apiBearer').value});
+  store.set('api.saved',apiSaved);renderApiSaved();toast('Saved "'+name+'"');
+};
+$('apiCurl').onclick=()=>{
+  const req=collectRequest();if(!req.url)return toast('Enter a URL first',true);
+  let c=`curl -X ${req.method} '${req.url}'`;
+  Object.entries(req.headers).forEach(([k,v])=>c+=` \\\n  -H '${k}: ${v}'`);
+  if(!['GET','HEAD'].includes(req.method)&&req.bodyType!=='none'&&req.body)c+=` \\\n  -d '${req.body.replace(/'/g,"'\\''")}'`;
+  copy(c,'cURL command');
+};
+$('apiClearHist').onclick=()=>{apiHist=[];renderApiHist();};
+$('apiUrl').value=store.get('api.url','https://jsonplaceholder.typicode.com/todos/1');
+$('apiMethod').value=store.get('api.method','GET');
+renderApiSaved();
+
+/* ================= CODE DIFF & MERGE ================= */
+function normLine(s){
+  let l=s;
+  if($('dfIgnoreWs').checked)l=$('dfOptimize').checked?l.trim().replace(/\s+/g,' '):l.trim();
+  if($('dfIgnoreCase').checked)l=l.toLowerCase();
+  return l;
+}
+function prepareLines(txt){
+  let lines=txt.replace(/\r\n?/g,'\n').split('\n');
+  if($('dfIgnoreBlank').checked)lines=lines.filter(l=>l.trim()!=='');
+  return lines;
+}
+/* word-level diff for a pair of changed lines */
+function tokenize(s){return s.match(/[A-Za-z0-9_$]+|\s+|[\s\S]/g)||[];}
+function wordDiffHtml(a,b){
+  const ta=tokenize(a),tb=tokenize(b),n=ta.length,m=tb.length;
+  if(n*m>250000)return null;
+  const dp=Array.from({length:n+1},()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=ta[i]===tb[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  const la=[],lb=[];let i=0,j=0;
+  const push=(arr,tok,type)=>{const last=arr[arr.length-1];if(last&&last.type===type)last.s+=tok;else arr.push({s:tok,type});};
+  while(i<n&&j<m){
+    if(ta[i]===tb[j]){push(la,ta[i],'ctx');push(lb,tb[j],'ctx');i++;j++;}
+    else if(dp[i+1][j]>=dp[i][j+1]){push(la,ta[i],'del');i++;}
+    else{push(lb,tb[j],'ins');j++;}
+  }
+  while(i<n){push(la,ta[i],'del');i++;}
+  while(j<m){push(lb,tb[j],'ins');j++;}
+  const render=(arr,tag,cls)=>arr.map(t=>t.type==='ctx'?esc(t.s):`<${tag} class="${cls}">${esc(t.s)}</${tag}>`).join('');
+  return {l:render(la,'del','wd'),r:render(lb,'ins','wi')};
+}
+function lcsDiff(a,b){
+  const na=a.map(normLine),nb=b.map(normLine),n=na.length,m=nb.length;
+  if(n*m>4_000_000)return {ops:[...a.map((l,i)=>({type:'ctx',l,r:b[i]??'',li:i+1,ri:i+1})),...b.slice(a.length).map((l,i)=>({type:'ins',r:l,ri:a.length+i+1}))],limited:true};
+  const dp=Array.from({length:n+1},()=>new Uint32Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=na[i]===nb[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  const ops=[];let i=0,j=0;
+  while(i<n&&j<m){
+    if(na[i]===nb[j]){ops.push({type:'ctx',l:a[i],r:b[j],li:i+1,ri:j+1});i++;j++;}
+    else if(dp[i+1][j]>=dp[i][j+1]){ops.push({type:'del',l:a[i],li:i+1});i++;}
+    else{ops.push({type:'ins',r:b[j],ri:j+1});j++;}
+  }
+  while(i<n){ops.push({type:'del',l:a[i],li:i+1});i++;}
+  while(j<m){ops.push({type:'ins',r:b[j],ri:j+1});j++;}
+  // word-level highlighting for paired change blocks
+  let k=0;
+  while(k<ops.length){
+    if(ops[k].type==='ctx'){k++;continue;}
+    let end=k;while(end<ops.length&&ops[end].type!=='ctx')end++;
+    const dels=ops.slice(k,end).filter(o=>o.type==='del'),ins=ops.slice(k,end).filter(o=>o.type==='ins');
+    const pairs=Math.min(dels.length,ins.length);
+    for(let p=0;p<pairs;p++){
+      if(dels[p].l.length<400&&ins[p].r.length<400){
+        const wd=wordDiffHtml(dels[p].l,ins[p].r);
+        if(wd){dels[p].lHtml=wd.l;ins[p].rHtml=wd.r;}
+      }
+    }
+    k=end;
+  }
+  return {ops,limited:false};
+}
+let dfOps=[],dfHunks=[],dfViewMode='split';
+function buildHunks(){
+  dfHunks=[];
+  const CTX=2;let cur=null,lastChange=-99,id=0;
+  dfOps.forEach((o,idx)=>{
+    if(o.type!=='ctx'){
+      if(!cur||idx-lastChange>CTX*2){cur={id:++id,side:'right',start:idx,end:idx};dfHunks.push(cur);}
+      cur.end=idx;lastChange=idx;
+    }
+  });
+  // map op index -> hunk
+  dfOps.forEach((o,idx)=>{o.hunk=null;});
+  dfHunks.forEach(h=>{for(let i=h.start;i<=h.end;i++)dfOps[i].hunk=h;});
+}
+function dfRun(){
+  const a=prepareLines($('dfLeft').value),b=prepareLines($('dfRight').value);
+  if(!a.length&&!b.length){$('dfResult').innerHTML='<div class="dline empty" style="grid-column:1/-1">Both sides are empty.</div>';$('dfStats').innerHTML='';$('dfMerged').value='';dfOps=[];dfHunks=[];return;}
+  const {ops,limited}=lcsDiff(a,b);
+  dfOps=ops;buildHunks();
+  const dels=ops.filter(o=>o.type==='del').length,ins=ops.filter(o=>o.type==='ins').length;
+  $('dfStats').innerHTML=dels||ins
+    ?`<span class="badge err">−${dels}</span><span class="badge ok">+${ins}</span><span class="badge info">${ops.filter(o=>o.type==='ctx').length} unchanged</span><span class="badge info">${dfHunks.length} hunks</span>${limited?'<span class="badge warn">limited (input too large)</span>':''}`
+    :'<span class="badge ok">✓ Identical under current normalization</span>';
+  renderDiff();dfBuildMerged();
+  store.set('df.l',$('dfLeft').value);store.set('df.r',$('dfRight').value);
+}
+function renderDiff(){
+  const res=$('dfResult');res.innerHTML='';
+  res.classList.toggle('unified',dfViewMode==='unified');
+  if(!dfOps.length){res.innerHTML='<div class="dline empty" style="grid-column:1/-1">Run a comparison…</div>';return;}
+  const CTX=2,shown=new Set();
+  dfHunks.forEach(h=>{for(let k=Math.max(0,h.start-CTX);k<=Math.min(dfOps.length-1,h.end+CTX);k++)shown.add(k);});
+  if(!shown.size){
+    res.innerHTML='<div class="dline" style="grid-column:1/-1;color:var(--green)">✓ No differences found after normalization.</div>';return;
+  }
+  const mkLine=(o,side)=>{
+    const d=document.createElement('div');
+    if(!o){d.className='dline empty';return d;}
+    if(side==='L')d.className='dline '+(o.type==='del'?'del':o.type==='ctx'?'':'empty');
+    else d.className='dline '+(o.type==='ins'?'ins':o.type==='ctx'?'':'empty');
+    const num=side==='L'?(o.li??''):(o.ri??'');
+    const html=side==='L'?(o.lHtml??esc(o.l??'')):(o.rHtml??esc(o.r??''));
+    d.innerHTML=`<span class="ln">${num}</span><span class="tx">${html||'&nbsp;'}</span>`;
+    return d;
+  };
+  if(dfViewMode==='unified'){
+    const col=document.createElement('div');col.className='diff-side';
+    const idxs=[...shown].sort((x,y)=>x-y);let prev=-1;
+    idxs.forEach(ix=>{
+      if(prev!==-1&&ix>prev+1)col.appendChild(mkHunkHead(dfOps[ix].hunk||dfHunks.find(h=>h.start<=ix&&h.end>=ix)));
+      prev=ix;const o=dfOps[ix];
+      const d=document.createElement('div');
+      d.className='dline '+(o.type==='del'?'del':o.type==='ins'?'ins':'');
+      const sign=o.type==='del'?'−':o.type==='ins'?'+':' ';
+      d.innerHTML=`<span class="ln">${o.li??''}</span><span class="ln" style="width:26px">${o.ri??''}</span><span class="tx">${sign} ${(o.type==='del'?o.lHtml??esc(o.l):o.type==='ins'?o.rHtml??esc(o.r):esc(o.r))||'&nbsp;'}</span>`;
+      col.appendChild(d);
+    });
+    res.appendChild(col);
+  }else{
+    const left=document.createElement('div');left.className='diff-side';
+    const right=document.createElement('div');right.className='diff-side';
+    const idxs=[...shown].sort((x,y)=>x-y);let prev=-1;
+    idxs.forEach(ix=>{
+      if(prev!==-1&&ix>prev+1){const hh=mkHunkHead(dfOps[ix-1]?.hunk||dfHunks.find(h=>h.start<=ix&&h.end>=ix)||dfHunks[0]);res.appendChild(hh);}
+      prev=ix;const o=dfOps[ix];
+      left.appendChild(mkLine(o,'L'));right.appendChild(mkLine(o,'R'));
+    });
+    res.appendChild(left);res.appendChild(right);
+  }
+}
+function mkHunkHead(hunk){
+  const h=document.createElement('div');h.className='diff-hunk-head';
+  if(!hunk){h.textContent='⋯';return h;}
+  h.innerHTML=`⋯ hunk ${hunk.id} · ${hunk.end-hunk.start+1} changed line(s) <span class="sp"></span>`;
+  const bl=document.createElement('button');bl.textContent='← Keep Left';
+  const br=document.createElement('button');br.textContent='Use Right →';
+  const sync=()=>{bl.classList.toggle('on',hunk.side==='left');br.classList.toggle('on',hunk.side==='right');};
+  bl.onclick=()=>{hunk.side='left';sync();dfBuildMerged();};
+  br.onclick=()=>{hunk.side='right';sync();dfBuildMerged();};
+  sync();h.append(bl,br);return h;
+}
+function dfBuildMerged(){
+  const out=[];
+  dfOps.forEach(o=>{
+    if(o.type==='ctx'){out.push($('dfIgnoreWs').checked&&o.l!==undefined?o.l:o.r);return;}
+    const side=o.hunk?o.hunk.side:'right';
+    if(o.type==='del'&&side==='left')out.push(o.l);
+    if(o.type==='ins'&&side==='right')out.push(o.r);
+  });
+  $('dfMerged').value=out.join('\n');
+}
+$('dfRun').onclick=dfRun;
+$('dfMergeAllRight').onclick=()=>{dfHunks.forEach(h=>h.side='right');renderDiff();dfBuildMerged();toast('Accepted all RIGHT changes');};
+$('dfMergeAllLeft').onclick=()=>{dfHunks.forEach(h=>h.side='left');renderDiff();dfBuildMerged();toast('Kept all LEFT lines');};
+$('dfCopyMerged').onclick=()=>copy($('dfMerged').value,'Merged code');
+$('dfDownloadMerged').onclick=()=>download(new Blob([$('dfMerged').value],{type:'text/plain'}),'merged.txt');
+$('dfViewSplit').onclick=()=>{dfViewMode='split';$('dfViewSplit').classList.add('on');$('dfViewUnified').classList.remove('on');renderDiff();};
+$('dfViewUnified').onclick=()=>{dfViewMode='unified';$('dfViewUnified').classList.add('on');$('dfViewSplit').classList.remove('on');renderDiff();};
+$('dfSwapSides').onclick=()=>{const t=$('dfLeft').value;$('dfLeft').value=$('dfRight').value;$('dfRight').value=t;dfRun();toast('Swapped sides');};
+$('dfSample').onclick=()=>{
+  $('dfLeft').value=`function calcTotal(items) {
+  let sum = 0;
+
+  for (const it of items) {
+    sum += it.price * it.qty;
+  }
+  return sum;
+}
+const total = calcTotal(cart);
+console.log(total);`;
+  $('dfRight').value=`function calcTotal(items, taxRate = 0) {
+    let sum=0;
+    for (const it of items) {
+        sum += it.price*it.qty;
+    }
+    return sum*(1+taxRate);
+}
+const total = calcTotal(cart, 0.18);
+console.log("Total:", total.toFixed(2));`;
+  dfRun();
+};
+['dfIgnoreWs','dfIgnoreBlank','dfIgnoreCase','dfOptimize'].forEach(id=>$(id).addEventListener('change',()=>{if(dfOps.length)dfRun();}));
+function bindFileDiff(btnId,inputId,taId){
+  $(btnId).onclick=()=>$(inputId).click();
+  $(inputId).onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$(taId).value=r.result;dfRun();toast('Loaded '+f.name);};r.readAsText(f);};
+}
+bindFileDiff('dfLoadL','dfFileL','dfLeft');
+bindFileDiff('dfLoadR','dfFileR','dfRight');
+(function initDiff(){
+  const l=store.get('df.l',''),r=store.get('df.r','');
+  if(l||r){$('dfLeft').value=l;$('dfRight').value=r;}
+  $('dfSample').click();
+})();
+
+/* tab-indent support everywhere */
+document.querySelectorAll('textarea').forEach(t=>t.addEventListener('keydown',e=>{
+  if(e.key==='Tab'){e.preventDefault();t.setRangeText('  ',t.selectionStart,t.selectionEnd,'end');}
+}));
+
+toast('DevKit ready — press Ctrl+K for the command palette');
+</script>
+</body>
+</html>
