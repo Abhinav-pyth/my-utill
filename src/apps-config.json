@@ -10,6 +10,15 @@
       "color": "from-blue-500 to-blue-600"
     },
     {
+      "id": "foot-app",
+      "name": "Foot App",
+      "description": "A simple and clean todo list application",
+      "path": "/apps/foot-map.html",
+      "icon": "📝",
+      "category": "Productivity",
+      "color": "from-blue-500 to-blue-600"
+    },
+    {
       "id": "calculator",
       "name": "Calculator",
       "description": "A basic calculator with modern UI",
