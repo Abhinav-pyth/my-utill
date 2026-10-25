@@ -1,0 +1,11 @@
+# robots.txt for iloveapps.vercel.app
+# Allow all crawlers full access
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://iloveapps.vercel.app/sitemap.xml
+
+# Disallow crawling of non-user-facing paths
+Disallow: /cdn-cgi/

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Maker — कहानी से वीडियो</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .container {
+      background: white; border-radius: 20px; padding: 40px;
+      width: 100%; max-width: 700px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 28px; color: #333; margin-bottom: 8px; text-align: center; }
+    .subtitle { text-align: center; color: #64748b; margin-bottom: 32px; }
+    .steps { display: grid; gap: 20px; }
+    .step {
+      display: flex; gap: 16px; padding: 20px; border: 2px solid #e2e8f0;
+      border-radius: 16px; transition: all 0.2s;
+    }
+    .step:hover { border-color: #059669; background: #f0fdf4; }
+    .step-number {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #059669, #047857);
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+    .step-content h3 { font-size: 18px; color: #333; margin-bottom: 4px; }
+    .step-content p { font-size: 14px; color: #64748b; }
+    .features {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 32px;
+    }
+    .feature {
+      text-align: center; padding: 16px; background: #f0fdf4;
+      border-radius: 12px;
+    }
+    .feature .icon { font-size: 28px; margin-bottom: 8px; }
+    .feature p { font-size: 12px; color: #059669; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📖 Story Maker</h1>
+    <p class="subtitle">Convert your stories into YouTube-ready videos</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Write or Paste Story</h3>
+          <p>Enter your story text in any language</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Choose Voice & Style</h3>
+          <p>Select from multiple voice types and visual styles</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Generate Video</h3>
+          <p>AI creates scenes, voiceover, and subtitles automatically</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Export & Upload</h3>
+          <p>Download HD video ready for YouTube</p>
+        </div>
+      </div>
+    </div>
+    <div class="features">
+      <div class="feature"><div class="icon">🎙️</div><p>AI Voice</p></div>
+      <div class="feature"><div class="icon">🎨</div><p>Visuals</p></div>
+      <div class="feature"><div class="icon">📝</div><p>Subtitles</p></div>
+      <div class="feature"><div class="icon">🎬</div><p>HD Export</p></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -3,39 +3,111 @@
     {
       "id": "todo-app",
       "name": "Todo App",
-      "description": "A simple and clean todo list application",
+      "description": "A simple and clean todo list application to manage your daily tasks",
       "path": "/apps/todo.html",
       "icon": "📝",
       "category": "Productivity",
       "color": "from-blue-500 to-blue-600"
     },
     {
+      "id": "foot-app",
+      "name": "Foot App",
+      "description": "A simple and clean todo list application",
+      "path": "/apps/foot-app.html",
+      "icon": "📝",
+      "category": "Productivity",
+      "color": "from-teal-500 to-teal-600"
+    },
+    {
       "id": "calculator",
       "name": "Calculator",
-      "description": "A basic calculator with modern UI",
+      "description": "A basic calculator with modern UI and keyboard support",
       "path": "/apps/calculator.html",
       "icon": "🧮",
       "category": "Utility",
       "color": "from-purple-500 to-purple-600"
     },
     {
-      "id": "weather-widget",
-      "name": "Weather Widget",
-      "description": "Display weather information with a beautiful widget",
-      "path": "/apps/weather.html",
-      "icon": "🌤️",
+      "id": "photo-sheet-maker",
+      "name": "Passport Photo Sheet Maker",
+      "description": "Create passport photo sheets — 6/12/18 photos with Name & DOB on A4 at 300 DPI",
+      "path": "/apps/photo-sheet-maker.html",
+      "icon": "📸",
       "category": "Widget",
       "color": "from-cyan-500 to-cyan-600"
     },
     {
       "id": "timer",
       "name": "Pomodoro Timer",
-      "description": "A focus timer using the Pomodoro technique",
+      "description": "A focus timer using the Pomodoro technique to boost productivity",
       "path": "/apps/timer.html",
       "icon": "⏱️",
       "category": "Productivity",
       "color": "from-red-500 to-red-600"
+    },
+    {
+      "id": "pdfutil",
+      "name": "PDF Utils",
+      "description": "PDF utility tool for merging, splitting and converting PDF files",
+      "path": "/apps/pdfutil.html",
+      "icon": "📄",
+      "category": "Productivity",
+      "color": "from-rose-500 to-rose-600"
+    },
+    {
+      "id": "pixelBoost",
+      "name": "pixelBoost",
+      "description": "AI-powered image enhancer utility to upscale and improve image quality",
+      "path": "/apps/pixelBoost.html",
+      "icon": "🖼️",
+      "category": "Productivity",
+      "color": "from-amber-500 to-orange-500"
+    },
+    {
+      "id": "story-maker",
+      "name": "Story Maker",
+      "description": "Convert Hindi stories into YouTube-ready videos with voice, visuals and subtitles",
+      "path": "/apps/story-maker.html",
+      "icon": "📖",
+      "category": "Productivity",
+      "color": "from-emerald-500 to-emerald-600"
+    },
+    {
+      "id": "AIStudioPro",
+      "name": "AI Studio Pro",
+      "description": "Complete AI content studio — Script, Images, Animation, Voice, Music from one prompt",
+      "path": "/apps/AIStudioPro.html",
+      "icon": "🤖",
+      "category": "AI",
+      "color": "from-violet-500 to-violet-600"
+    },
+    {
+      "id": "WebOS",
+      "name": "WebOS",
+      "description": "Full Windows-like desktop experience in your browser with Paint, Excel, Word and more",
+      "path": "/apps/WebOS.html",
+      "icon": "💻",
+      "category": "AI",
+      "color": "from-sky-500 to-sky-600"
+    },
+    {
+      "id": "AgentVerse",
+      "name": "AgentVerse",
+      "description": "AI Agents, Agentic AI & MCP Interactive Developer Guide",
+      "path": "/apps/AgentVerse.html",
+      "icon": "🌐",
+      "category": "AI",
+      "color": "from-fuchsia-500 to-fuchsia-600"
+    },
+    {
+      "id": "DevKit",
+      "name": "DevKit",
+      "description": "Developer Utility Suite — essential tools for modern web developers",
+      "path": "/apps/DevKit.html",
+      "icon": "🛠️",
+      "category": "AI",
+      "color": "from-lime-500 to-lime-600"
     }
   ],
-  "categories": ["All", "Productivity", "Utility", "Widget"]
+  "categories": ["All", "Productivity", "Utility", "Widget", "AI"]
 }

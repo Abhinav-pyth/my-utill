@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passport Photo Sheet Maker — 6 / 12 / 18 photos with Name & DOB</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+      min-height: 100vh; padding: 20px;
+    }
+    .container {
+      max-width: 900px; margin: 0 auto;
+      background: white; border-radius: 20px; padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 24px; color: #333; margin-bottom: 8px; }
+    .subtitle { color: #64748b; margin-bottom: 24px; font-size: 14px; }
+    .controls {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .control-group label { display: block; font-size: 12px; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .control-group input, .control-group select {
+      width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0;
+      border-radius: 8px; font-size: 14px; outline: none;
+    }
+    .control-group input:focus, .control-group select:focus { border-color: #0891b2; }
+    .upload-area {
+      border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+      margin-bottom: 24px;
+    }
+    .upload-area:hover { border-color: #0891b2; background: #f0f9ff; }
+    .upload-area .icon { font-size: 48px; margin-bottom: 12px; }
+    .upload-area p { color: #64748b; }
+    .preview {
+      border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;
+      background: #f8fafc; min-height: 200px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview p { color: #94a3b8; }
+    .btn {
+      padding: 12px 24px; background: linear-gradient(135deg, #0891b2, #0e7490);
+      color: white; border: none; border-radius: 10px; font-size: 14px;
+      font-weight: 600; cursor: pointer; margin-top: 16px;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(8,145,178,0.3); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📸 Passport Photo Sheet Maker</h1>
+    <p class="subtitle">Create passport-size photo sheets — 6, 12, or 18 photos on A4 at 300 DPI</p>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label>Full Name</label>
+        <input type="text" placeholder="Enter name">
+      </div>
+      <div class="control-group">
+        <label>Date of Birth</label>
+        <input type="date">
+      </div>
+      <div class="control-group">
+        <label>Photo Size</label>
+        <select>
+          <option>35mm × 45mm (Standard)</option>
+          <option>50mm × 70mm (US Passport)</option>
+          <option>33mm × 48mm (Schengen)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Copies per Sheet</label>
+        <select>
+          <option>6 photos</option>
+          <option>12 photos</option>
+          <option>18 photos</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">📷</div>
+      <p>Click to upload your passport photo</p>
+      <p style="font-size:12px; margin-top:8px;">JPG or PNG, max 10MB</p>
+      <input type="file" id="fileInput" accept="image/*" hidden>
+    </div>
+
+    <div class="preview">
+      <p>Preview will appear here after uploading</p>
+    </div>
+
+    <button class="btn">📥 Download A4 Sheet (300 DPI)</button>
+  </div>
+</body>
+</html>
