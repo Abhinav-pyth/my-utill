@@ -107,7 +107,15 @@
       "icon": "⏱️",
       "category": "AI",
       "color": "from-cyan-500 to-cyan-600"
-    }
+    },{
+      "id": "listingPilot",
+      "name": "Listing Pilot",
+      "description": "ListingPilot Pro — Single Page Pricing App",
+      "path": "/apps/listingPilot.html",
+      "icon": "⏱️",
+      "category": "Productivity",
+      "color": "from-red-500 to-red-600"
+    },
     
   ],
   "categories": ["All", "Productivity", "Utility", "Widget", "AI"]
