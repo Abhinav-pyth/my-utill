@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListingPilot Pro — Single Page Pricing App</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#fff; --ink:#151a26; --muted:#667085;
+    --line:#e7eaf3; --accent:#4f46e5; --accent-2:#312e81;
+    --good:#067647; --good-bg:#e8f6ef; --bad:#d92d20; --bad-bg:#feeceb;
+    --warn:#b54708; --warn-bg:#fff4e5;
+    --shadow:0 10px 30px rgba(16,24,40,.08); --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,system-ui,-apple-system,Roboto,sans-serif;font-size:14px}
+  .hidden{display:none !important}
+  .muted{color:var(--muted)}
+  .appbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px}
+  .brand h1{margin:0;font-size:17px;letter-spacing:-.3px}
+  .brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);padding:4px 8px;border-radius:999px;font-size:11px;color:var(--muted);margin-left:8px}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:11px;padding:10px 13px;font-weight:700;cursor:pointer;transition:.18s;font-size:13px}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#4338ca;color:#fff}
+  .btn.dark{background:#111827;border-color:#111827;color:#fff}
+  .btn.small{padding:8px 10px;font-size:12px;border-radius:9px}
+  .tabs{max-width:1320px;margin:18px auto 0;padding:0 22px;display:flex;gap:8px;overflow:auto}
+  .tabbtn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:700;color:var(--muted);white-space:nowrap}
+  .tabbtn.active{background:#111827;color:#fff;border-color:#111827}
+  main{max-width:1320px;margin:18px auto 100px;padding:0 22px}
+  .tab{display:none}
+  .tab.active{display:block}
+  .layout{display:grid;grid-template-columns:1.08fr .92fr;gap:20px;align-items:start}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:9px}
+  .card .hint{margin:0 0 18px;color:var(--muted);font-size:12.5px;line-height:1.55}
+  .step{width:24px;height:24px;border-radius:8px;background:#eef0ff;color:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:900}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
+  label{display:block;font-size:12px;font-weight:700;color:#3d465e;margin-bottom:6px}
+  .field small{display:block;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.45}
+  .inputwrap{position:relative}
+  .inputwrap .suffix{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none}
+  input,select{width:100%;background:#fbfcff;border:1px solid var(--line);border-radius:11px;padding:10px 34px 10px 11px;color:var(--ink);font:inherit;outline:none;transition:.15s}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+  select{padding-right:12px;cursor:pointer}
+  input[type="checkbox"]{width:16px;height:16px;padding:0;accent-color:var(--accent)}
+  .toggle{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#3d465e;margin-top:26px;cursor:pointer}
+  .hero{background:linear-gradient(135deg,#171a29,#312e81 45%,#4f46e5);color:#fff;border:none;padding:24px}
+  .hero .label{font-size:11px;letter-spacing:.7px;text-transform:uppercase;opacity:.82}
+  .bigprice{font-size:44px;font-weight:900;letter-spacing:-1.8px;line-height:1.06;margin:7px 0 2px}
+  .price-sub{opacity:.84;font-size:12px}
+  .hero-row{display:flex;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.2);margin-top:20px;padding-top:16px}
+  .hero-row span{display:block;font-size:11px;opacity:.82}
+  .hero-row b{display:block;font-size:19px;margin-top:4px}
+  .banner{padding:12px 13px;border-radius:13px;font-size:12.5px;line-height:1.55;margin-bottom:14px;font-weight:600}
+  .banner.ok{background:var(--good-bg);color:var(--good)}
+  .banner.warn{background:var(--warn-bg);color:var(--warn)}
+  .banner.err{background:var(--bad-bg);color:var(--bad)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;box-shadow:var(--shadow)}
+  .kpi span{display:block;color:var(--muted);font-size:11px;line-height:1.4}
+  .kpi b{display:block;font-size:20px;margin-top:6px;letter-spacing:-.5px}
+  .kpi.good b{color:var(--good)} .kpi.bad b{color:var(--bad)}
+  .bar{display:flex;height:13px;border-radius:7px;overflow:hidden;background:var(--line);margin:8px 0 16px}
+  .bar i{display:block;height:100%}
+  .breakdown{display:grid;grid-template-columns:1fr auto;gap:9px 10px;font-size:12.5px}
+  .breakdown .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px}
+  .breakdown .val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .breakdown .total{border-top:1px solid var(--line);padding-top:9px;margin-top:3px;font-weight:900}
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px}
+  th,td{padding:11px 10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  th{background:#f9fafc;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.35px}
+  tbody tr:hover{background:#fafbff}
+  tbody tr.active{background:#eef0ff;color:var(--accent);font-weight:700}
+  .pill{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800}
+  .pill.good{background:var(--good-bg);color:var(--good)}
+  .pill.bad{background:var(--bad-bg);color:var(--bad)}
+  .saved-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .saved-card{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff;box-shadow:var(--shadow)}
+  .saved-card h3{margin:0 0 5px;font-size:14px}
+  .saved-card .meta{color:var(--muted);font-size:12px;margin-bottom:12px;line-height:1.5}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .upload-box{border:2px dashed #d7dcf0;border-radius:18px;padding:28px;text-align:center;background:#fbfcff}
+  .upload-box strong{display:block;font-size:16px;margin-bottom:6px}
+  .notice{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6}
+  .bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+  .bottomnav .inner{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .bottomnav button{border:none;background:none;cursor:pointer;font-size:11px;font-weight:800;color:var(--muted);padding:8px 4px;border-radius:12px}
+  .bottomnav button.active{background:#eef0ff;color:var(--accent)}
+  .footer-note{padding:10px 0 30px;color:var(--muted);font-size:11.5px;line-height:1.7;text-align:center}
+  @media(max-width:1100px){.layout{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.saved-grid{grid-template-columns:1fr}}
+  @media(max-width:900px){
+    .tabs{display:none}
+    .bottomnav{display:block}
+    main{margin-bottom:110px}
+    .grid-2,.grid-3{grid-template-columns:1fr}
+    .appbar{padding:12px 14px}
+    .brand p{display:none}
+    .bigprice{font-size:36px}
+  }
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand">
+    <div class="logo">₹</div>
+    <div>
+      <h1>ListingPilot Pro</h1>
+      <p>No-login single page pricing app</p>
+    </div>
+    <span class="badge">India · INR ₹</span>
+  </div>
+  <div>
+    <span class="badge">Local workspace</span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tabbtn active" data-tab="calc" type="button">Calculator</button>
+  <button class="tabbtn" data-tab="bulk" type="button">Bulk Pricing</button>
+  <button class="tabbtn" data-tab="dashboard" type="button">Profit Dashboard</button>
+  <button class="tabbtn" data-tab="saved" type="button">Saved Products</button>
+  <button class="tabbtn" data-tab="data" type="button">Local Data</button>
+</nav>
+
+<main>
+  <!-- CALCULATOR -->
+  <section id="tab-calc" class="tab active">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <h2><span class="step">1</span> Platform &amp; pricing goal</h2>
+          <p class="hint">Select an India marketplace preset or use Custom. Presets are indicative — edit them as per your live category fee schedule.</p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="platform">Marketplace</label>
+              <select id="platform">
+                <option value="amazon">Amazon India</option>
+                <option value="flipkart">Flipkart</option>
+                <option value="meesho">Meesho</option>
+                <option value="myntra">Myntra</option>
+                <option value="jiomart">JioMart</option>
+                <option value="nykaa">Nykaa</option>
+                <option value="firstcry">FirstCry</option>
+                <option value="shopify">Shopify / Own Website</option>
+                <option value="ebay">eBay</option>
+                <option value="custom">Custom / Any Platform</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="productName">Product name</label>
+              <input id="productName" value="My Product" style="padding-right:11px">
+            </div>
+            <div class="field">
+              <label for="productGst">Product GST / sales tax</label>
+              <div class="inputwrap"><input type="number" id="productGst" value="18" min="0" step="0.1"><span class="suffix">%</span></div>
+            </div>
+            <div class="field">
+              <label for="discount">Planned discount off MRP</label>
+              <div class="inputwrap"><input type="number" id="discount" value="20" min="0" max="95"><span class="suffix">%</span></div>
+            </div>
+            <div class="field">
+              <label for="marginMode">Profit target type</label>
+              <select id="marginMode">
+                <option value="margin">Margin on selling price</option>
+                <option value="markup">Markup on cost</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="margin">Target profit</label>
+              <div class="inputwrap"><input type="number" id="margin" value="20" min="0" max="95" step="0.5"><span class="suffix">%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">2</span> Product &amp; fulfilment cost</h2>
+          <p class="hint">All values are per unit in ₹.</p>
+          <div class="grid-2">
+            <div class="field"><label for="unitCost">Product / procurement cost</label><div class="inputwrap"><input type="number" id="unitCost" value="400" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="packaging">Packaging &amp; labelling</label><div class="inputwrap"><input type="number" id="packaging" value="25" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="inbound">Inbound freight to warehouse</label><div class="inputwrap"><input type="number" id="inbound" value="15" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="forwardShip">Forward shipping / delivery fee</label><div class="inputwrap"><input type="number" id="forwardShip" value="65" min="0"><span class="suffix">₹</span></div><small>Paid on every dispatch, including RTO.</small></div>
+            <div class="field"><label for="fixedFee">Fixed closing / handling fee</label><div class="inputwrap"><input type="number" id="fixedFee" value="20" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="overhead">Other cost per unit</label><div class="inputwrap"><input type="number" id="overhead" value="10" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="subscription">Platform subscription / month</label><div class="inputwrap"><input type="number" id="subscription" value="0" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="monthlyUnits">Expected orders / month</label><div class="inputwrap"><input type="number" id="monthlyUnits" value="500" min="0"><span class="suffix">units</span></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">3</span> Marketplace fees &amp; marketing</h2>
+          <p class="hint">Percentages are applied on pre-GST selling price.</p>
+          <div class="grid-3">
+            <div class="field"><label for="referral">Commission / referral</label><div class="inputwrap"><input type="number" id="referral" value="12" min="0" step="0.1"><span class="suffix">%</span></div></div>
+            <div class="field"><label for="gateway">Payment gateway</label><div class="inputwrap"><input type="number" id="gateway" value="2" min="0" step="0.1"><span class="suffix">%</span></div></div>
+            <div class="field"><label for="ads">Advertising budget</label><div class="inputwrap"><input type="number" id="ads" value="8" min="0" step="0.1"><span class="suffix">%</span></div></div>
+          </div>
+          <div class="grid-2" style="margin-top:13px">
+            <div class="field">
+              <label for="feeGst">GST on fees / services</label>
+              <div class="inputwrap"><input type="number" id="feeGst" value="18" min="0" step="0.1"><span class="suffix">%</span></div>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <label class="toggle" style="margin-top:0"><input type="checkbox" id="itc" checked> I can claim input tax credit on fee GST</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">4</span> Returns, RTO &amp; recovery</h2>
+          <p class="hint">These expected losses are built into the listing price.</p>
+          <div class="grid-2">
+            <div class="field"><label for="returnRate">Delivered-return rate</label><div class="inputwrap"><input type="number" id="returnRate" value="8" min="0" max="100"><span class="suffix">%</span></div></div>
+            <div class="field"><label for="rtoRate">RTO / undelivered rate</label><div class="inputwrap"><input type="number" id="rtoRate" value="5" min="0" max="100"><span class="suffix">%</span></div></div>
+            <div class="field"><label for="reverseCost">Reverse logistics + QC per return</label><div class="inputwrap"><input type="number" id="reverseCost" value="60" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="rtoCost">Total RTO cost per occurrence</label><div class="inputwrap"><input type="number" id="rtoCost" value="90" min="0"><span class="suffix">₹</span></div></div>
+            <div class="field"><label for="recovery">Resale recovery on returned stock</label><div class="inputwrap"><input type="number" id="recovery" value="80" min="0" max="100"><span class="suffix">%</span></div><small>100% means returned item can be resold as new.</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="banner ok" id="calc_status">Calculating…</div>
+
+        <div class="card hero">
+          <div class="label" id="calc_product_label">Recommended listing price</div>
+          <div class="bigprice" id="calc_listing">—</div>
+          <div class="price-sub">Customer-facing listing price · inclusive of product GST · INR</div>
+          <div class="hero-row">
+            <div><span>Pre-GST selling price</span><b id="calc_exgst">—</b></div>
+            <div><span>Printable MRP</span><b id="calc_mrp">—</b></div>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi good"><span>Profit / kept sale</span><b id="calc_profit">—</b></div>
+          <div class="kpi"><span>Effective margin</span><b id="calc_margin">—</b></div>
+          <div class="kpi"><span>Break-even listing</span><b id="calc_breakeven">—</b></div>
+          <div class="kpi"><span>Profit / dispatch</span><b id="calc_profit_dispatch">—</b></div>
+        </div>
+
+        <div class="card">
+          <h2>Actions</h2>
+          <p class="hint">Save this product locally, export a single-product sheet, or download a PDF summary.</p>
+          <div class="actions">
+            <button class="btn primary" id="saveProductBtn" type="button">💾 Save product</button>
+            <button class="btn" id="singlePdfBtn" type="button">PDF</button>
+            <button class="btn" id="singleCsvBtn" type="button">CSV</button>
+            <button class="btn dark" id="goDashboardBtn" type="button">Open dashboard →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BULK -->
+  <section id="tab-bulk" class="tab">
+    <div class="card">
+      <h2><span class="step">B</span> Bulk SKU pricing</h2>
+      <p class="hint">Upload CSV or Excel. Missing fee columns use the current Calculator values as defaults. You can also include platform-specific columns.</p>
+
+      <div class="upload-box">
+        <strong>Upload product file</strong>
+        <div class="muted" style="margin-bottom:14px">Supported: .csv, .xlsx, .xls</div>
+        <input type="file" id="bulkFile" accept=".csv,.xlsx,.xls" style="max-width:380px;margin:0 auto;padding-right:11px">
+        <div class="notice">
+          Excel parsing and PDF export use CDN libraries. If offline, CSV export still works.
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:16px">
+        <button class="btn" id="bulkTemplateBtn" type="button">Download template</button>
+        <button class="btn" id="bulkCsvBtn" type="button">Export CSV</button>
+        <button class="btn" id="bulkXlsxBtn" type="button">Export Excel</button>
+        <button class="btn" id="bulkPdfBtn" type="button">Export PDF</button>
+        <button class="btn primary" id="bulkSaveBtn" type="button">Save all to Saved Products</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><span>Total SKUs</span><b id="bulkTotal">0</b></div>
+      <div class="kpi good"><span>Profitable</span><b id="bulkProfitable">0</b></div>
+      <div class="kpi bad"><span>Not viable / loss</span><b id="bulkNotViable">0</b></div>
+      <div class="kpi"><span>Average effective margin</span><b id="bulkAvgMargin">—</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Bulk results</h2>
+      <p class="hint">Listing price, break-even, profit, ROI and monthly forecast per SKU.</p>
+      <div class="table-wrap" id="bulkTableWrap">
+        <div style="padding:28px;text-align:center;color:var(--muted)">No bulk file processed yet.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard" class="tab">
+    <div class="banner ok" id="dash_status">Calculating…</div>
+
+    <div class="card hero">
+      <div class="label" id="dash_product_label">Profit dashboard</div>
+      <div class="bigprice" id="dash_listing">—</div>
+      <div class="price-sub">Recommended listing price · inclusive of GST</div>
+      <div class="hero-row">
+        <div><span>Pre-GST price</span><b id="dash_exgst">—</b></div>
+        <div><span>MRP</span><b id="dash_mrp">—</b></div>
+        <div><span>Profit / kept sale</span><b id="dash_perkept">—</b></div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi good"><span>Profit / dispatch</span><b id="dash_profit">—</b></div>
+      <div class="kpi"><span>Effective margin</span><b id="dash_margin">—</b></div>
+      <div class="kpi"><span>Break-even listing</span><b id="dash_breakeven">—</b></div>
+      <div class="kpi"><span>ROI forecast</span><b id="dash_roi">—</b></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><span>Break-even units / month</span><b id="dash_break_units">—</b></div>
+      <div class="kpi"><span>Monthly profit forecast</span><b id="dash_month_profit">—</b></div>
+      <div class="kpi"><span>Monthly net sales ex-GST</span><b id="dash_month_sales">—</b></div>
+      <div class="kpi"><span>Kept sales / month</span><b id="dash_kept">—</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Cost waterfall</h2>
+      <p class="hint">Expected cost distribution per dispatch at the recommended price.</p>
+      <div class="bar" id="dash_costBar"></div>
+      <div class="breakdown" id="dash_breakdown"></div>
+    </div>
+
+    <div class="card">
+      <h2>Margin sensitivity</h2>
+      <p class="hint">How listing price changes with target margin.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Target margin</th><th>Listing price incl. GST</th><th>MRP</th></tr></thead>
+          <tbody id="dash_sensitivity"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SAVED -->
+  <section id="tab-saved" class="tab">
+    <div class="card">
+      <h2><span class="step">S</span> Saved products</h2>
+      <p class="hint">Saved products are stored locally in this browser only. No login is required.</p>
+      <div id="savedList" class="saved-grid"></div>
+    </div>
+  </section>
+
+  <!-- LOCAL DATA -->
+  <section id="tab-data" class="tab">
+    <div class="card">
+      <h2><span class="step">D</span> Local data</h2>
+      <p class="hint">This app stores calculator settings and saved products in your browser localStorage.</p>
+      <div class="banner ok" id="dataInfo">Local data ready.</div>
+      <div class="actions">
+        <button class="btn" id="exportDataBtn" type="button">Export all data JSON</button>
+        <button class="btn" id="clearSavedBtn" type="button">Clear saved products</button>
+        <button class="btn dark" id="resetSettingsBtn" type="button">Reset calculator settings</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Notes</h2>
+      <p class="hint">
+        This is a no-login single-page version. If you clear browser data, saved products will be removed.
+        For production use, verify live marketplace fees, GST rates, logistics charges and category commissions.
+      </p>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    ListingPilot Pro · Single Page Application · INR only.
+  </div>
+</main>
+
+<nav class="bottomnav">
+  <div class="inner">
+    <button class="tabbtn active" data-tab="calc" type="button">🧮 Calc</button>
+    <button class="tabbtn" data-tab="bulk" type="button">📦 Bulk</button>
+    <button class="tabbtn" data-tab="dashboard" type="button">📊 Profit</button>
+    <button class="tabbtn" data-tab="saved" type="button">💾 Saved</button>
+    <button class="tabbtn" data-tab="data" type="button">🗂 Data</button>
+  </div>
+</nav>
+
+<!-- Optional export libraries. Core app works without them, but Excel/PDF export require internet. -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const SETTINGS_KEY = "listingpilot_no_login_settings";
+const PRODUCTS_KEY = "listingpilot_no_login_products";
+
+const FIELD_IDS = [
+  "platform","productName","productGst","discount","marginMode","margin",
+  "unitCost","packaging","inbound","forwardShip","fixedFee","overhead","subscription","monthlyUnits",
+  "referral","gateway","ads","feeGst","itc",
+  "returnRate","rtoRate","reverseCost","rtoCost","recovery"
+];
+
+const PRESETS = {
+  amazon:   {referral:12,   gateway:2,   fixedFee:20, forwardShip:65, ads:8},
+  flipkart: {referral:13,   gateway:2,   fixedFee:22, forwardShip:60, ads:7},
+  meesho:   {referral:0,    gateway:0,   fixedFee:0,  forwardShip:0,  ads:10},
+  myntra:   {referral:18,   gateway:2,   fixedFee:0,  forwardShip:70, ads:5},
+  jiomart:  {referral:10,   gateway:2,   fixedFee:15, forwardShip:55, ads:5},
+  nykaa:    {referral:22,   gateway:2,   fixedFee:10, forwardShip:60, ads:6},
+  firstcry: {referral:20,   gateway:2,   fixedFee:10, forwardShip:65, ads:5},
+  shopify:  {referral:0,    gateway:2.9, fixedFee:0,  forwardShip:70, ads:12},
+  ebay:     {referral:13.25,gateway:0,   fixedFee:10, forwardShip:65, ads:5},
+  custom:   {referral:10,   gateway:2,   fixedFee:10, forwardShip:60, ads:5}
+};
+
+let defaultState = {};
+let currentBulkResults = [];
+let saveTimer = null;
+
+/* ---------------- Utilities ---------------- */
+const fmtMoney = n => isFinite(n) ? "₹" + Math.round(n).toLocaleString("en-IN") : "—";
+const fmtPct = n => isFinite(n) ? n.toFixed(1) + "%" : "—";
+const fmtUnits = n => isFinite(n) ? Math.ceil(n).toLocaleString("en-IN") : "—";
+const fmtBreakUnits = n => !isFinite(n) ? "∞" : (n <= 0 ? "0" : Math.ceil(n).toLocaleString("en-IN"));
+
+function platformLabel(value){
+  const opt = Array.from($("platform").options).find(o => o.value === value);
+  return opt ? opt.text : value;
+}
+
+function downloadText(filename, text, mime){
+  const blob = new Blob([text], {type:mime || "text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function downloadCSV(filename, rows){
+  const csv = rows.map(r => r.map(cell => {
+    const s = cell === null || cell === undefined ? "" : String(cell);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }).join(",")).join("\n");
+  downloadText(filename, csv, "text/csv;charset=utf-8");
+}
+
+function exportTabular(filename, head, body, format){
+  const rows = [head, ...body];
+  if(format === "xlsx" && window.XLSX){
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pricing");
+    XLSX.writeFile(wb, filename + ".xlsx");
+  } else {
+    downloadCSV(filename + ".csv", rows);
+  }
+}
+
+function exportPDF(title, head, body, metaLines=[]){
+  if(!window.jspdf || !window.jspdf.jsPDF){
+    alert("PDF library not loaded. Please check internet connection or use CSV export.");
+    return;
+  }
+  const doc = new window.jspdf.jsPDF({
+    orientation: head.length > 5 ? "landscape" : "portrait",
+    unit:"mm",
+    format:"a4"
+  });
+  doc.setFontSize(15);
+  doc.setTextColor(21,26,38);
+  doc.text("ListingPilot Pro — " + title, 14, 15);
+
+  doc.setFontSize(8.5);
+  doc.setTextColor(100,108,128);
+  let y = 22;
+  metaLines.slice(0,7).forEach(line => {
+    doc.text(line, 14, y);
+    y += 5;
+  });
+
+  if(typeof doc.autoTable === "function"){
+    doc.autoTable({
+      startY:y + 2,
+      head:[head],
+      body,
+      styles:{fontSize:8, cellPadding:2},
+      headStyles:{fillColor:[79,70,229]},
+      margin:{left:14,right:14}
+    });
+  } else {
+    y += 6;
+    body.forEach(row => {
+      y += 5;
+      if(y > 280){ doc.addPage(); y = 15; }
+      doc.text(row.map(x => String(x)).join(" | "), 14, y);
+    });
+  }
+  doc.save(title.replace(/\s+/g,"-").toLowerCase() + ".pdf");
+}
+
+/* ---------------- Local storage ---------------- */
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(!raw) return;
+    const settings = JSON.parse(raw);
+    if(settings && settings.state) setFormState(settings.state);
+  } catch(e){
+    console.warn("Could not load settings:", e);
+  }
+}
+
+function saveSettingsSoon(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try{
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        state: gatherState(),
+        updatedAt: Date.now()
+      }));
+      updateDataInfo();
+    } catch(e){
+      console.warn("Could not save settings:", e);
+    }
+  }, 700);
+}
+
+function getSavedProducts(){
+  try{
+    return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || "[]");
+  } catch(e){
+    return [];
+  }
+}
+
+function saveSavedProducts(products){
+  try{
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+    updateDataInfo();
+  } catch(e){
+    alert("Could not save products. Browser storage may be full.");
+  }
+}
+
+function updateDataInfo(){
+  const products = getSavedProducts();
+  let settingsTime = "not saved yet";
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(raw){
+      const settings = JSON.parse(raw);
+      if(settings.updatedAt) settingsTime = new Date(settings.updatedAt).toLocaleString();
+    }
+  } catch(e){}
+  $("dataInfo").textContent = `${products.length} saved product(s) · Calculator settings last saved: ${settingsTime}`;
+}
+
+/* ---------------- Form state ---------------- */
+function gatherState(){
+  const state = {};
+  FIELD_IDS.forEach(id => {
+    const el = $(id);
+    state[id] = el.type === "checkbox" ? el.checked : el.value;
+  });
+  return state;
+}
+
+function setFormState(state){
+  if(!state) return;
+  FIELD_IDS.forEach(id => {
+    if(state[id] === undefined || state[id] === null) return;
+    const el = $(id);
+    if(el.type === "checkbox"){
+      el.checked = state[id] === true || state[id] === "true" || state[id] === 1 || state[id] === "1" || state[id] === "on";
+    } else {
+      el.value = state[id];
+    }
+  });
+}
+
+function applyPreset(key){
+  const p = PRESETS[key];
+  if(!p) return;
+  Object.entries(p).forEach(([k,v]) => {
+    if($(k)) $(k).value = v;
+  });
+  renderAll();
+}
+
+/* ---------------- Pricing engine ---------------- */
+function calculateState(state){
+  const n = key => {
+    const v = parseFloat(state[key]);
+    return isFinite(v) && v >= 0 ? v : 0;
+  };
+  const isTrue = v => v === true || v === "true" || v === "1" || v === 1 || v === "on" || v === "yes";
+
+  const recoverable = n("unitCost") + n("packaging") + n("inbound");
+  const cBase = recoverable + n("overhead");
+  const monthlyUnits = Math.max(0, n("monthlyUnits"));
+  const allocationUnits = Math.max(1, monthlyUnits);
+  const subscription = n("subscription");
+  const c = cBase + subscription / allocationUnits;
+
+  const S = n("forwardShip");
+  const F = n("fixedFee");
+  const cr = n("referral") / 100;
+  const gw = n("gateway") / 100;
+  const ad = n("ads") / 100;
+  const tf = n("feeGst") / 100;
+
+  const r = Math.min(1, n("returnRate") / 100);
+  const q = Math.min(1, n("rtoRate") / 100);
+  const D = 1 - q;
+  const K = D * (1 - r);
+  const rec = Math.min(1, n("recovery") / 100);
+  const returnLoss = n("reverseCost") + recoverable * (1 - rec);
+
+  const pctFees = (cr + gw) * D;
+  const feeGSTfactor = isTrue(state.itc) ? 0 : tf;
+  const V = pctFees * (1 + feeGSTfactor) + ad;
+  const B = c + S + F + r * D * returnLoss + q * n("rtoCost") + (S + F) * feeGSTfactor;
+
+  const gstP = n("productGst") / 100;
+  const discount = Math.min(0.95, n("discount") / 100);
+  const marginMode = String(state.marginMode || "margin").toLowerCase().includes("markup") ? "markup" : "margin";
+  const target = Math.min(0.95, n("margin") / 100);
+
+  let s = NaN;
+  let targetLabel = "";
+
+  if(marginMode === "markup"){
+    const A = K - V;
+    s = A > 0.001 ? (B + target * c) / A : NaN;
+    targetLabel = "Markup " + (target * 100).toFixed(2) + "% on cost";
+  } else {
+    const A = K - V - target;
+    s = A > 0.001 ? B / A : NaN;
+    targetLabel = "Margin " + (target * 100).toFixed(2) + "% of selling price";
+  }
+
+  if(!isFinite(s) || s <= 0){
+    return {ok:false, state, cBase, recoverable, monthlyUnits, subscription};
+  }
+
+  const commission = (cr + gw) * s * D;
+  const ads = ad * s;
+  const returns = r * D * returnLoss;
+  const rto = q * n("rtoCost");
+  const feeGST = feeGSTfactor ? (S + F + (cr + gw) * s * D) * tf : 0;
+  const base = c + S + F;
+  const revenue = s * K;
+  const totalCost = base + commission + ads + returns + rto + feeGST;
+  const actualProfit = revenue - totalCost;
+
+  const listing = s * (1 + gstP);
+  const mrp = discount < 1 ? listing / (1 - discount) : NaN;
+  const effMargin = revenue > 0 ? actualProfit / revenue : 0;
+  const perKeptProfit = K > 0 ? actualProfit / K : NaN;
+
+  const contributionBeforeFixed = actualProfit + subscription / allocationUnits;
+  const breakEvenUnits = subscription <= 0 ? 0 : (contributionBeforeFixed > 0 ? subscription / contributionBeforeFixed : Infinity);
+  const monthlyProfit = actualProfit * monthlyUnits;
+  const monthlyNetSales = revenue * monthlyUnits;
+  const monthlyKept = K * monthlyUnits;
+  const inventoryInvestment = recoverable * monthlyUnits;
+  const roi = inventoryInvestment > 0 ? monthlyProfit / inventoryInvestment * 100 : 0;
+
+  const s0 = (K - V) > 0.001 ? B / (K - V) : NaN;
+  const breakevenListing = isFinite(s0) ? s0 * (1 + gstP) : NaN;
+
+  return {
+    ok:true, state, s, listing, mrp, revenue, actualProfit, effMargin, perKeptProfit,
+    base, commission, ads, returns, rto, feeGST, totalCost,
+    breakevenListing, contributionBeforeFixed, breakEvenUnits,
+    monthlyProfit, monthlyNetSales, monthlyOrders:monthlyUnits, monthlyKept,
+    roi, K, D, gstP, discount, cBase, recoverable, subscription, monthlyUnits, targetLabel
+  };
+}
+
+/* ---------------- Rendering ---------------- */
+function renderAll(){
+  const state = gatherState();
+  const res = calculateState(state);
+  renderCalc(state, res);
+  renderDashboard(state, res);
+  saveSettingsSoon();
+}
+
+function renderCalc(state, res){
+  $("calc_product_label").textContent = (state.productName || "Product") + " · recommended listing price";
+
+  if(!res.ok){
+    $("calc_status").className = "banner err";
+    $("calc_status").textContent = "⚠ Target not achievable. Reduce fees, ads, returns, RTO, or lower the profit target.";
+    ["calc_listing","calc_exgst","calc_mrp","calc_profit","calc_margin","calc_breakeven","calc_profit_dispatch"].forEach(id => $(id).textContent = "—");
+    return;
+  }
+
+  $("calc_status").className = res.actualProfit >= 0 ? "banner ok" : "banner err";
+  $("calc_status").textContent = res.actualProfit >= 0
+    ? `✓ Profitable at this price. Retains ${fmtMoney(res.actualProfit)} per dispatch after returns, RTO, ads and fees.`
+    : "⚠ This configuration is losing money. Adjust price, cost, returns or ads.";
+
+  $("calc_listing").textContent = fmtMoney(res.listing);
+  $("calc_exgst").textContent = fmtMoney(res.s);
+  $("calc_mrp").textContent = isFinite(res.mrp) ? fmtMoney(res.mrp) : "—";
+  $("calc_profit").textContent = fmtMoney(res.perKeptProfit);
+  $("calc_margin").textContent = fmtPct(res.effMargin * 100);
+  $("calc_breakeven").textContent = fmtMoney(res.breakevenListing);
+  $("calc_profit_dispatch").textContent = fmtMoney(res.actualProfit);
+}
+
+function renderDashboard(state, res){
+  $("dash_product_label").textContent = (state.productName || "Product") + " · profit dashboard";
+
+  if(!res.ok){
+    $("dash_status").className = "banner err";
+    $("dash_status").textContent = "⚠ No viable price with current assumptions.";
+    ["dash_listing","dash_exgst","dash_mrp","dash_perkept","dash_profit","dash_margin","dash_breakeven","dash_roi",
+     "dash_break_units","dash_month_profit","dash_month_sales","dash_kept"].forEach(id => $(id).textContent = "—");
+    $("dash_costBar").innerHTML = "";
+    $("dash_breakdown").innerHTML = '<div class="muted">No viable cost waterfall.</div>';
+    renderSensitivity(state);
+    return;
+  }
+
+  $("dash_status").className = res.actualProfit >= 0 ? "banner ok" : "banner err";
+  $("dash_status").textContent = res.actualProfit >= 0
+    ? `✓ Healthy pricing model. Monthly forecast: ${fmtMoney(res.monthlyProfit)} profit on ${fmtUnits(res.monthlyOrders)} dispatches.`
+    : "⚠ Loss-making configuration. Increase price or reduce cost/returns/ads.";
+
+  $("dash_listing").textContent = fmtMoney(res.listing);
+  $("dash_exgst").textContent = fmtMoney(res.s);
+  $("dash_mrp").textContent = isFinite(res.mrp) ? fmtMoney(res.mrp) : "—";
+  $("dash_perkept").textContent = fmtMoney(res.perKeptProfit);
+  $("dash_profit").textContent = fmtMoney(res.actualProfit);
+  $("dash_margin").textContent = fmtPct(res.effMargin * 100);
+  $("dash_breakeven").textContent = fmtMoney(res.breakevenListing);
+  $("dash_roi").textContent = fmtPct(res.roi);
+  $("dash_break_units").textContent = fmtBreakUnits(res.breakEvenUnits);
+  $("dash_month_profit").textContent = fmtMoney(res.monthlyProfit);
+  $("dash_month_sales").textContent = fmtMoney(res.monthlyNetSales);
+  $("dash_kept").textContent = fmtUnits(res.monthlyKept);
+
+  const rows = [
+    ["Product, overhead & fixed fulfilment", res.base, "#6366f1"],
+    ["Commission + gateway", res.commission, "#0ea5e9"],
+    ["Advertising", res.ads, "#f59e0b"],
+    ["Expected return loss", res.returns, "#ef4444"],
+    ["Expected RTO loss", res.rto, "#f97316"],
+    ["GST on fees", res.feeGST, "#94a3b8"],
+    ["Profit", res.actualProfit, res.actualProfit >= 0 ? "#10b981" : "#d92d20"]
+  ];
+
+  const positiveSum = rows.reduce((a,b) => a + Math.max(0,b[1]), 0) || 1;
+  $("dash_costBar").innerHTML = rows.map(r => `<i style="width:${Math.max(0,r[1]/positiveSum*100)}%;background:${r[2]}"></i>`).join("");
+
+  $("dash_breakdown").innerHTML = rows.map(r =>
+    `<div><span class="dot" style="background:${r[2]}"></span>${r[0]}</div><div class="val">${fmtMoney(r[1])}</div>`
+  ).join("") +
+  `<div class="total">Net customer receipt ex-GST</div><div class="total val">${fmtMoney(res.revenue)}</div>`;
+
+  renderSensitivity(state);
+}
+
+function renderSensitivity(state){
+  const targets = [0,5,10,15,20,25,30];
+  const current = parseFloat(state.margin) || 0;
+
+  $("dash_sensitivity").innerHTML = targets.map(t => {
+    const r = calculateState({...state, marginMode:"margin", margin:t});
+    const active = state.marginMode === "margin" && Math.abs(t - current) < 0.25;
+    return `<tr class="${active ? "active" : ""}">
+      <td>${t}%</td>
+      <td>${r.ok ? fmtMoney(r.listing) : "Not viable"}</td>
+      <td>${r.ok && isFinite(r.mrp) ? fmtMoney(r.mrp) : "—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ---------------- Bulk ---------------- */
+function parseCSV(text){
+  const rows = [];
+  let row = [], cur = "", inQ = false;
+
+  for(let i=0;i<text.length;i++){
+    const ch = text[i];
+    if(inQ){
+      if(ch === '"'){
+        if(text[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = false;
+      } else cur += ch;
+    } else {
+      if(ch === '"') inQ = true;
+      else if(ch === ","){ row.push(cur); cur = ""; }
+      else if(ch === "\r"){
+        if(text[i+1] === "\n") i++;
+        row.push(cur); rows.push(row); row = []; cur = "";
+      }
+      else if(ch === "\n"){
+        row.push(cur); rows.push(row); row = []; cur = "";
+      }
+      else cur += ch;
+    }
+  }
+  row.push(cur);
+  rows.push(row);
+
+  const clean = rows.filter(r => r.some(c => String(c).trim() !== ""));
+  if(clean.length < 2) return [];
+
+  const headers = clean[0].map(h => String(h).trim());
+  return clean.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = (r[i] ?? "").trim());
+    return obj;
+  });
+}
+
+async function parseFile(file){
+  const ext = file.name.split(".").pop().toLowerCase();
+
+  if(window.XLSX){
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:"array"});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws, {defval:""});
+  }
+
+  if(ext === "csv" || file.type === "text/csv"){
+    const text = await file.text();
+    return parseCSV(text);
+  }
+
+  throw new Error("Excel parsing requires internet for the SheetJS library. Please upload CSV instead.");
+}
+
+function parseNumClean(v){
+  if(v === undefined || v === null) return NaN;
+  if(typeof v === "number") return v;
+  const s = String(v).replace(/[₹$%,\s]/g,"");
+  if(s === "") return NaN;
+  return parseFloat(s);
+}
+
+function parseBool(v){
+  if(v === undefined || v === null) return undefined;
+  if(typeof v === "boolean") return v;
+  const s = String(v).trim().toLowerCase();
+  if(["true","1","yes","y","on"].includes(s)) return true;
+  if(["false","0","no","n","off"].includes(s)) return false;
+  return undefined;
+}
+
+function mapBulkRow(row){
+  const norm = {};
+  Object.keys(row).forEach(k => {
+    norm[k.toLowerCase().replace(/[^a-z0-9]/g,"")] = row[k];
+  });
+
+  const get = (...keys) => {
+    for(const k of keys){
+      if(norm[k] !== undefined && String(norm[k]).trim() !== "") return norm[k];
+    }
+    return undefined;
+  };
+
+  const overrides = {};
+
+  const sku = get("sku","id","code");
+  const name = get("productname","name","title","product");
+  if(sku) overrides.sku = String(sku);
+  if(name) overrides.productName = String(name);
+
+  const platformRaw = get("platform","marketplace");
+  if(platformRaw){
+    const key = String(platformRaw).toLowerCase().replace(/\s+/g,"");
+    const map = {
+      amazonindia:"amazon", amazon:"amazon", flipkart:"flipkart", meesho:"meesho",
+      myntra:"myntra", jiomart:"jiomart", nykaa:"nykaa", firstcry:"firstcry",
+      shopify:"shopify", ebay:"ebay", custom:"custom"
+    };
+    const pkey = map[key] || "custom";
+    overrides.platform = pkey;
+    if(PRESETS[pkey]) Object.assign(overrides, PRESETS[pkey]);
+  }
+
+  const numericMap = {
+    unitCost:["unitcost","cost","productcost","costprice","procurementcost","purchasecost"],
+    packaging:["packaging","packing","packagingcost"],
+    inbound:["inbound","inboundfreight","inboundshipping"],
+    forwardShip:["forwardship","shipping","ship","deliveryfee","forwardshipping","courier"],
+    fixedFee:["fixedfee","closingfee","handlingfee","fixedclosing"],
+    overhead:["overhead","othercost","other","labour"],
+    subscription:["subscription","monthlysubscription","subscriptionmonthly"],
+    monthlyUnits:["monthlyunits","units","orderspermonth","monthlyorders"],
+    referral:["referral","commission","referralfee","commissionpercent","platformfee"],
+    gateway:["gateway","paymentgateway","gatewaypercent","pg"],
+    ads:["ads","advertising","adspercent","marketing","adspend"],
+    productGst:["productgst","gst","gstpercent","salestax","tax"],
+    feeGst:["feegst","gstonfees","servicegst"],
+    returnRate:["returnrate","returns","returnpercent","deliveredreturns"],
+    rtoRate:["rtorate","rto","rtopercent","undelivered"],
+    reverseCost:["reversecost","reverse","returnshipping","reverselogistics"],
+    rtoCost:["rtocost","rtoperorder"],
+    recovery:["recovery","recoverypct","resalerecovery"],
+    margin:["margin","targetmargin","targetprofit","profit"],
+    discount:["discount","discountpercent","discountoffmrp"]
+  };
+
+  Object.entries(numericMap).forEach(([field,aliases]) => {
+    const raw = get(...aliases);
+    if(raw !== undefined){
+      const val = parseNumClean(raw);
+      if(isFinite(val)) overrides[field] = val;
+    }
+  });
+
+  const itc = parseBool(get("itc","claimitc","itcclaimed"));
+  if(itc !== undefined) overrides.itc = itc;
+
+  const marginMode = get("marginmode");
+  if(marginMode !== undefined){
+    overrides.marginMode = String(marginMode).toLowerCase().includes("markup") ? "markup" : "margin";
+  }
+
+  return {sku: overrides.sku, name: overrides.productName, overrides};
+}
+
+async function handleBulkFile(file){
+  try{
+    const rows = await parseFile(file);
+    if(!rows.length){
+      alert("No data rows found in the file.");
+      return;
+    }
+
+    const global = gatherState();
+    currentBulkResults = rows.map((row, idx) => {
+      const mapped = mapBulkRow(row);
+      const state = {...global, ...mapped.overrides};
+      if(mapped.name) state.productName = mapped.name;
+      const res = calculateState(state);
+      return {
+        sku: mapped.sku || `SKU-${idx + 1}`,
+        name: mapped.name || state.productName || "Product",
+        state,
+        res
+      };
+    });
+
+    renderBulk();
+  } catch(err){
+    alert("Could not parse file: " + err.message);
+  }
+}
+
+function renderBulk(){
+  const total = currentBulkResults.length;
+  const profitable = currentBulkResults.filter(x => x.res.ok && x.res.actualProfit > 0).length;
+  const notViable = total - profitable;
+  const margins = currentBulkResults.filter(x => x.res.ok).map(x => x.res.effMargin * 100);
+  const avg = margins.length ? margins.reduce((a,b)=>a+b,0)/margins.length : NaN;
+
+  $("bulkTotal").textContent = total;
+  $("bulkProfitable").textContent = profitable;
+  $("bulkNotViable").textContent = notViable;
+  $("bulkAvgMargin").textContent = fmtPct(avg);
+
+  if(!total){
+    $("bulkTableWrap").innerHTML = '<div style="padding:28px;text-align:center;color:var(--muted)">No bulk file processed yet.</div>';
+    return;
+  }
+
+  const rows = currentBulkResults.map(r => {
+    const res = r.res;
+    const status = !res.ok
+      ? '<span class="pill bad">Not viable</span>'
+      : res.actualProfit > 0
+        ? '<span class="pill good">Profit</span>'
+        : '<span class="pill bad">Loss</span>';
+
+    return `<tr>
+      <td><b>${r.sku}</b><div class="muted" style="font-size:11px">${r.name}</div></td>
+      <td>${fmtMoney(res.cBase || 0)}</td>
+      <td>${res.ok ? fmtMoney(res.listing) : "—"}</td>
+      <td>${res.ok ? fmtMoney(res.s) : "—"}</td>
+      <td>${res.ok && isFinite(res.mrp) ? fmtMoney(res.mrp) : "—"}</td>
+      <td>${res.ok ? fmtMoney(res.breakevenListing) : "—"}</td>
+      <td>${res.ok ? fmtMoney(res.actualProfit) : "—"}</td>
+      <td>${res.ok ? fmtPct(res.effMargin * 100) : "—"}</td>
+      <td>${res.ok ? fmtPct(res.roi) : "—"}</td>
+      <td>${res.ok ? fmtMoney(res.monthlyProfit) : "—"}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join("");
+
+  $("bulkTableWrap").innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>SKU / Product</th>
+          <th>Base cost</th>
+          <th>Listing price</th>
+          <th>Ex-GST price</th>
+          <th>MRP</th>
+          <th>Break-even</th>
+          <th>Profit/dispatch</th>
+          <th>Margin</th>
+          <th>ROI</th>
+          <th>Monthly profit</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function bulkExportRows(){
+  return currentBulkResults.map(r => {
+    const res = r.res;
+    return [
+      r.sku,
+      r.name,
+      res.cBase ?? "",
+      res.ok ? Math.round(res.listing) : "",
+      res.ok ? Math.round(res.s) : "",
+      res.ok && isFinite(res.mrp) ? Math.round(res.mrp) : "",
+      res.ok && isFinite(res.breakevenListing) ? Math.round(res.breakevenListing) : "",
+      res.ok ? Math.round(res.actualProfit) : "",
+      res.ok ? Number((res.effMargin * 100).toFixed(2)) : "",
+      res.ok ? Number(res.roi.toFixed(2)) : "",
+      res.ok ? Math.round(res.monthlyProfit) : "",
+      res.ok ? (res.actualProfit > 0 ? "Profit" : "Loss") : "Not viable"
+    ];
+  });
+}
+
+function bulkHead(){
+  return ["SKU","Product","Base Cost","Listing Price","Ex-GST Price","MRP","Break-even","Profit/Dispatch","Margin %","ROI %","Monthly Profit","Status"];
+}
+
+function downloadBulkTemplate(){
+  const head = [
+    "SKU","Product Name","Platform","Unit Cost","Packaging","Inbound","Forward Ship","Fixed Fee","Overhead",
+    "Subscription Monthly","Monthly Units","Referral %","Gateway %","Ads %","Product GST %","Fee GST %","ITC",
+    "Return %","RTO %","Reverse Cost","RTO Cost","Recovery %","Target Margin %","Margin Mode","Discount %"
+  ];
+  const sample = [
+    "SKU-001","Cotton T-Shirt","Amazon India",220,18,10,62,18,8,0,300,12,2,7,5,18,"Yes",10,6,55,85,80,20,"margin",25
+  ];
+  exportTabular("bulk-pricing-template", head, [sample], "csv");
+}
+
+/* ---------------- Saved products ---------------- */
+function saveCurrentProduct(){
+  const state = gatherState();
+  const res = calculateState(state);
+  const products = getSavedProducts();
+
+  products.unshift({
+    id: Date.now(),
+    name: state.productName || "Untitled product",
+    platform: state.platform,
+    listing: res.ok ? res.listing : null,
+    state,
+    updatedAt: Date.now()
+  });
+
+  saveSavedProducts(products);
+  renderSaved();
+  alert("Product saved locally.");
+}
+
+function saveBulkProducts(){
+  if(!currentBulkResults.length){
+    alert("Process a bulk file first.");
+    return;
+  }
+
+  const products = getSavedProducts();
+
+  currentBulkResults.forEach((r, i) => {
+    products.unshift({
+      id: Date.now() + i,
+      name: `${r.name} (${r.sku})`,
+      platform: r.state.platform,
+      listing: r.res.ok ? r.res.listing : null,
+      state: r.state,
+      updatedAt: Date.now()
+    });
+  });
+
+  saveSavedProducts(products);
+  renderSaved();
+  alert(`Saved ${currentBulkResults.length} products locally.`);
+  switchTab("saved");
+}
+
+function renderSaved(){
+  const products = getSavedProducts();
+  const wrap = $("savedList");
+
+  if(!products.length){
+    wrap.innerHTML = '<div class="muted">No saved products yet. Save from Calculator or Bulk Pricing.</div>';
+    return;
+  }
+
+  wrap.innerHTML = products.map(item => `
+    <div class="saved-card">
+      <h3>${item.name}</h3>
+      <div class="meta">
+        ${platformLabel(item.platform)}<br>
+        Listing: ${item.listing ? fmtMoney(item.listing) : "Not viable"}<br>
+        Updated: ${new Date(item.updatedAt).toLocaleString()}
+      </div>
+      <div class="actions">
+        <button class="btn small primary" data-action="load" data-id="${item.id}" type="button">Open</button>
+        <button class="btn small" data-action="duplicate" data-id="${item.id}" type="button">Duplicate</button>
+        <button class="btn small" data-action="delete" data-id="${item.id}" type="button">Delete</button>
+      </div>
+    </div>
+  `).join("");
+
+  wrap.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.id);
+      const action = btn.dataset.action;
+      let products = getSavedProducts();
+      const item = products.find(x => x.id === id);
+      if(!item) return;
+
+      if(action === "load"){
+        setFormState(item.state);
+        renderAll();
+        switchTab("calc");
+      }
+
+      if(action === "duplicate"){
+        products.unshift({
+          ...item,
+          id: Date.now(),
+          name: item.name + " Copy",
+          updatedAt: Date.now()
+        });
+        saveSavedProducts(products);
+        renderSaved();
+      }
+
+      if(action === "delete"){
+        if(!confirm("Delete this saved product?")) return;
+        products = products.filter(x => x.id !== id);
+        saveSavedProducts(products);
+        renderSaved();
+      }
+    });
+  });
+}
+
+/* ---------------- Exports ---------------- */
+function singleExportRows(){
+  const state = gatherState();
+  const res = calculateState(state);
+  if(!res.ok){
+    alert("No viable price to export.");
+    return null;
+  }
+
+  const meta = [
+    `Product: ${state.productName || "-"}`,
+    `Platform: ${platformLabel(state.platform)}`,
+    `Generated: ${new Date().toLocaleString()}`,
+    `Target: ${res.targetLabel}`,
+    `Monthly units: ${state.monthlyUnits}`
+  ];
+
+  const body = [
+    ["Recommended listing price incl GST", fmtMoney(res.listing)],
+    ["Pre-GST selling price", fmtMoney(res.s)],
+    ["Printable MRP", isFinite(res.mrp) ? fmtMoney(res.mrp) : "—"],
+    ["Break-even listing price", fmtMoney(res.breakevenListing)],
+    ["Profit per dispatch", fmtMoney(res.actualProfit)],
+    ["Profit per kept sale", fmtMoney(res.perKeptProfit)],
+    ["Effective margin", fmtPct(res.effMargin * 100)],
+    ["ROI forecast", fmtPct(res.roi)],
+    ["Break-even units/month", fmtBreakUnits(res.breakEvenUnits)],
+    ["Monthly profit forecast", fmtMoney(res.monthlyProfit)],
+    ["Monthly net sales ex-GST", fmtMoney(res.monthlyNetSales)],
+    ["", ""],
+    ["Cost breakdown", ""],
+    ["Product, overhead & fixed fulfilment", fmtMoney(res.base)],
+    ["Commission + gateway", fmtMoney(res.commission)],
+    ["Advertising", fmtMoney(res.ads)],
+    ["Expected return loss", fmtMoney(res.returns)],
+    ["Expected RTO loss", fmtMoney(res.rto)],
+    ["GST on fees", fmtMoney(res.feeGST)],
+    ["Net customer receipt ex-GST", fmtMoney(res.revenue)]
+  ];
+
+  return {state, res, meta, body};
+}
+
+function exportSingleCSV(){
+  const out = singleExportRows();
+  if(!out) return;
+  exportTabular("listing-price-summary", ["Metric","Value"], out.body, "csv");
+}
+
+function exportSinglePDF(){
+  const out = singleExportRows();
+  if(!out) return;
+  exportPDF("Listing Summary", ["Metric","Value"], out.body, out.meta);
+}
+
+function exportBulkCSV(){
+  if(!currentBulkResults.length) return alert("Process a bulk file first.");
+  exportTabular("bulk-pricing-results", bulkHead(), bulkExportRows(), "csv");
+}
+
+function exportBulkXLSX(){
+  if(!currentBulkResults.length) return alert("Process a bulk file first.");
+  exportTabular("bulk-pricing-results", bulkHead(), bulkExportRows(), "xlsx");
+}
+
+function exportBulkPDF(){
+  if(!currentBulkResults.length) return alert("Process a bulk file first.");
+  exportPDF(
+    "Bulk Pricing Results",
+    bulkHead(),
+    bulkExportRows(),
+    [`Generated: ${new Date().toLocaleString()}`, `Total SKUs: ${currentBulkResults.length}`]
+  );
+}
+
+function exportAllData(){
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    settings: gatherState(),
+    savedProducts: getSavedProducts()
+  };
+  downloadText("listingpilot-local-data.json", JSON.stringify(payload, null, 2), "application/json");
+}
+
+function clearSavedProducts(){
+  if(!confirm("Clear all saved products?")) return;
+  saveSavedProducts([]);
+  renderSaved();
+  alert("Saved products cleared.");
+}
+
+function resetSettings(){
+  if(!confirm("Reset calculator settings to defaults? Saved products will not be removed.")) return;
+  setFormState(defaultState);
+  saveSettingsSoon();
+  renderAll();
+}
+
+/* ---------------- Tabs ---------------- */
+function switchTab(tab){
+  document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+  $("tab-" + tab).classList.add("active");
+
+  document.querySelectorAll(".tabbtn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
+
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ---------------- Init ---------------- */
+function bindEvents(){
+  FIELD_IDS.forEach(id => {
+    if(id === "platform"){
+      $("platform").addEventListener("change", e => applyPreset(e.target.value));
+    } else {
+      $(id).addEventListener("input", renderAll);
+    }
+  });
+
+  document.querySelectorAll(".tabbtn").forEach(btn => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+  });
+
+  $("saveProductBtn").addEventListener("click", saveCurrentProduct);
+  $("singlePdfBtn").addEventListener("click", exportSinglePDF);
+  $("singleCsvBtn").addEventListener("click", exportSingleCSV);
+  $("goDashboardBtn").addEventListener("click", () => switchTab("dashboard"));
+
+  $("bulkFile").addEventListener("change", async e => {
+    const file = e.target.files[0];
+    if(file) await handleBulkFile(file);
+    e.target.value = "";
+  });
+
+  $("bulkTemplateBtn").addEventListener("click", downloadBulkTemplate);
+  $("bulkCsvBtn").addEventListener("click", exportBulkCSV);
+  $("bulkXlsxBtn").addEventListener("click", exportBulkXLSX);
+  $("bulkPdfBtn").addEventListener("click", exportBulkPDF);
+  $("bulkSaveBtn").addEventListener("click", saveBulkProducts);
+
+  $("exportDataBtn").addEventListener("click", exportAllData);
+  $("clearSavedBtn").addEventListener("click", clearSavedProducts);
+  $("resetSettingsBtn").addEventListener("click", resetSettings);
+}
+
+defaultState = gatherState();
+bindEvents();
+loadSettings();
+renderAll();
+renderSaved();
+updateDataInfo();
+</script>
+</body>
+</html>
