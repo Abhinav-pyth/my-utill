@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentVerse — AI Agents, Agentic AI & MCP Interactive Developer Guide</title>
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/latin-400.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/latin-600.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/latin-700.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.1.0/latin-500.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.1.0/latin-700.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.1.0/latin-400.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.1.0/latin-600.css" rel="stylesheet">
+<style>
+:root{
+  --bg:#060a14; --bg2:#0a101f; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --line:rgba(148,163,184,.16); --line2:rgba(148,163,184,.3);
+  --txt:#e2e8f0; --mut:#94a3b8; --dim:#64748b;
+  --cy:#22d3ee; --vi:#a78bfa; --pk:#f472b6; --gr:#34d399; --am:#fbbf24; --rd:#fb7185;
+  --mono:'JetBrains Mono',monospace; --head:'Space Grotesk',sans-serif; --body:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--body);line-height:1.65;overflow-x:hidden}
+::selection{background:rgba(34,211,238,.3)}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:6px}
+h1,h2,h3,h4{font-family:var(--head);line-height:1.2}
+code,pre,.mono{font-family:var(--mono)}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--body);cursor:pointer}
+
+/* ---------- top nav ---------- */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(6,10,20,.75);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.tb-in{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:0 24px;height:62px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--head);font-weight:700;font-size:18px;letter-spacing:.3px;white-space:nowrap}
+.logo-orb{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 0deg,var(--cy),var(--vi),var(--pk),var(--cy));position:relative;animation:spin 6s linear infinite}
+.logo-orb::after{content:'';position:absolute;inset:5px;border-radius:6px;background:var(--bg)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo span b{background:linear-gradient(90deg,var(--cy),var(--vi));-webkit-background-clip:text;background-clip:text;color:transparent}
+#mainnav{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+#mainnav::-webkit-scrollbar{display:none}
+#mainnav a{padding:7px 13px;border-radius:8px;font-size:13px;color:var(--mut);white-space:nowrap;transition:.25s;font-weight:600}
+#mainnav a:hover{color:var(--txt);background:var(--panel2)}
+#mainnav a.on{color:var(--cy);background:rgba(34,211,238,.1)}
+#progwrap{height:2px;background:rgba(148,163,184,.1)}
+#progbar{height:2px;width:0;background:linear-gradient(90deg,var(--cy),var(--vi),var(--pk));box-shadow:0 0 12px var(--cy)}
+
+/* ---------- hero ---------- */
+#hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding:110px 24px 70px}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%}
+.hero-glow{position:absolute;border-radius:50%;filter:blur(120px);opacity:.35;pointer-events:none}
+.hg1{width:520px;height:520px;background:#0e7490;top:-120px;left:-120px}
+.hg2{width:460px;height:460px;background:#6d28d9;bottom:-140px;right:-100px}
+.hero-in{position:relative;max-width:1400px;margin:0 auto;width:100%;display:grid;grid-template-columns:1.15fr .85fr;gap:60px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border:1px solid rgba(34,211,238,.35);background:rgba(34,211,238,.08);border-radius:999px;font-size:12.5px;color:var(--cy);font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--gr);box-shadow:0 0 10px var(--gr);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.3}}
+#hero h1{font-size:clamp(38px,5.4vw,68px);font-weight:700;margin:22px 0 18px;letter-spacing:-1px}
+#hero h1 .grad{background:linear-gradient(92deg,var(--cy) 0%,var(--vi) 45%,var(--pk) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-sub{font-size:17px;color:var(--mut);max-width:620px;margin-bottom:30px}
+.hero-sub b{color:var(--txt)}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:38px}
+.btn{padding:13px 26px;border-radius:12px;font-weight:700;font-size:14.5px;border:1px solid transparent;transition:.25s;display:inline-flex;align-items:center;gap:9px}
+.btn-p{background:linear-gradient(92deg,var(--cy),var(--vi));color:#04121a;box-shadow:0 8px 30px rgba(34,211,238,.3)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(167,139,250,.45)}
+.btn-g{border-color:var(--line2);color:var(--txt);background:var(--panel)}
+.btn-g:hover{background:var(--panel2);border-color:var(--cy)}
+.btn-s{padding:9px 18px;font-size:13px;border-radius:9px}
+.hero-stats{display:flex;gap:34px;flex-wrap:wrap}
+.hstat .n{font-family:var(--head);font-size:30px;font-weight:700;background:linear-gradient(90deg,var(--cy),var(--gr));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hstat .l{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.hero-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:30px}
+.chip{padding:6px 13px;border-radius:999px;font-size:12px;font-family:var(--mono);border:1px solid var(--line);color:var(--mut);background:var(--panel);transition:.25s}
+.chip:hover{border-color:var(--cy);color:var(--cy);transform:translateY(-2px)}
+/* hero right visual: live agent mini-terminal */
+.hero-card{background:rgba(8,13,26,.82);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+.hc-bar{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
+.hc-bar i{width:11px;height:11px;border-radius:50%}
+.hc-bar .t{margin-left:8px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+#heroFeed{padding:18px;font-family:var(--mono);font-size:12.5px;height:330px;overflow:hidden;display:flex;flex-direction:column;gap:9px}
+.hf-line{opacity:0;animation:hfIn .5s forwards}
+@keyframes hfIn{to{opacity:1}}
+.hf-line .tag{padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:600;margin-right:8px}
+.tag-th{background:rgba(167,139,250,.15);color:var(--vi)}
+.tag-ac{background:rgba(34,211,238,.15);color:var(--cy)}
+.tag-ob{background:rgba(52,211,153,.15);color:var(--gr)}
+.tag-an{background:rgba(251,191,36,.15);color:var(--am)}
+.hf-line span.tx{color:var(--mut)}
+.scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:var(--dim);font-size:11px;letter-spacing:2px;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:8px}
+.scroll-hint::after{content:'';width:1px;height:38px;background:linear-gradient(var(--cy),transparent);animation:drop 1.6s infinite}
+@keyframes drop{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1)}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ---------- sections ---------- */
+section{padding:96px 24px;position:relative}
+.wrap{max-width:1280px;margin:0 auto}
+.sec-tag{font-family:var(--mono);font-size:12px;color:var(--cy);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sec-tag::before{content:'';width:36px;height:1px;background:var(--cy)}
+.sec-title{font-size:clamp(28px,3.6vw,44px);font-weight:700;letter-spacing:-.5px;margin-bottom:14px}
+.sec-title em{font-style:normal;background:linear-gradient(90deg,var(--cy),var(--vi));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sec-desc{color:var(--mut);max-width:760px;font-size:15.5px;margin-bottom:44px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;transition:.3s}
+.panel:hover{border-color:var(--line2);background:var(--panel2)}
+.panel h3{font-size:18px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.panel h3 .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:17px;flex:none}
+.panel p{color:var(--mut);font-size:14px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .8s cubic-bezier(.2,.7,.3,1),transform .8s cubic-bezier(.2,.7,.3,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* code blocks */
+.codebox{background:#0a0f1d;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:18px}
+.cb-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 15px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line)}
+.cb-bar .fn{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.copy-btn{background:var(--panel2);border:1px solid var(--line);color:var(--mut);font-size:11.5px;padding:4px 11px;border-radius:7px;transition:.2s}
+.copy-btn:hover{color:var(--cy);border-color:var(--cy)}
+.codebox pre{padding:18px;overflow-x:auto;font-size:13px;line-height:1.75;color:#cbd5e1}
+.k{color:var(--vi)}.s{color:var(--gr)}.c{color:#5b6b82;font-style:italic}.f{color:var(--cy)}.n{color:var(--am)}.p{color:var(--pk)}
+
+/* tokenizer */
+.tok-input{width:100%;background:#0a0f1d;border:1px solid var(--line2);border-radius:12px;padding:14px 16px;color:var(--txt);font-family:var(--mono);font-size:14px;outline:none;transition:.25s;resize:vertical;min-height:52px}
+.tok-input:focus{border-color:var(--cy);box-shadow:0 0 0 3px rgba(34,211,238,.12)}
+#tokOut{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px;min-height:44px}
+.tok{padding:6px 10px;border-radius:8px;font-family:var(--mono);font-size:13px;border:1px solid;animation:tokIn .35s backwards;white-space:pre-wrap}
+@keyframes tokIn{from{opacity:0;transform:scale(.6)}}
+.tok small{opacity:.6;margin-left:6px;font-size:10px}
+.tok-stats{display:flex;gap:26px;margin-top:16px;flex-wrap:wrap}
+.tok-stats div{font-size:12.5px;color:var(--dim)}
+.tok-stats b{color:var(--cy);font-family:var(--mono);font-size:15px}
+
+/* attention */
+#attnWrap{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start}
+#attnGrid{display:grid;gap:4px}
+.ag-cell{width:52px;height:40px;border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:10.5px;transition:.2s;cursor:pointer}
+.ag-cell:hover{transform:scale(1.12);z-index:2;box-shadow:0 0 18px rgba(34,211,238,.4)}
+.ag-lab{display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--mut);height:40px}
+.ag-lab.col{height:26px}
+#attnInfo{font-size:13.5px;color:var(--mut)}
+#attnBars{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+.ab-row{display:grid;grid-template-columns:74px 1fr 46px;gap:10px;align-items:center;font-family:var(--mono);font-size:12px}
+.ab-track{height:9px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden}
+.ab-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cy),var(--vi));width:0;transition:width .7s cubic-bezier(.2,.7,.3,1)}
+
+/* embedding canvas */
+.emb-box{position:relative}
+#embCanvas{width:100%;height:380px;border-radius:14px;background:#080d19;border:1px solid var(--line);display:block}
+#embTip{position:absolute;pointer-events:none;background:rgba(8,13,26,.95);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-family:var(--mono);font-size:11.5px;opacity:0;transition:opacity .15s;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.emb-filters{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.ef-btn{padding:6px 15px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:12.5px;font-weight:600;transition:.2s}
+.ef-btn.on{color:#04121a;font-weight:700}
+.ef-btn[data-cat="all"].on{background:linear-gradient(90deg,var(--cy),var(--vi));border-color:transparent}
+.ef-btn[data-cat="ai"].on{background:var(--cy);border-color:transparent}
+.ef-btn[data-cat="food"].on{background:var(--pk);border-color:transparent}
+.ef-btn[data-cat="nature"].on{background:var(--gr);border-color:transparent}
+.ef-btn[data-cat="code"].on{background:var(--am);border-color:transparent}
+
+/* RL chart */
+#rlCanvas{width:100%;height:280px;background:#080d19;border:1px solid var(--line);border-radius:14px;display:block}
+.rl-ctrl{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.rl-ep{margin-left:auto;font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+.rl-ep b{color:var(--gr)}
+
+/* agent loop ring */
+.loop-box{position:relative;width:340px;height:340px;margin:0 auto;flex:none}
+.loop-ring-svg{position:absolute;inset:0;animation:spin 22s linear infinite}
+.loop-node{position:absolute;width:104px;height:104px;border-radius:50%;background:rgba(10,16,31,.9);border:1.5px solid var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:700;font-size:13.5px;transition:.35s;z-index:2}
+.loop-node small{font-size:10px;color:var(--dim);font-weight:500;text-align:center;padding:0 8px}
+.loop-node[data-step="perceive"]{top:0;left:50%;transform:translateX(-50%)}
+.loop-node[data-step="think"]{top:50%;right:0;transform:translateY(-50%)}
+.loop-node[data-step="act"]{bottom:0;left:50%;transform:translateX(-50%)}
+.loop-node[data-step="observe"]{top:50%;left:0;transform:translateY(-50%)}
+.loop-node.hot{border-color:var(--cy);box-shadow:0 0 0 6px rgba(34,211,238,.12),0 0 34px rgba(34,211,238,.45);color:var(--cy);transform-origin:center}
+.loop-node[data-step="perceive"].hot{transform:translateX(-50%) scale(1.08)}
+.loop-node[data-step="act"].hot{transform:translateX(-50%) scale(1.08)}
+.loop-node[data-step="think"].hot,.loop-node[data-step="observe"].hot{transform:translateY(-50%) scale(1.08)}
+.loop-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 32% 30%,rgba(34,211,238,.5),rgba(109,40,217,.4));display:grid;place-items:center;font-size:34px;animation:pulse 3s infinite;z-index:1}
+@keyframes pulse{50%{box-shadow:0 0 0 18px rgba(34,211,238,.06)}}
+
+/* agent chat */
+#agentLog{background:#080d19;border:1px solid var(--line);border-radius:14px;padding:18px;height:430px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+#agentLog::-webkit-scrollbar{width:6px}#agentLog::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
+.msg{border-radius:12px;padding:12px 15px;font-size:13.5px;animation:msgIn .4s cubic-bezier(.2,.7,.3,1);max-width:92%}
+@keyframes msgIn{from{opacity:0;transform:translateY(14px)}}
+.msg .who{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:7px}
+.msg.user{background:rgba(148,163,184,.09);border:1px solid var(--line);align-self:flex-start}
+.msg.user .who{color:var(--mut)}
+.msg.thought{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);align-self:flex-start}
+.msg.thought .who{color:var(--vi)}
+.msg.action{background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.35);align-self:flex-end;font-family:var(--mono);font-size:12.5px}
+.msg.action .who{color:var(--cy)}
+.msg.observation{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.3);align-self:flex-start;font-family:var(--mono);font-size:12.5px}
+.msg.observation .who{color:var(--gr)}
+.msg.answer{background:linear-gradient(92deg,rgba(251,191,36,.1),rgba(52,211,153,.1));border:1px solid rgba(251,191,36,.4);align-self:flex-start;box-shadow:0 0 30px rgba(251,191,36,.1)}
+.msg.answer .who{color:var(--am)}
+.typing::after{content:'▍';animation:blink 1s infinite;color:var(--cy)}
+
+/* memory */
+#memChips{display:flex;flex-wrap:wrap;gap:9px;min-height:40px}
+.mchip{padding:7px 14px;border-radius:999px;font-size:12.5px;font-family:var(--mono);background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.35);color:#c4b5fd;animation:tokIn .4s}
+.mchip.new{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.4);color:#6ee7b7}
+.mem-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.mem-row input{flex:1;min-width:180px}
+#memResults{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+
+/* RAG pipeline */
+.rag-flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:14px}
+.rag-stage{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px 12px;text-align:center;position:relative;transition:.35s}
+.rag-stage .ric{font-size:23px;display:block;margin-bottom:7px;filter:grayscale(.4);transition:.35s}
+.rag-stage .rt{font-size:12.5px;font-weight:700}
+.rag-stage .rd{font-size:10.5px;color:var(--dim);margin-top:3px;font-family:var(--mono)}
+.rag-stage.active{border-color:var(--cy);background:rgba(34,211,238,.08);box-shadow:0 0 26px rgba(34,211,238,.25);transform:translateY(-4px)}
+.rag-stage.active .ric{filter:none;transform:scale(1.15)}
+.rag-stage.done{border-color:rgba(52,211,153,.5)}
+.rag-arrow{align-self:center;color:var(--dim);font-size:17px;flex:none}
+#ragOut{margin-top:22px;display:flex;flex-direction:column;gap:14px}
+.rag-card{background:#0a0f1d;border:1px solid var(--line);border-radius:13px;padding:16px;animation:msgIn .45s}
+.rag-card h4{font-size:12px;font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--cy);margin-bottom:11px}
+.hit-row{display:grid;grid-template-columns:1fr 130px 52px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.hit-row:last-child{border:none}
+.hit-row .ht{color:var(--mut);font-family:var(--mono);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hit-row .sc{font-family:var(--mono);font-size:11.5px;color:var(--gr);text-align:right}
+.rag-prompt{font-family:var(--mono);font-size:12px;color:#a5b4cf;white-space:pre-wrap;background:rgba(255,255,255,.03);border-radius:9px;padding:13px;border:1px dashed var(--line2)}
+
+/* planning tree */
+#treeSvg{width:100%;height:auto;display:block}
+.tnode{opacity:0;transform:translateY(12px);transition:.6s cubic-bezier(.2,.7,.3,1)}
+.tnode.in{opacity:1;transform:none}
+.tnode rect{transition:.3s}
+.tnode:hover rect{filter:brightness(1.4)}
+
+/* multi-agent */
+.ma-box{position:relative;height:430px;background:#080d19;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ma-svg{position:absolute;inset:0;width:100%;height:100%}
+.ma-link{stroke:rgba(148,163,184,.22);stroke-width:1.5;fill:none;transition:.3s}
+.ma-link.hot{stroke:var(--cy);stroke-width:2.5;stroke-dasharray:7 7;animation:dashmove .6s linear infinite;filter:drop-shadow(0 0 6px var(--cy))}
+@keyframes dashmove{to{stroke-dashoffset:-14}}
+.ma-node{position:absolute;transform:translate(-50%,-50%);width:132px;padding:13px 8px;border-radius:14px;background:rgba(12,18,34,.95);border:1.5px solid var(--line2);text-align:center;transition:.35s;z-index:2}
+.ma-node .mi{font-size:22px;display:block;margin-bottom:5px}
+.ma-node .mn{font-size:12.5px;font-weight:700}
+.ma-node .ms{font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:3px;min-height:14px}
+.ma-node.hot{border-color:var(--vi);box-shadow:0 0 30px rgba(167,139,250,.4);transform:translate(-50%,-50%) scale(1.07)}
+.ma-node.orch{width:150px;border-color:rgba(34,211,238,.5)}
+#maLog{background:#0a0f1d;border:1px solid var(--line);border-radius:14px;padding:15px;height:430px;overflow-y:auto;font-family:var(--mono);font-size:12px;display:flex;flex-direction:column;gap:8px}
+#maLog::-webkit-scrollbar{width:6px}#maLog::-webkit-scrollbar-thumb{background:#1e293b}
+.ml{animation:msgIn .35s;color:var(--mut);padding:7px 11px;border-radius:8px;background:rgba(255,255,255,.03);border-left:2px solid var(--dim)}
+.ml b{color:var(--cy)}
+.ml.ok{border-left-color:var(--gr);color:#a7f3d0}
+.ml.task{border-left-color:var(--vi);color:#ddd6fe}
+
+/* MCP */
+.mcp-arch{display:grid;grid-template-columns:1fr;gap:0;position:relative}
+.mcp-host{border:1.5px solid rgba(34,211,238,.4);background:rgba(34,211,238,.04);border-radius:18px;padding:20px;position:relative}
+.mcp-lab{position:absolute;top:-11px;left:20px;background:var(--bg);padding:0 10px;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--cy);text-transform:uppercase}
+.mcp-clients{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+.mcp-client{border:1px dashed rgba(167,139,250,.5);border-radius:12px;padding:12px;text-align:center;font-size:12.5px;background:rgba(167,139,250,.05)}
+.mcp-client b{display:block;font-size:13px;color:#c4b5fd}
+.mcp-client small{color:var(--dim);font-family:var(--mono);font-size:10.5px}
+.mcp-wires{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;height:52px;position:relative}
+.wire{position:relative;margin:0 auto;width:2px;height:100%;background:linear-gradient(var(--vi),var(--gr));opacity:.5}
+.wire::after{content:'';position:absolute;left:50%;top:0;width:8px;height:8px;border-radius:50%;background:var(--cy);transform:translateX(-50%);box-shadow:0 0 12px var(--cy);animation:wiredrop 1.8s infinite}
+.wire:nth-child(2)::after{animation-delay:.5s}
+.wire:nth-child(3)::after{animation-delay:1s}
+@keyframes wiredrop{0%{top:0;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:100%;opacity:0}}
+.mcp-servers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mcp-server{border:1.5px solid rgba(52,211,153,.45);background:rgba(52,211,153,.05);border-radius:14px;padding:15px;text-align:center;transition:.3s}
+.mcp-server:hover{transform:translateY(-4px);box-shadow:0 12px 34px rgba(52,211,153,.2)}
+.mcp-server b{font-size:13.5px;color:#6ee7b7;display:block}
+.mcp-server small{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.mcp-server .caps{display:flex;gap:6px;justify-content:center;margin-top:9px;flex-wrap:wrap}
+.cap{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.06);color:var(--mut)}
+#mcpTerm{background:#050a12;border:1px solid var(--line);border-radius:14px;height:380px;overflow-y:auto;padding:16px;font-family:var(--mono);font-size:12px;line-height:1.7}
+#mcpTerm::-webkit-scrollbar{width:6px}#mcpTerm::-webkit-scrollbar-thumb{background:#1e293b}
+.mt-line{animation:msgIn .3s;margin-bottom:9px;white-space:pre-wrap;word-break:break-word}
+.mt-line .dir{font-weight:600;margin-right:8px}
+.mt-c .dir{color:var(--cy)}.mt-s .dir{color:var(--gr)}
+.mt-c{color:#7dd3fc;background:rgba(34,211,238,.05);border-left:2px solid var(--cy);padding:7px 11px;border-radius:7px}
+.mt-s{color:#86efac;background:rgba(52,211,153,.05);border-left:2px solid var(--gr);padding:7px 11px;border-radius:7px}
+.mt-note{color:var(--dim);font-style:italic}
+
+/* roadmap */
+.road{position:relative;padding-left:38px}
+.road::before{content:'';position:absolute;left:13px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--cy),var(--vi),var(--pk),var(--gr))}
+.road-step{position:relative;margin-bottom:26px}
+.road-step::before{content:attr(data-n);position:absolute;left:-38px;top:2px;width:28px;height:28px;border-radius:50%;background:var(--bg2);border:2px solid var(--cy);display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--cy);z-index:1}
+.road-step h4{font-size:16.5px;margin-bottom:6px}
+.road-step p{color:var(--mut);font-size:13.5px;max-width:760px}
+.road-step .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+
+footer{border-top:1px solid var(--line);padding:44px 24px;text-align:center;color:var(--dim);font-size:13px}
+footer b{color:var(--cy)}
+#toTop{position:fixed;right:26px;bottom:26px;width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--cy),var(--vi));color:#04121a;font-size:18px;font-weight:700;border:none;opacity:0;pointer-events:none;transition:.3s;z-index:90;box-shadow:0 10px 30px rgba(34,211,238,.35)}
+#toTop.show{opacity:1;pointer-events:auto}
+#toTop:hover{transform:translateY(-3px)}
+
+@media(max-width:1020px){
+  .hero-in{grid-template-columns:1fr}
+  .grid3,.grid4{grid-template-columns:repeat(2,1fr)}
+  #attnWrap{grid-template-columns:1fr}
+  .mcp-clients,.mcp-servers,.mcp-wires{grid-template-columns:repeat(2,1fr)}
+  .mcp-wires{display:none}
+}
+@media(max-width:680px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .loop-box{transform:scale(.85);margin:-20px auto}
+  .ma-box{height:380px}
+  .ma-node{width:104px;padding:9px 5px}
+  .hit-row{grid-template-columns:1fr 80px 44px}
+  section{padding:70px 16px}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="tb-in">
+    <a class="logo" href="#hero"><span class="logo-orb"></span><span>Agent<b>Verse</b></span></a>
+    <nav id="mainnav">
+      <a href="#foundations">Foundations</a>
+      <a href="#ml">ML Paradigms</a>
+      <a href="#agents">AI Agents</a>
+      <a href="#tools">Tools & Memory</a>
+      <a href="#rag">RAG</a>
+      <a href="#agentic">Agentic AI</a>
+      <a href="#mcp">MCP</a>
+      <a href="#roadmap">Roadmap</a>
+    </nav>
+  </div>
+  <div id="progwrap"><div id="progbar"></div></div>
+</div>
+
+<!-- ================= HERO ================= -->
+<section id="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-glow hg1"></div><div class="hero-glow hg2"></div>
+  <div class="hero-in">
+    <div>
+      <span class="badge"><span class="dot"></span> Interactive Developer Tutorial</span>
+      <h1>Master <span class="grad">AI Agents</span>, Agentic AI &amp; <span class="grad">MCP</span> visually.</h1>
+      <p class="hero-sub">A hands-on, animated guide for developers: <b>LLM foundations</b>, the <b>ReAct agent loop</b>, <b>function calling</b>, <b>memory</b>, <b>RAG pipelines</b>, <b>multi-agent orchestration</b> and the <b>Model Context Protocol</b> — every concept explained with live simulations, sample data and runnable code.</p>
+      <div class="cta-row">
+        <a class="btn btn-p" href="#foundations">▶ Start Learning</a>
+        <a class="btn btn-g" href="#mcp">Jump to MCP ⚡</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="n">8</div><div class="l">Live Demos</div></div>
+        <div class="hstat"><div class="n">5</div><div class="l">Code Samples</div></div>
+        <div class="hstat"><div class="n">20+</div><div class="l">Concepts</div></div>
+        <div class="hstat"><div class="n">100%</div><div class="l">Interactive</div></div>
+      </div>
+      <div class="hero-chips">
+        <span class="chip">LLM</span><span class="chip">tokens</span><span class="chip">embeddings</span><span class="chip">attention</span><span class="chip">ReAct</span><span class="chip">function-calling</span><span class="chip">vector-db</span><span class="chip">RAG</span><span class="chip">planning</span><span class="chip">multi-agent</span><span class="chip">MCP</span><span class="chip">JSON-RPC</span>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hc-bar"><i style="background:#fb7185"></i><i style="background:#fbbf24"></i><i style="background:#34d399"></i><span class="t">agent_trace.log — live</span></div>
+      <div id="heroFeed"></div>
+    </div>
+  </div>
+  <div class="scroll-hint">scroll</div>
+</section>
+
+<!-- ================= 01 FOUNDATIONS ================= -->
+<section id="foundations">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 01</div>
+    <h2 class="sec-title reveal">AI &amp; LLM <em>Foundations</em></h2>
+    <p class="sec-desc reveal">Everything an agent is built on: a Large Language Model that turns text into <b>tokens</b>, maps tokens into <b>embedding vectors</b>, and uses <b>attention</b> to decide which tokens matter. Play with each primitive below.</p>
+
+    <div class="grid4 reveal" style="margin-bottom:26px">
+      <div class="panel"><h3><span class="ic" style="background:rgba(34,211,238,.12)">🧠</span>LLM</h3><p>A neural network trained to predict the next token. Given "The cat sat on the…", it assigns probabilities to every possible next token and samples one.</p></div>
+      <div class="panel"><h3><span class="ic" style="background:rgba(167,139,250,.12)">🔤</span>Tokens</h3><p>The atomic units of text (≈4 chars). Models see token IDs, not words. Context windows are priced and limited in tokens.</p></div>
+      <div class="panel"><h3><span class="ic" style="background:rgba(244,114,182,.12)">📍</span>Embeddings</h3><p>Numbers-in-space representation of meaning. Similar meanings → nearby vectors. Powers search, RAG and memory.</p></div>
+      <div class="panel"><h3><span class="ic" style="background:rgba(52,211,153,.12)">🎯</span>Attention</h3><p>Each token computes a weighted look at every other token. This is how "it" knows what "it" refers to.</p></div>
+    </div>
+
+    <!-- tokenizer -->
+    <div class="panel reveal">
+      <h3><span class="ic" style="background:rgba(34,211,238,.12)">🔤</span>Interactive Tokenizer <small style="color:var(--dim);font-weight:400">— type text, watch it become tokens</small></h3>
+      <p>LLMs never read your string directly. It is first chopped into sub-word tokens, each mapped to an integer ID. Try editing the text below.</p>
+      <textarea id="tokInput" class="tok-input" rows="2" style="margin-top:14px">Agentic AI uses tools, memory and planning to get work done.</textarea>
+      <div id="tokOut"></div>
+      <div class="tok-stats">
+        <div>characters <b id="tokChars">0</b></div>
+        <div>tokens <b id="tokCount">0</b></div>
+        <div>≈ bytes <b id="tokBytes">0</b></div>
+        <div>≈ cost @ $3/M input <b id="tokCost">$0.0000</b></div>
+      </div>
+    </div>
+
+    <!-- attention -->
+    <div class="panel reveal" style="margin-top:26px">
+      <h3><span class="ic" style="background:rgba(244,114,182,.12)">🎯</span>Attention Heatmap <small style="color:var(--dim);font-weight:400">— click any row token</small></h3>
+      <p>Sentence: <span class="mono" style="color:var(--pk)">"The cat sat on the mat"</span>. Each row shows how strongly that token "looks at" every column token when building its representation. Brighter = more attention.</p>
+      <div id="attnWrap" style="margin-top:20px">
+        <div id="attnGrid"></div>
+        <div id="attnInfo">
+          <b style="color:var(--txt)">👆 Pick a token row</b> to inspect its attention distribution. Notice how <span class="mono" style="color:var(--cy)">sat</span> attends strongly to <span class="mono" style="color:var(--cy)">cat</span> — the verb binds to its subject, exactly like a dependency parse.
+          <div id="attnBars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- embeddings -->
+    <div class="panel reveal" style="margin-top:26px">
+      <h3><span class="ic" style="background:rgba(52,211,153,.12)">📍</span>Embedding Space Explorer <small style="color:var(--dim);font-weight:400">— hover points, filter clusters</small></h3>
+      <p>A 2-D projection (think t-SNE/UMAP) of a real embedding space: semantically related words cluster together. This geometry is what vector databases search over in RAG and agent memory.</p>
+      <div class="emb-box" style="margin-top:16px">
+        <canvas id="embCanvas"></canvas>
+        <div id="embTip"></div>
+      </div>
+      <div class="emb-filters">
+        <button class="ef-btn on" data-cat="all">All clusters</button>
+        <button class="ef-btn" data-cat="ai">🤖 AI</button>
+        <button class="ef-btn" data-cat="food">🍕 Food</button>
+        <button class="ef-btn" data-cat="nature">🌲 Nature</button>
+        <button class="ef-btn" data-cat="code">💻 Code</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 02 ML ================= -->
+<section id="ml" style="background:linear-gradient(180deg,transparent,rgba(109,40,217,.05),transparent)">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 02</div>
+    <h2 class="sec-title reveal">How Models <em>Learn</em> — ML Paradigms</h2>
+    <p class="sec-desc reveal">Three families of learning power everything from spam filters to autonomous agents. The animated chart shows a reinforcement-learning agent actually improving episode after episode.</p>
+    <div class="grid3 reveal">
+      <div class="panel"><h3><span class="ic" style="background:rgba(34,211,238,.12)">🏷️</span>Supervised</h3><p>Learn input→output from labeled pairs. <b style="color:var(--txt)">Example:</b> classify tickets as bug/feature. LLM pre-training &amp; fine-tuning are supervised next-token prediction at massive scale.</p>
+        <div class="codebox"><div class="cb-bar"><span class="fn">signal → label</span></div><pre><code>email:  <span class="s">"WIN $$$ NOW!!!"</span>  →  <span class="p">SPAM</span>
+email:  <span class="s">"Q3 roadmap draft"</span>  →  <span class="gr" style="color:var(--gr)">HAM</span></code></pre></div></div>
+      <div class="panel"><h3><span class="ic" style="background:rgba(167,139,250,.12)">🧩</span>Unsupervised</h3><p>Find structure with no labels: clustering, embeddings, dimensionality reduction. This is what produces the embedding space in Module 01 and powers semantic search.</p>
+        <div class="codebox"><div class="cb-bar"><span class="fn">structure discovery</span></div><pre><code>cluster(users) →
+  [<span class="s">"night-owls"</span>, <span class="s">"weekend-bulk"</span>, <span class="s">"daily-sippers"</span>]</code></pre></div></div>
+      <div class="panel"><h3><span class="ic" style="background:rgba(52,211,153,.12)">🎮</span>Reinforcement</h3><p>An agent acts in an environment, receives reward, and optimizes long-term return. RLHF/RLAIF uses this to align LLMs; agents use it to learn tool policies.</p>
+        <div class="codebox"><div class="cb-bar"><span class="fn">reward loop</span></div><pre><code>state → action → reward
+ s<sub>t</sub>   a<sub>t</sub>     r<sub>t</sub>  → update policy π</code></pre></div></div>
+    </div>
+    <div class="panel reveal" style="margin-top:26px">
+      <h3><span class="ic" style="background:rgba(52,211,153,.12)">📈</span>Live RL Training Curve <small style="color:var(--dim);font-weight:400">— CartPole-style agent learning to balance</small></h3>
+      <p>Watch reward climb as the policy improves. Early episodes are chaotic (low score), later episodes saturate near the max. The noisy line is per-episode reward; the smooth line is a moving average.</p>
+      <canvas id="rlCanvas" style="margin-top:16px"></canvas>
+      <div class="rl-ctrl">
+        <button class="btn btn-p btn-s" id="rlPlay">⏸ Pause</button>
+        <button class="btn btn-g btn-s" id="rlReset">↺ Restart training</button>
+        <span class="rl-ep">episode <b id="rlEp">0</b>/160 · best reward <b id="rlBest">0</b></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 03 AGENTS ================= -->
+<section id="agents">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 03</div>
+    <h2 class="sec-title reveal">AI <em>Agents</em> — the ReAct Loop</h2>
+    <p class="sec-desc reveal">An <b>agent</b> = LLM + a loop: it <b>perceives</b> a goal, <b>thinks</b> (reasons), <b>acts</b> (calls a tool), <b>observes</b> the result, and repeats until done. Press run and watch a real trace unfold step-by-step.</p>
+    <div class="grid2 reveal">
+      <div class="panel">
+        <h3><span class="ic" style="background:rgba(34,211,238,.12)">🔄</span>The Agent Loop</h3>
+        <p style="text-align:center">The loop highlights in sync with the live trace on the right.</p>
+        <div class="loop-box" style="margin-top:20px">
+          <svg class="loop-ring-svg" viewBox="0 0 340 340"><circle cx="170" cy="170" r="128" fill="none" stroke="rgba(34,211,238,.25)" stroke-width="1.5" stroke-dasharray="5 9"/></svg>
+          <div class="loop-core">🤖</div>
+          <div class="loop-node" data-step="perceive">👁 Perceive<small>goal + context</small></div>
+          <div class="loop-node" data-step="think">🧠 Think<small>LLM reasons</small></div>
+          <div class="loop-node" data-step="act">🛠 Act<small>tool call</small></div>
+          <div class="loop-node" data-step="observe">📥 Observe<small>tool result</small></div>
+        </div>
+        <div class="codebox">
+          <div class="cb-bar"><span class="fn">agent.py — the whole idea in 10 lines</span><button class="copy-btn" data-copy="codeAgent">copy</button></div>
+          <pre><code id="codeAgent"><span class="c"># Minimal ReAct agent loop</span>
+<span class="k">def</span> <span class="f">run_agent</span>(task, tools, llm, max_steps=<span class="n">8</span>):
+    history = [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: task}]
+    <span class="k">for</span> step <span class="k">in</span> <span class="f">range</span>(max_steps):
+        reply = llm.<span class="f">chat</span>(history, tools=tools)   <span class="c"># THINK</span>
+        <span class="k">if</span> reply.tool_call:                      <span class="c"># ACT</span>
+            out = tools[reply.tool_call.name](**reply.tool_call.args)
+            history.<span class="f">append</span>({<span class="s">"role"</span>: <span class="s">"tool"</span>, <span class="s">"content"</span>: out})  <span class="c"># OBSERVE</span>
+        <span class="k">else</span>:
+            <span class="k">return</span> reply.content                 <span class="c"># FINAL ANSWER</span>
+    <span class="k">return</span> <span class="s">"max steps reached"</span></code></pre>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><span class="ic" style="background:rgba(251,191,36,.12)">🎬</span>Live Agent Trace <small style="color:var(--dim);font-weight:400">— simulated run with 2 tools</small></h3>
+        <div id="agentLog" style="margin-top:6px"></div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn btn-p btn-s" id="runAgent">▶ Run agent</button>
+          <button class="btn btn-g btn-s" id="resetAgent">↺ Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 04 TOOLS & MEMORY ================= -->
+<section id="tools" style="background:linear-gradient(180deg,transparent,rgba(34,211,238,.04),transparent)">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 04</div>
+    <h2 class="sec-title reveal">Superpowers: <em>Tools</em>, Function-Calling &amp; <em>Memory</em></h2>
+    <p class="sec-desc reveal">A bare LLM can only talk. Tools let it <b>do</b>; memory lets it <b>remember</b>. Function-calling is the contract: you describe a function with JSON Schema, the model emits structured arguments, your runtime executes it.</p>
+    <div class="grid2 reveal">
+      <div class="panel">
+        <h3><span class="ic" style="background:rgba(34,211,238,.12)">🛠</span>Function Calling Flow</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin:14px 0">
+          <div class="rag-stage active" style="text-align:left;padding:12px 16px"><span class="rt">1 · User</span><div class="rd" style="text-align:left;color:var(--mut)">"What's the weather in Tokyo?"</div></div>
+          <div class="rag-arrow" style="transform:rotate(90deg)">➜</div>
+          <div class="rag-stage" style="text-align:left;padding:12px 16px;border-color:rgba(167,139,250,.5)"><span class="rt" style="color:var(--vi)">2 · LLM chooses tool</span><div class="rd" style="text-align:left;color:var(--mut)">emits <span class="mono">{"name":"get_weather","arguments":{"city":"Tokyo"}}</span></div></div>
+          <div class="rag-arrow" style="transform:rotate(90deg)">➜</div>
+          <div class="rag-stage" style="text-align:left;padding:12px 16px;border-color:rgba(52,211,153,.5)"><span class="rt" style="color:var(--gr)">3 · Your runtime executes</span><div class="rd" style="text-align:left;color:var(--mut)">runs real code / API, returns result string to the model</div></div>
+        </div>
+        <div class="codebox">
+          <div class="cb-bar"><span class="fn">tool_schema.json</span><button class="copy-btn" data-copy="codeSchema">copy</button></div>
+          <pre><code id="codeSchema">{
+  <span class="p">"name"</span>: <span class="s">"get_weather"</span>,
+  <span class="p">"description"</span>: <span class="s">"Get current weather for a city"</span>,
+  <span class="p">"parameters"</span>: {
+    <span class="p">"type"</span>: <span class="s">"object"</span>,
+    <span class="p">"properties"</span>: {
+      <span class="p">"city"</span>:  { <span class="p">"type"</span>: <span class="s">"string"</span>, <span class="p">"description"</span>: <span class="s">"City name"</span> },
+      <span class="p">"units"</span>: { <span class="p">"type"</span>: <span class="s">"string"</span>, <span class="p">"enum"</span>: [<span class="s">"celsius"</span>, <span class="s">"fahrenheit"</span>] }
+    },
+    <span class="p">"required"</span>: [<span class="s">"city"</span>]
+  }
+}</code></pre>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><span class="ic" style="background:rgba(167,139,250,.12)">💾</span>Memory Playground</h3>
+        <p><b style="color:var(--txt)">Long-term memory</b> = memories embedded into a vector store, retrieved by similarity when relevant. Store a memory, then query the store — retrieval uses keyword-overlap scoring as a stand-in for cosine similarity.</p>
+        <div id="memChips" style="margin-top:16px"></div>
+        <div class="mem-row">
+          <input id="memAddInput" class="tok-input" style="min-height:44px" placeholder="e.g. User prefers dark mode UIs">
+          <button class="btn btn-g btn-s" id="memAdd">＋ Store</button>
+        </div>
+        <div class="mem-row">
+          <input id="memQuery" class="tok-input" style="min-height:44px" placeholder="🔍 Query memory… e.g. which database does the user use?">
+          <button class="btn btn-p btn-s" id="memSearch">Search</button>
+        </div>
+        <div id="memResults"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 05 RAG ================= -->
+<section id="rag">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 05</div>
+    <h2 class="sec-title reveal"><em>RAG</em> — Retrieval-Augmented Generation</h2>
+    <p class="sec-desc reveal">Give the model your private, up-to-date knowledge without retraining: chunk documents → embed → store in a vector DB → retrieve top-k for the question → paste into the prompt → answer with citations. Run the full pipeline on sample data.</p>
+    <div class="panel reveal">
+      <h3><span class="ic" style="background:rgba(52,211,153,.12)">⚙️</span>Pipeline Simulator <small style="color:var(--dim);font-weight:400">— sample corpus: NovaDB handbook (4 chunks)</small></h3>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 20px">
+        <input id="ragQuery" class="tok-input" style="flex:1;min-width:220px;min-height:44px" value="How do I create a backup of my NovaDB database?">
+        <button class="btn btn-p btn-s" id="ragRun">▶ Run pipeline</button>
+      </div>
+      <div class="rag-flow" id="ragIndexFlow">
+        <div class="rag-stage" data-st="docs"><span class="ric">📄</span><span class="rt">Documents</span><div class="rd">handbook.md</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="chunk"><span class="ric">✂️</span><span class="rt">Chunking</span><div class="rd">400 tok / 80 ovlp</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="embed"><span class="ric">🧮</span><span class="rt">Embedding</span><div class="rd">1536-dim</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="vdb"><span class="ric">🗄️</span><span class="rt">Vector DB</span><div class="rd">HNSW index</div></div>
+      </div>
+      <div class="rag-flow" id="ragQueryFlow">
+        <div class="rag-stage" data-st="q"><span class="ric">❓</span><span class="rt">Query</span><div class="rd">user question</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="qemb"><span class="ric">🧮</span><span class="rt">Embed query</span><div class="rd">same model!</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="search"><span class="ric">🎯</span><span class="rt">Top-k search</span><div class="rd">cosine, k=3</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="ctx"><span class="ric">📦</span><span class="rt">Augment prompt</span><div class="rd">context + q</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="llm"><span class="ric">🤖</span><span class="rt">LLM</span><div class="rd">grounded gen</div></div>
+        <div class="rag-arrow">➜</div>
+        <div class="rag-stage" data-st="ans"><span class="ric">💬</span><span class="rt">Answer</span><div class="rd">+ citations</div></div>
+      </div>
+      <div id="ragOut"></div>
+      <div class="codebox">
+        <div class="cb-bar"><span class="fn">rag.py — retriever in 8 lines</span><button class="copy-btn" data-copy="codeRag">copy</button></div>
+        <pre><code id="codeRag">chunks = <span class="f">split_docs</span>(docs, size=<span class="n">400</span>, overlap=<span class="n">80</span>)
+index  = <span class="f">embed</span>(chunks)                    <span class="c"># → vector DB</span>
+
+<span class="k">def</span> <span class="f">answer</span>(question):
+    hits = index.<span class="f">search</span>(<span class="f">embed</span>(question), top_k=<span class="n">3</span>)
+    ctx  = <span class="s">"\n"</span>.<span class="f">join</span>(h.text <span class="k">for</span> h <span class="k">in</span> hits)
+    <span class="k">return</span> llm.<span class="f">chat</span>(<span class="s">f"Context:\n{ctx}\n\nQ: {question}"</span>)</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 06 AGENTIC ================= -->
+<section id="agentic" style="background:linear-gradient(180deg,transparent,rgba(244,114,182,.04),transparent)">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 06</div>
+    <h2 class="sec-title reveal"><em>Agentic AI</em> — Planning &amp; Multi-Agent Orchestration</h2>
+    <p class="sec-desc reveal">One loop is an agent; a <b>system</b> of agents is agentic AI. A planner decomposes goals into a task tree, and an orchestrator routes sub-tasks to specialist agents (research, code, review, write) that message each other until the goal is met.</p>
+    <div class="panel reveal">
+      <h3><span class="ic" style="background:rgba(251,191,36,.12)">🌳</span>Planner: Goal → Task Tree</h3>
+      <p>The LLM planner turns one vague goal into an executable DAG of sub-tasks with dependencies.</p>
+      <svg id="treeSvg" viewBox="0 0 900 300" style="margin-top:16px">
+        <g stroke="rgba(148,163,184,.3)" stroke-width="1.5" fill="none">
+          <path d="M450 60 V110 M450 110 H150 M450 110 H350 M450 110 H550 M450 110 H750 M150 110 V140 M350 110 V140 M550 110 V140 M750 110 V140 M350 170 V210 M350 210 H270 M350 210 H430 M270 210 V235 M430 210 V235"/>
+        </g>
+        <g class="tnode" data-d="0"><rect x="330" y="22" width="240" height="40" rx="10" fill="rgba(34,211,238,.14)" stroke="#22d3ee"/><text x="450" y="47" fill="#e2e8f0" font-size="14" font-weight="700" text-anchor="middle" font-family="Space Grotesk">🎯 Ship weekly AI newsletter</text></g>
+        <g class="tnode" data-d="1"><rect x="80" y="140" width="140" height="34" rx="9" fill="rgba(167,139,250,.13)" stroke="#a78bfa"/><text x="150" y="162" fill="#ddd6fe" font-size="12" text-anchor="middle">1 · Research topics</text></g>
+        <g class="tnode" data-d="2"><rect x="280" y="140" width="140" height="34" rx="9" fill="rgba(167,139,250,.13)" stroke="#a78bfa"/><text x="350" y="162" fill="#ddd6fe" font-size="12" text-anchor="middle">2 · Draft content</text></g>
+        <g class="tnode" data-d="3"><rect x="480" y="140" width="140" height="34" rx="9" fill="rgba(167,139,250,.13)" stroke="#a78bfa"/><text x="550" y="162" fill="#ddd6fe" font-size="12" text-anchor="middle">3 · Review &amp; edit</text></g>
+        <g class="tnode" data-d="4"><rect x="680" y="140" width="140" height="34" rx="9" fill="rgba(167,139,250,.13)" stroke="#a78bfa"/><text x="750" y="162" fill="#ddd6fe" font-size="12" text-anchor="middle">4 · Publish &amp; log</text></g>
+        <g class="tnode" data-d="5"><rect x="200" y="235" width="140" height="32" rx="9" fill="rgba(52,211,153,.12)" stroke="#34d399"/><text x="270" y="256" fill="#a7f3d0" font-size="11.5" text-anchor="middle">2a · write intro</text></g>
+        <g class="tnode" data-d="6"><rect x="360" y="235" width="140" height="32" rx="9" fill="rgba(52,211,153,.12)" stroke="#34d399"/><text x="430" y="256" fill="#a7f3d0" font-size="11.5" text-anchor="middle">2b · summarize links</text></g>
+      </svg>
+    </div>
+    <div class="grid2 reveal" style="margin-top:26px">
+      <div class="panel" style="padding:18px">
+        <h3><span class="ic" style="background:rgba(244,114,182,.12)">🕸️</span>Orchestrator + Specialist Agents</h3>
+        <div class="ma-box" style="margin-top:10px">
+          <svg class="ma-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <line class="ma-link" data-link="res" x1="50" y1="50" x2="18" y2="26"/>
+            <line class="ma-link" data-link="cod" x1="50" y1="50" x2="82" y2="26"/>
+            <line class="ma-link" data-link="rev" x1="50" y1="50" x2="18" y2="78"/>
+            <line class="ma-link" data-link="wri" x1="50" y1="50" x2="82" y2="78"/>
+          </svg>
+          <div class="ma-node orch" data-agent="orc" style="left:50%;top:50%"><span class="mi">🧭</span><span class="mn">Orchestrator</span><span class="ms" data-status>idle</span></div>
+          <div class="ma-node" data-agent="res" style="left:18%;top:26%"><span class="mi">🔎</span><span class="mn">Researcher</span><span class="ms" data-status>idle</span></div>
+          <div class="ma-node" data-agent="cod" style="left:82%;top:26%"><span class="mi">👨‍💻</span><span class="mn">Coder</span><span class="ms" data-status>idle</span></div>
+          <div class="ma-node" data-agent="rev" style="left:18%;top:78%"><span class="mi">🧐</span><span class="mn">Reviewer</span><span class="ms" data-status>idle</span></div>
+          <div class="ma-node" data-agent="wri" style="left:82%;top:78%"><span class="mi">✍️</span><span class="mn">Writer</span><span class="ms" data-status>idle</span></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn btn-p btn-s" id="maRun">▶ Run multi-agent mission</button>
+          <button class="btn btn-g btn-s" id="maReset">↺ Reset</button>
+        </div>
+      </div>
+      <div class="panel" style="padding:18px">
+        <h3><span class="ic" style="background:rgba(52,211,153,.12)">📡</span>Message Bus Log</h3>
+        <p style="margin-bottom:10px">Every hand-off is a message: <span class="mono" style="color:var(--vi)">task →</span> and <span class="mono" style="color:var(--gr)">result ←</span>. Real frameworks (LangGraph, AutoGen, CrewAI) work exactly like this under the hood.</p>
+        <div id="maLog"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 07 MCP ================= -->
+<section id="mcp">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 07</div>
+    <h2 class="sec-title reveal"><em>MCP</em> — Model Context Protocol</h2>
+    <p class="sec-desc reveal">MCP is an open standard (JSON-RPC 2.0) that gives AI applications a <b>universal plug</b> for tools and data — the "USB-C of AI". Instead of M×N custom integrations, every app speaks MCP to every server. Servers expose three primitives: <b>Tools</b> (callable functions), <b>Resources</b> (readable data) and <b>Prompts</b> (reusable templates).</p>
+    <div class="grid3 reveal" style="margin-bottom:26px">
+      <div class="panel"><h3><span class="ic" style="background:rgba(34,211,238,.12)">🛠</span>Tools</h3><p>Model-controlled actions: <span class="mono" style="color:var(--cy)">search_files</span>, <span class="mono" style="color:var(--cy)">create_issue</span>, <span class="mono" style="color:var(--cy)">run_query</span>. Discovered via <span class="mono">tools/list</span>, invoked via <span class="mono">tools/call</span>.</p></div>
+      <div class="panel"><h3><span class="ic" style="background:rgba(52,211,153,.12)">📚</span>Resources</h3><p>App-controlled context: file contents, DB rows, tickets. Read via URI-like identifiers (<span class="mono" style="color:var(--gr)">file:///src/app.py</span>) without executing anything.</p></div>
+      <div class="panel"><h3><span class="ic" style="background:rgba(251,191,36,.12)">📝</span>Prompts</h3><p>User-controlled templates served by the server, e.g. <span class="mono" style="color:var(--am)">/debug-error</span> with arguments — shareable, versioned prompt engineering.</p></div>
+    </div>
+
+    <div class="panel reveal">
+      <h3><span class="ic" style="background:rgba(167,139,250,.12)">🏗️</span>Architecture: Host → Clients → Servers</h3>
+      <p style="margin-bottom:22px">The <b style="color:var(--txt)">host</b> (your AI app/IDE) spawns one <b style="color:var(--txt)">MCP client</b> per connection. Each client keeps a 1:1 stateful session with a <b style="color:var(--txt)">server</b> over stdio or HTTP+SSE. Packets below animate the JSON-RPC traffic.</p>
+      <div class="mcp-arch">
+        <div class="mcp-host">
+          <span class="mcp-lab">HOST · your AI app / IDE</span>
+          <div class="mcp-clients">
+            <div class="mcp-client"><b>MCP Client A</b><small>stateful session</small></div>
+            <div class="mcp-client"><b>MCP Client B</b><small>stateful session</small></div>
+            <div class="mcp-client"><b>MCP Client C</b><small>stateful session</small></div>
+          </div>
+        </div>
+        <div class="mcp-wires"><div class="wire"></div><div class="wire"></div><div class="wire"></div></div>
+        <div class="mcp-servers">
+          <div class="mcp-server"><b>📁 filesystem-server</b><small>local disk</small><div class="caps"><span class="cap">tools</span><span class="cap">resources</span></div></div>
+          <div class="mcp-server"><b>🐙 github-server</b><small>repos · issues · PRs</small><div class="caps"><span class="cap">tools</span><span class="cap">prompts</span></div></div>
+          <div class="mcp-server"><b>🐘 postgres-server</b><small>read-only SQL</small><div class="caps"><span class="cap">tools</span><span class="cap">resources</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2 reveal" style="margin-top:26px">
+      <div class="panel" style="padding:18px">
+        <h3><span class="ic" style="background:rgba(34,211,238,.12)">🔌</span>Live Protocol Session</h3>
+        <p style="margin-bottom:12px">A real MCP handshake: <span class="mono" style="color:var(--cy)">initialize</span> → capability negotiation → <span class="mono" style="color:var(--cy)">tools/list</span> → <span class="mono" style="color:var(--cy)">tools/call</span>. Watch the JSON-RPC frames.</p>
+        <div id="mcpTerm"></div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn btn-p btn-s" id="mcpRun">▶ Run session</button>
+          <button class="btn btn-g btn-s" id="mcpClear">↺ Clear</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <div class="panel">
+          <h3><span class="ic" style="background:rgba(52,211,153,.12)">🐍</span>Build a Server in 12 Lines</h3>
+          <div class="codebox" style="margin-top:10px">
+            <div class="cb-bar"><span class="fn">weather_server.py</span><button class="copy-btn" data-copy="codeMcp">copy</button></div>
+            <pre><code id="codeMcp"><span class="c"># MCP server with the official Python SDK</span>
+<span class="k">from</span> mcp.server.fastmcp <span class="k">import</span> FastMCP
+
+mcp = <span class="f">FastMCP</span>(<span class="s">"weather-server"</span>)
+
+<span class="p">@mcp.tool()</span>
+<span class="k">def</span> <span class="f">get_weather</span>(city: <span class="f">str</span>) -&gt; <span class="f">str</span>:
+    <span class="s">"""Get current weather for a city."""</span>
+    <span class="k">return</span> <span class="s">f"{city}: 28°C, partly cloudy"</span>
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    mcp.<span class="f">run</span>(transport=<span class="s">"stdio"</span>)</code></pre>
+          </div>
+          <div class="codebox">
+            <div class="cb-bar"><span class="fn">claude_desktop_config.json — register it</span><button class="copy-btn" data-copy="codeCfg">copy</button></div>
+            <pre><code id="codeCfg">{
+  <span class="p">"mcpServers"</span>: {
+    <span class="p">"weather"</span>: {
+      <span class="p">"command"</span>: <span class="s">"python"</span>,
+      <span class="p">"args"</span>: [<span class="s">"weather_server.py"</span>]
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+        <div class="panel">
+          <h3><span class="ic" style="background:rgba(251,191,36,.12)">⚖️</span>MCP vs Function Calling</h3>
+          <p style="margin-top:6px"><b style="color:var(--txt)">Function calling</b> is a per-model feature: schemas live in <i>your</i> app code. <b style="color:var(--txt)">MCP</b> is a per-<i>ecosystem</i> protocol: schemas live in the server, are discovered at runtime, and work identically across every MCP-capable host. Use function calling for in-app tools; use MCP to share tools across apps, teams and products.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 08 ROADMAP ================= -->
+<section id="roadmap" style="background:linear-gradient(180deg,transparent,rgba(52,211,153,.04),transparent)">
+  <div class="wrap">
+    <div class="sec-tag reveal">Module 08</div>
+    <h2 class="sec-title reveal">Your <em>Developer Roadmap</em></h2>
+    <p class="sec-desc reveal">A battle-tested order of operations from "I can call an API" to "I ship production agent systems".</p>
+    <div class="road reveal">
+      <div class="road-step" data-n="1"><h4>Prompt engineering &amp; structured output</h4><p>Master system prompts, few-shot examples, chain-of-thought, and JSON-mode outputs. Everything else builds on reliable single calls.</p><div class="tags"><span class="chip">zero/few-shot</span><span class="chip">CoT</span><span class="chip">JSON mode</span></div></div>
+      <div class="road-step" data-n="2"><h4>Function calling &amp; single-tool agents</h4><p>Wrap 2–3 real APIs as tools, run the ReAct loop yourself (Module 03 code). Log every trace — observability from day one.</p><div class="tags"><span class="chip">tool schema</span><span class="chip">ReAct</span><span class="chip">tracing</span></div></div>
+      <div class="road-step" data-n="3"><h4>RAG &amp; vector memory</h4><p>Chunking strategy, embedding model choice, hybrid search (vector + BM25), re-ranking, citation UX. Evaluate retrieval quality before generator quality.</p><div class="tags"><span class="chip">chunking</span><span class="chip">embeddings</span><span class="chip">top-k</span><span class="chip">evals</span></div></div>
+      <div class="road-step" data-n="4"><h4>Guardrails, evals &amp; cost control</h4><p>Input/output validators, allow-listed tools, step &amp; token budgets, golden-dataset evals, replay tests. Agents fail loudly or silently — catch both.</p><div class="tags"><span class="chip">validation</span><span class="chip">budgets</span><span class="chip">eval harness</span></div></div>
+      <div class="road-step" data-n="5"><h4>Multi-agent orchestration</h4><p>Planner/worker graphs, state machines (LangGraph-style), human-in-the-loop checkpoints. Only add agents when one agent genuinely can't fit in context.</p><div class="tags"><span class="chip">orchestrator</span><span class="chip">task graph</span><span class="chip">HITL</span></div></div>
+      <div class="road-step" data-n="6"><h4>MCP &amp; production deployment</h4><p>Package your tools as MCP servers, consume community servers, handle auth &amp; rate limits, stream over HTTP+SSE, monitor sessions in prod.</p><div class="tags"><span class="chip">MCP servers</span><span class="chip">stdio / SSE</span><span class="chip">observability</span></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Built for developers, by developers · <b>AgentVerse</b> interactive tutorial · every demo on this page runs on simulated sample data so you can read the exact mechanics before wiring real models. 🚀
+</footer>
+<button id="toTop" title="Back to top">↑</button>
+
+<script>
+/* ============ utils ============ */
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return Math.abs(h);}
+function seededNoise(i){const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+
+/* ============ scroll progress + spy + reveal + toTop ============ */
+const progBar=document.getElementById('progbar');
+const toTopBtn=document.getElementById('toTop');
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  const p=h.scrollTop/(h.scrollHeight-h.clientHeight)*100;
+  progBar.style.width=p+'%';
+  toTopBtn.classList.toggle('show',h.scrollTop>600);
+},{passive:true});
+toTopBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+const revealIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revealIO.unobserve(e.target);}});},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>revealIO.observe(el));
+
+const navLinks=[...document.querySelectorAll('#mainnav a')];
+const spyIO=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      navLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));
+    }
+  });
+},{rootMargin:'-40% 0px -55% 0px'});
+['foundations','ml','agents','tools','rag','agentic','mcp','roadmap'].forEach(id=>{const s=document.getElementById(id);if(s)spyIO.observe(s);});
+
+/* tree nodes staggered reveal */
+const treeIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){
+  document.querySelectorAll('#treeSvg .tnode').forEach(n=>{setTimeout(()=>n.classList.add('in'),(+n.dataset.d)*180);});
+  treeIO.disconnect();}});},{threshold:.3});
+treeIO.observe(document.getElementById('treeSvg'));
+
+/* ============ hero neural canvas ============ */
+(function(){
+  const cv=document.getElementById('heroCanvas'),ctx=cv.getContext('2d');
+  let W=0,H=0,pts=[];
+  function resize(){W=cv.width=cv.offsetWidth*devicePixelRatio;H=cv.height=cv.offsetHeight*devicePixelRatio;}
+  window.addEventListener('resize',resize);resize();
+  const N=64;
+  for(let i=0;i<N;i++)pts.push({x:Math.random(),y:Math.random(),vx:(Math.random()-.5)*.0006,vy:(Math.random()-.5)*.0006,r:Math.random()*1.6+.7,h:Math.random()});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>1)p.vx*=-1;if(p.y<0||p.y>1)p.vy*=-1;});
+    for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
+      const dx=(pts[i].x-pts[j].x)*W,dy=(pts[i].y-pts[j].y)*H,d=Math.hypot(dx,dy);
+      if(d<150*devicePixelRatio){
+        ctx.strokeStyle='rgba(34,211,238,'+(0.14*(1-d/(150*devicePixelRatio)))+')';
+        ctx.lineWidth=devicePixelRatio*.7;
+        ctx.beginPath();ctx.moveTo(pts[i].x*W,pts[i].y*H);ctx.lineTo(pts[j].x*W,pts[j].y*H);ctx.stroke();
+      }
+    }
+    pts.forEach(p=>{
+      const col=p.h<.5?'34,211,238':'167,139,250';
+      ctx.fillStyle='rgba('+col+',.85)';
+      ctx.shadowColor='rgba('+col+',1)';ctx.shadowBlur=8*devicePixelRatio;
+      ctx.beginPath();ctx.arc(p.x*W,p.y*H,p.r*devicePixelRatio,0,7);ctx.fill();
+      ctx.shadowBlur=0;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ============ hero live feed ============ */
+(function(){
+  const feed=document.getElementById('heroFeed');
+  const lines=[
+    ['th','THOUGHT','User wants Tokyo weather + run advice. Need live data → call get_weather.'],
+    ['ac','ACTION','get_weather(city="Tokyo")'],
+    ['ob','OBSERVE','{"temp_c":22,"cond":"partly cloudy","humidity":55}'],
+    ['th','THOUGHT','22°C is runnable. Convert to °F for the user: tool calculator.'],
+    ['ac','ACTION','calculator(expr="22*9/5+32")'],
+    ['ob','OBSERVE','71.6'],
+    ['an','ANSWER','Tokyo: 22°C / 71.6°F, partly cloudy — great run conditions ✔'],
+    ['th','THOUGHT','Log session to vector memory for next time…'],
+    ['ac','ACTION','memory.store(session_summary)'],
+    ['ob','OBSERVE','stored: mem_8f3a ✓']
+  ];
+  let idx=0;
+  function push(){
+    const [cls,tag,tx]=lines[idx%lines.length];
+    const div=document.createElement('div');
+    div.className='hf-line';
+    div.innerHTML='<span class="tag tag-'+cls+'">'+tag+'</span><span class="tx"></span>';
+    div.querySelector('.tx').textContent=tx;
+    feed.appendChild(div);
+    while(feed.children.length>9)feed.removeChild(feed.firstChild);
+    idx++;
+    setTimeout(push,1500);
+  }
+  push();
+})();
+
+/* ============ tokenizer ============ */
+(function(){
+  const inp=document.getElementById('tokInput'),out=document.getElementById('tokOut');
+  const cE=document.getElementById('tokChars'),nE=document.getElementById('tokCount'),bE=document.getElementById('tokBytes'),costE=document.getElementById('tokCost');
+  const palette=[['#22d3ee','rgba(34,211,238,.1)'],['#a78bfa','rgba(167,139,250,.1)'],['#f472b6','rgba(244,114,182,.1)'],['#34d399','rgba(52,211,153,.1)'],['#fbbf24','rgba(251,191,36,.1)']];
+  function naiveBpe(text){
+    const toks=[];
+    text.split(/(\s+)/).forEach(piece=>{
+      if(!piece)return;
+      if(/^\s+$/.test(piece)){toks.push(piece);return;}
+      let rest=piece;
+      while(rest.length>0){
+        const take=rest.length<=4?rest.length:(rest.length%3===0?3:(rest.length%3===1?4:4));
+        toks.push(rest.slice(0,take));rest=rest.slice(take);
+      }
+    });
+    return toks;
+  }
+  function render(){
+    const text=inp.value;
+    const toks=naiveBpe(text);
+    out.innerHTML='';
+    toks.forEach((t,i)=>{
+      const [fg,bgc]=palette[i%palette.length];
+      const el=document.createElement('span');
+      el.className='tok';
+      el.style.color=fg;el.style.background=bgc;el.style.borderColor=fg+'55';
+      el.style.animationDelay=(i*0.03)+'s';
+      el.textContent=t;
+      const id=document.createElement('small');id.textContent=hashStr(t)%50211;
+      el.appendChild(id);
+      out.appendChild(el);
+    });
+    cE.textContent=text.length;
+    nE.textContent=toks.length;
+    bE.textContent=new TextEncoder().encode(text).length;
+    costE.textContent='$'+(toks.length*3/1e6).toFixed(6);
+  }
+  inp.addEventListener('input',render);render();
+})();
+
+/* ============ attention heatmap ============ */
+(function(){
+  const toks=['The','cat','sat','on','the','mat'];
+  const M=[
+    [0.35,0.40,0.05,0.05,0.10,0.05],
+    [0.15,0.30,0.30,0.05,0.05,0.15],
+    [0.05,0.45,0.20,0.05,0.05,0.20],
+    [0.05,0.10,0.25,0.10,0.10,0.40],
+    [0.20,0.10,0.05,0.10,0.15,0.40],
+    [0.05,0.25,0.20,0.20,0.10,0.20]
+  ];
+  const grid=document.getElementById('attnGrid'),bars=document.getElementById('attnBars');
+  grid.style.gridTemplateColumns='52px repeat(6,52px)';
+  grid.appendChild(Object.assign(document.createElement('div'),{className:'ag-lab col'}));
+  toks.forEach(t=>{const d=document.createElement('div');d.className='ag-lab col';d.textContent=t;grid.appendChild(d);});
+  M.forEach((row,r)=>{
+    const lab=document.createElement('div');lab.className='ag-lab';lab.textContent=toks[r];lab.style.cursor='pointer';
+    lab.addEventListener('click',()=>showRow(r));
+    grid.appendChild(lab);
+    row.forEach((v,c)=>{
+      const cell=document.createElement('div');
+      cell.className='ag-cell';
+      const hot=v>0.3;
+      cell.style.background=hot?('rgba(244,114,182,'+(0.25+v*0.7)+')'):('rgba(34,211,238,'+(0.06+v*0.8)+')');
+      cell.style.color=v>0.25?'#0b0f1a':'#7dd3fc';
+      cell.textContent=v.toFixed(2);
+      cell.title=toks[r]+' → '+toks[c];
+      cell.addEventListener('click',()=>showRow(r));
+      grid.appendChild(cell);
+    });
+  });
+  function showRow(r){
+    const order=toks.map((t,i)=>[t,M[r][i]]).sort((a,b)=>b[1]-a[1]);
+    bars.innerHTML='<b style="color:var(--txt);font-size:12.5px">attention of "'+toks[r]+'":</b>';
+    order.forEach(([t,v])=>{
+      const rowEl=document.createElement('div');rowEl.className='ab-row';
+      rowEl.innerHTML='<span style="color:var(--mut)">'+t+'</span><div class="ab-track"><div class="ab-fill"></div></div><span style="color:var(--cy);text-align:right">'+v.toFixed(2)+'</span>';
+      bars.appendChild(rowEl);
+      requestAnimationFrame(()=>{rowEl.querySelector('.ab-fill').style.width=(v*100/0.45)+'%';});
+    });
+  }
+  showRow(2);
+})();
+
+/* ============ embedding explorer ============ */
+(function(){
+  const cv=document.getElementById('embCanvas'),tip=document.getElementById('embTip');
+  const ctx=cv.getContext('2d');
+  const CATS={ai:'#22d3ee',food:'#f472b6',nature:'#34d399',code:'#fbbf24'};
+  const WORDS=[
+    ['neural','ai',.22,.28],['model','ai',.30,.20],['agent','ai',.18,.38],['transformer','ai',.34,.34],['LLM','ai',.26,.46],
+    ['pizza','food',.72,.24],['sushi','food',.80,.32],['burger','food',.66,.36],['pasta','food',.76,.16],
+    ['forest','nature',.24,.72],['ocean','nature',.32,.80],['mountain','nature',.18,.84],['river','nature',.36,.66],
+    ['function','code',.74,.70],['class','code',.82,.78],['loop','code',.68,.82],['variable','code',.78,.62]
+  ].map(w=>({name:w[0],cat:w[1],x:w[2],y:w[3],ph:Math.random()*6.28,alpha:1}));
+  let filter='all',hoverW=null;
+  function resize(){cv.width=cv.offsetWidth*devicePixelRatio;cv.height=cv.offsetHeight*devicePixelRatio;}
+  window.addEventListener('resize',resize);resize();
+  document.querySelectorAll('.ef-btn').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.ef-btn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');filter=b.dataset.cat;
+  }));
+  cv.addEventListener('mousemove',e=>{
+    const r=cv.getBoundingClientRect();
+    const mx=(e.clientX-r.left)/r.width,my=(e.clientY-r.top)/r.height;
+    hoverW=null;let best=1e9;
+    WORDS.forEach(w=>{
+      if(filter!=='all'&&w.cat!==filter)return;
+      const d=Math.hypot(w.x-mx,w.y-my);
+      if(d<0.045&&d<best){best=d;hoverW=w;}
+    });
+    if(hoverW){
+      const h=hashStr(hoverW.name);
+      tip.style.opacity=1;
+      tip.style.left=Math.min(e.clientX-r.left+14,r.width-190)+'px';
+      tip.style.top=(e.clientY-r.top-14)+'px';
+      tip.innerHTML='<b style="color:'+CATS[hoverW.cat]+'">'+hoverW.name+'</b> · '+hoverW.cat+'<br>vec ['+((h%200)/100-1).toFixed(2)+', '+((h%137)/100-0.6).toFixed(2)+', … '+((h%89)/100).toFixed(2)+']';
+    }else tip.style.opacity=0;
+  });
+  cv.addEventListener('mouseleave',()=>tip.style.opacity=0);
+  function draw(t){
+    const W=cv.width,H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    Object.keys(CATS).forEach(c=>{
+      const members=WORDS.filter(w=>w.cat===c);
+      const cx=members.reduce((s,w)=>s+w.x,0)/members.length*W;
+      const cy=members.reduce((s,w)=>s+w.y,0)/members.length*H;
+      const g=ctx.createRadialGradient(cx,cy,4,cx,cy,W*0.14);
+      g.addColorStop(0,CATS[c]+'22');g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,W*0.14,0,7);ctx.fill();
+    });
+    WORDS.forEach(w=>{
+      const target=(filter==='all'||w.cat===filter)?1:0.12;
+      w.alpha+=(target-w.alpha)*0.1;
+      const px=(w.x+Math.sin(t/1400+w.ph)*0.006)*W;
+      const py=(w.y+Math.cos(t/1200+w.ph)*0.008)*H;
+      ctx.globalAlpha=w.alpha;
+      ctx.fillStyle=CATS[w.cat];
+      ctx.shadowColor=CATS[w.cat];ctx.shadowBlur=(hoverW===w?18:8)*devicePixelRatio;
+      ctx.beginPath();ctx.arc(px,py,(hoverW===w?6:4)*devicePixelRatio,0,7);ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.font=(11*devicePixelRatio)+'px JetBrains Mono';
+      ctx.fillStyle='rgba(226,232,240,'+(0.85*w.alpha)+')';
+      ctx.fillText(w.name,px+8*devicePixelRatio,py+4*devicePixelRatio);
+      ctx.globalAlpha=1;
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ============ RL chart ============ */
+(function(){
+  const cv=document.getElementById('rlCanvas'),ctx=cv.getContext('2d');
+  const EP=160;
+  const DATA=[];let best=0;
+  for(let e=0;e<EP;e++){
+    const base=95*(1-Math.exp(-e/34));
+    const v=Math.max(2,base+(seededNoise(e)-0.5)*26*(1-e/EP*0.6));
+    DATA.push(v);best=Math.max(best,v);
+  }
+  let prog=0,playing=true;
+  const epEl=document.getElementById('rlEp'),bestEl=document.getElementById('rlBest');
+  function resize(){cv.width=cv.offsetWidth*devicePixelRatio;cv.height=cv.offsetHeight*devicePixelRatio;}
+  window.addEventListener('resize',resize);resize();
+  function draw(){
+    const W=cv.width,H=cv.height,pad=42*devicePixelRatio;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(148,163,184,.12)';ctx.lineWidth=devicePixelRatio;
+    ctx.font=(10*devicePixelRatio)+'px JetBrains Mono';ctx.fillStyle='#64748b';
+    for(let g=0;g<=4;g++){
+      const y=H-pad-(H-2*pad)*g/4;
+      ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad*0.4,y);ctx.stroke();
+      ctx.fillText(String(g*25),pad*0.35,y+4*devicePixelRatio);
+    }
+    ctx.fillText('reward',6*devicePixelRatio,16*devicePixelRatio);
+    ctx.fillText('episode →',W-pad*1.6,H-8*devicePixelRatio);
+    const n=Math.max(2,Math.floor(prog));
+    // raw line
+    ctx.strokeStyle='rgba(52,211,153,.4)';ctx.lineWidth=devicePixelRatio;
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const x=pad+(W-pad*1.4)*i/(EP-1);
+      const y=H-pad-(H-2*pad)*Math.min(DATA[i],100)/100;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+    // moving avg
+    ctx.strokeStyle='#22d3ee';ctx.lineWidth=2.4*devicePixelRatio;
+    ctx.shadowColor='#22d3ee';ctx.shadowBlur=10*devicePixelRatio;
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      let s=0,c=0;for(let j=Math.max(0,i-9);j<=i;j++){s+=DATA[j];c++;}
+      const x=pad+(W-pad*1.4)*i/(EP-1);
+      const y=H-pad-(H-2*pad)*Math.min(s/c,100)/100;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();ctx.shadowBlur=0;
+    if(n>1){
+      const lx=pad+(W-pad*1.4)*(n-1)/(EP-1);
+      const ly=H-pad-(H-2*pad)*Math.min(DATA[n-1],100)/100;
+      ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(lx,ly,4*devicePixelRatio,0,7);ctx.fill();
+    }
+    epEl.textContent=n;
+    bestEl.textContent=Math.max(...DATA.slice(0,n)).toFixed(0);
+    if(playing&&prog<EP)prog+=0.9;
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+  const playBtn=document.getElementById('rlPlay');
+  playBtn.addEventListener('click',()=>{playing=!playing;playBtn.textContent=playing?'⏸ Pause':'▶ Play';});
+  document.getElementById('rlReset').addEventListener('click',()=>{prog=0;playing=true;playBtn.textContent='⏸ Pause';});
+})();
+
+/* ============ ReAct agent simulation ============ */
+const agentRunState={id:0};
+function setLoopNode(step){
+  document.querySelectorAll('.loop-node').forEach(n=>n.classList.toggle('hot',n.dataset.step===step));
+}
+(function(){
+  let idleTimer=null,ci=0;
+  const steps=['perceive','think','act','observe'];
+  function idle(){idleTimer=setInterval(()=>{setLoopNode(steps[ci++%4]);},1100);setLoopNode(steps[0]);}
+  idle();
+  const log=document.getElementById('agentLog');
+  const runBtn=document.getElementById('runAgent'),resetBtn=document.getElementById('resetAgent');
+  const SCEN=[
+    {t:'user',who:'👤 User',step:'perceive',text:'What is the weather in Tokyo right now, and is it good for a run? Give me the temperature in °F too.'},
+    {t:'thought',who:'🧠 Thought',step:'think',text:'I need live weather data — I cannot know it from weights alone. I have a get_weather tool. Plan: fetch Tokyo weather, then convert °C→°F with the calculator.'},
+    {t:'action',who:'🛠 Action',step:'act',tool:'get_weather',args:'{ "city": "Tokyo" }'},
+    {t:'observation',who:'📥 Observation',step:'observe',text:'{ "temp_c": 22, "condition": "partly cloudy", "humidity_pct": 55, "wind_kph": 9 }'},
+    {t:'thought',who:'🧠 Thought',step:'think',text:'22°C, partly cloudy, light wind — runnable. Now convert: F = C*9/5+32. Use calculator to avoid arithmetic slips.'},
+    {t:'action',who:'🛠 Action',step:'act',tool:'calculator',args:'{ "expression": "22 * 9 / 5 + 32" }'},
+    {t:'observation',who:'📥 Observation',step:'observe',text:'71.6'},
+    {t:'thought',who:'🧠 Thought',step:'think',text:'I have everything: conditions + conversion. Compose the grounded final answer.'},
+    {t:'answer',who:'✅ Final answer',step:'perceive',text:'Tokyo right now: 22°C = 71.6°F, partly cloudy, 55% humidity, 9 kph wind. That is excellent running weather — cool enough to stay comfortable, dry, and barely any wind. Enjoy the run! 🏃'}
+  ];
+  function addMsg(s){
+    const div=document.createElement('div');
+    div.className='msg '+s.t;
+    const who=document.createElement('div');who.className='who';who.textContent=s.who;
+    div.appendChild(who);
+    if(s.t==='action'){
+      const b=document.createElement('div');
+      b.innerHTML='<span style="color:var(--cy)">▸ '+s.tool+'</span>(<span style="color:var(--am)">'+s.args+'</span>)';
+      div.appendChild(b);
+      log.appendChild(div);log.scrollTop=log.scrollHeight;
+      return Promise.resolve(div);
+    }
+    const body=document.createElement('div');body.className='typing';
+    div.appendChild(body);log.appendChild(div);log.scrollTop=log.scrollHeight;
+    return new Promise(res=>{
+      let i=0;const myRun=agentRunState.id;
+      (function tick(){
+        if(agentRunState.id!==myRun){body.classList.remove('typing');return res(div);}
+        body.textContent=s.text.slice(0,++i);
+        log.scrollTop=log.scrollHeight;
+        if(i<s.text.length)setTimeout(tick,14);
+        else{body.classList.remove('typing');res(div);}
+      })();
+    });
+  }
+  async function run(){
+    agentRunState.id++;const myRun=agentRunState.id;
+    clearInterval(idleTimer);
+    runBtn.disabled=true;runBtn.style.opacity=.5;
+    log.innerHTML='';
+    for(const s of SCEN){
+      if(agentRunState.id!==myRun)return;
+      setLoopNode(s.step);
+      await addMsg(s);
+      await sleep(s.t==='action'?650:420);
+    }
+    runBtn.disabled=false;runBtn.style.opacity=1;runBtn.textContent='▶ Replay agent';
+    idle();
+  }
+  runBtn.addEventListener('click',run);
+  resetBtn.addEventListener('click',()=>{
+    agentRunState.id++;log.innerHTML='';
+    runBtn.disabled=false;runBtn.style.opacity=1;runBtn.textContent='▶ Run agent';
+    clearInterval(idleTimer);idle();
+  });
+})();
+
+/* ============ memory playground ============ */
+(function(){
+  let MEM=[
+    'User prefers Python over JavaScript',
+    'User project uses PostgreSQL 15',
+    'Deploy target is AWS eu-west-1',
+    'User name is Alex, timezone IST'
+  ];
+  const chips=document.getElementById('memChips'),res=document.getElementById('memResults');
+  function renderChips(){
+    chips.innerHTML='';
+    MEM.forEach((m,i)=>{
+      const c=document.createElement('span');
+      c.className='mchip'+(i>=4?' new':'');
+      c.textContent='💾 '+m;
+      chips.appendChild(c);
+    });
+  }
+  renderChips();
+  document.getElementById('memAdd').addEventListener('click',()=>{
+    const inp=document.getElementById('memAddInput');
+    const v=inp.value.trim();if(!v)return;
+    MEM.push(v);inp.value='';renderChips();
+  });
+  function score(q,t){
+    const stop=new Set(['the','a','an','is','does','do','which','what','of','to','for','user','my','me']);
+    const qw=new Set((q.toLowerCase().match(/[a-z0-9]+/g)||[]).filter(w=>!stop.has(w)));
+    const tw=new Set(t.toLowerCase().match(/[a-z0-9]+/g)||[]);
+    if(!qw.size)return 0;
+    let hit=0;qw.forEach(w=>{if(tw.has(w))hit++;});
+    return hit/qw.size;
+  }
+  document.getElementById('memSearch').addEventListener('click',()=>{
+    const q=document.getElementById('memQuery').value.trim();
+    res.innerHTML='';
+    if(!q){res.innerHTML='<div style="color:var(--dim);font-size:12.5px">Type a query first — e.g. "which database?"</div>';return;}
+    const ranked=MEM.map(m=>[m,score(q,m)]).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    if(ranked[0][1]===0){res.innerHTML='<div style="color:var(--rd);font-size:12.5px">∅ no memory above threshold 0.10 — agent would proceed without context.</div>';return;}
+    ranked.forEach(([m,s])=>{
+      const row=document.createElement('div');row.className='ab-row';
+      row.style.gridTemplateColumns='1fr 130px 56px';
+      row.innerHTML='<span style="color:var(--mut);font-size:12px">💾 '+m+'</span><div class="ab-track"><div class="ab-fill" style="background:linear-gradient(90deg,#a78bfa,#f472b6)"></div></div><span style="color:var(--gr);text-align:right">'+s.toFixed(2)+'</span>';
+      res.appendChild(row);
+      requestAnimationFrame(()=>{row.querySelector('.ab-fill').style.width=Math.min(100,s*100)+'%';});
+    });
+  });
+})();
+
+/* ============ RAG pipeline ============ */
+(function(){
+  const CHUNKS=[
+    {id:'c1',text:'NovaDB stores all writes in append-only segment logs; compaction runs nightly at 02:00 UTC.'},
+    {id:'c2',text:'To back up NovaDB, run `novactl backup --snapshot`. Snapshots are consistent, incremental and uploaded to your object store.'},
+    {id:'c3',text:'Indexes in NovaDB use LSM trees; write amplification is bounded by the level ratio of 10.'},
+    {id:'c4',text:'Restore from any backup with `novactl restore --snapshot <id>`; point-in-time recovery replays the WAL up to a timestamp.'}
+  ];
+  const HITS=[['c2',0.93],['c4',0.81],['c1',0.42]];
+  const ANSWER='To create a backup of your NovaDB database, run `novactl backup --snapshot`. This produces a consistent, incremental snapshot that is uploaded to your object store [c2]. If you later need it, `novactl restore --snapshot <id>` brings the cluster back, with optional point-in-time recovery via WAL replay [c4].';
+  const stages=[...document.querySelectorAll('.rag-stage')];
+  const out=document.getElementById('ragOut');
+  const runBtn=document.getElementById('ragRun');
+  let busy=false;
+  function setStage(st,cls){const el=document.querySelector('.rag-stage[data-st="'+st+'"]');if(el)el.classList.add(cls);}
+  function clearStages(){stages.forEach(s=>s.classList.remove('active','done'));}
+  runBtn.addEventListener('click',async()=>{
+    if(busy)return;busy=true;runBtn.style.opacity=.5;
+    out.innerHTML='';clearStages();
+    const q=document.getElementById('ragQuery').value.trim()||'How do I back up NovaDB?';
+    const seq=['docs','chunk','embed','vdb','q','qemb','search','ctx','llm','ans'];
+    for(const st of seq){
+      setStage(st,'active');
+      await sleep(430);
+      document.querySelector('.rag-stage[data-st="'+st+'"]').classList.replace('active','done');
+      if(st==='search'){
+        const card=document.createElement('div');card.className='rag-card';
+        card.innerHTML='<h4>🎯 vector search · cosine top-3</h4>';
+        HITS.forEach(([id,sc])=>{
+          const c=CHUNKS.find(x=>x.id===id);
+          const row=document.createElement('div');row.className='hit-row';
+          row.innerHTML='<span class="ht">['+id+'] '+c.text+'</span><div class="ab-track"><div class="ab-fill" style="background:linear-gradient(90deg,#34d399,#22d3ee)"></div></div><span class="sc">'+sc.toFixed(2)+'</span>';
+          card.appendChild(row);
+          setTimeout(()=>{row.querySelector('.ab-fill').style.width=sc*100+'%';},60);
+        });
+        out.appendChild(card);
+      }
+      if(st==='ctx'){
+        const card=document.createElement('div');card.className='rag-card';
+        card.innerHTML='<h4>📦 augmented prompt sent to LLM</h4><div class="rag-prompt"></div>';
+        card.querySelector('.rag-prompt').textContent='SYSTEM: Answer using ONLY the context.\nCONTEXT [c2]: '+CHUNKS[1].text+'\nCONTEXT [c4]: '+CHUNKS[3].text+'\nCONTEXT [c1]: '+CHUNKS[0].text+'\n\nQUESTION: '+q;
+        out.appendChild(card);
+      }
+      if(st==='ans'){
+        const card=document.createElement('div');card.className='rag-card';
+        card.innerHTML='<h4 style="color:var(--am)">💬 grounded answer (streaming)</h4><div style="font-size:13.5px;color:#cbd5e1" class="typing"></div>';
+        out.appendChild(card);
+        const tgt=card.querySelector('div[style]');
+        await new Promise(res=>{let i=0;(function tk(){tgt.textContent=ANSWER.slice(0,++i);if(i<ANSWER.length)setTimeout(tk,12);else{tgt.classList.remove('typing');res();}})();});
+      }
+    }
+    busy=false;runBtn.style.opacity=1;
+  });
+})();
+
+/* ============ multi-agent mission ============ */
+(function(){
+  const logEl=document.getElementById('maLog');
+  const runBtn=document.getElementById('maRun'),resetBtn=document.getElementById('maReset');
+  const nodes={};document.querySelectorAll('.ma-node').forEach(n=>nodes[n.dataset.agent]=n);
+  const links={};document.querySelectorAll('.ma-link').forEach(l=>links[l.dataset.link]=l);
+  let busy=false,runId=0;
+  function status(a,s){nodes[a].querySelector('[data-status]').textContent=s;}
+  function hot(a,on){nodes[a].classList.toggle('hot',on);}
+  function linkOn(k,on){links[k].classList.toggle('hot',on);}
+  function log(html,cls){const d=document.createElement('div');d.className='ml'+(cls?' '+cls:'');d.innerHTML=html;logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;}
+  function reset(){
+    runId++;busy=false;runBtn.style.opacity=1;runBtn.disabled=false;
+    logEl.innerHTML='';
+    Object.keys(nodes).forEach(a=>{hot(a,false);status(a,'idle');});
+    Object.keys(links).forEach(k=>linkOn(k,false));
+  }
+  resetBtn.addEventListener('click',reset);
+  const SCRIPT=[
+    {from:'orc',to:'res',link:'res',msg:'<b>Orchestrator → Researcher</b> · task: collect 5 credible sources on MCP adoption',st:'researching…'},
+    {from:'res',to:'orc',link:'res',msg:'<b>Researcher → Orchestrator</b> · 5 sources collected + 1-paragraph synthesis',st:'done ✓',cls:'ok'},
+    {from:'orc',to:'cod',link:'cod',msg:'<b>Orchestrator → Coder</b> · task: draft minimal MCP server snippet',st:'coding…'},
+    {from:'cod',to:'orc',link:'cod',msg:'<b>Coder → Orchestrator</b> · FastMCP server, 12 lines, stdio transport',st:'done ✓',cls:'ok'},
+    {from:'orc',to:'rev',link:'rev',msg:'<b>Orchestrator → Reviewer</b> · review snippet for correctness &amp; style',st:'reviewing…'},
+    {from:'rev',to:'orc',link:'rev',msg:'<b>Reviewer → Orchestrator</b> · approved, 1 nit: add docstring (fixed)',st:'done ✓',cls:'ok'},
+    {from:'orc',to:'wri',link:'wri',msg:'<b>Orchestrator → Writer</b> · compose final tutorial section from artifacts',st:'writing…'},
+    {from:'wri',to:'orc',link:'wri',msg:'<b>Writer → Orchestrator</b> · section drafted, 480 words, 2 code blocks',st:'done ✓',cls:'ok'},
+    {from:'orc',to:null,link:null,msg:'<b>Orchestrator</b> · mission complete — all artifacts assembled ✅',st:'complete ✅',cls:'ok'}
+  ];
+  runBtn.addEventListener('click',async()=>{
+    if(busy)return;busy=true;runBtn.disabled=true;runBtn.style.opacity=.5;
+    const my=++runId;
+    logEl.innerHTML='';
+    log('<b>Orchestrator</b> · goal received: "publish an MCP tutorial section" — decomposing into 4 sub-tasks','task');
+    hot('orc',true);await sleep(700);if(runId!==my)return;hot('orc',false);
+    for(const s of SCRIPT){
+      if(runId!==my)return;
+      if(s.link)linkOn(s.link,true);
+      hot(s.from,true);if(s.to)hot(s.to,true);
+      status(s.from,s.to?'sending…':'finishing…');
+      if(s.to)status(s.to,s.st);
+      log(s.msg,s.cls);
+      await sleep(900);if(runId!==my)return;
+      hot(s.from,false);if(s.to)hot(s.to,false);
+      status(s.from,'idle');
+      if(s.link)linkOn(s.link,false);
+    }
+    busy=false;runBtn.disabled=false;runBtn.style.opacity=1;
+  });
+})();
+
+/* ============ MCP terminal ============ */
+(function(){
+  const term=document.getElementById('mcpTerm');
+  const runBtn=document.getElementById('mcpRun'),clearBtn=document.getElementById('mcpClear');
+  let busy=false,sessId=0;
+  const FRAMES=[
+    ['note','— transport: stdio · spawning `python weather_server.py` …'],
+    ['c','→ initialize  {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","clientInfo":{"name":"DevIDE","version":"1.4"},"capabilities":{}}}'],
+    ['s','← result  {"id":1,"result":{"protocolVersion":"2025-03-26","serverInfo":{"name":"weather-server","version":"0.4.1"},"capabilities":{"tools":{"listChanged":false}}}}'],
+    ['c','→ notifications/initialized'],
+    ['c','→ tools/list  {"jsonrpc":"2.0","id":2,"method":"tools/list"}'],
+    ['s','← result  {"id":2,"result":{"tools":[{"name":"get_weather","description":"Get current weather for a city","inputSchema":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}},{"name":"get_forecast","description":"5-day forecast","inputSchema":{"type":"object","properties":{"city":{"type":"string"}}}}]}}'],
+    ['note','— client injects tool schemas into the model prompt…'],
+    ['c','→ tools/call  {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_weather","arguments":{"city":"Bengaluru"}}}'],
+    ['s','← result  {"id":3,"result":{"content":[{"type":"text","text":"Bengaluru: 28°C, partly cloudy"}],"isError":false}}'],
+    ['note','— session stays stateful; client may call more tools or read resources ✔']
+  ];
+  function push(kind,text){
+    const d=document.createElement('div');
+    if(kind==='note'){d.className='mt-line mt-note';d.textContent=text;}
+    else{
+      d.className='mt-line mt-'+kind;
+      const dir=document.createElement('span');dir.className='dir';dir.textContent=kind==='c'?'CLIENT':'SERVER';
+      d.appendChild(dir);d.appendChild(document.createTextNode(text));
+    }
+    term.appendChild(d);term.scrollTop=term.scrollHeight;
+  }
+  clearBtn.addEventListener('click',()=>{sessId++;term.innerHTML='';busy=false;runBtn.disabled=false;runBtn.style.opacity=1;});
+  runBtn.addEventListener('click',async()=>{
+    if(busy)return;busy=true;runBtn.disabled=true;runBtn.style.opacity=.5;
+    const my=++sessId;term.innerHTML='';
+    for(const [k,t] of FRAMES){
+      if(sessId!==my)return;
+      push(k,t);
+      await sleep(k==='note'?500:700);
+    }
+    busy=false;runBtn.disabled=false;runBtn.style.opacity=1;
+  });
+})();
+
+/* ============ copy buttons ============ */
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const src=document.getElementById(btn.dataset.copy);
+    if(!src)return;
+    const txt=src.textContent;
+    const done=()=>{const o=btn.textContent;btn.textContent='✓ copied!';setTimeout(()=>btn.textContent=o,1400);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done);}
+    else{
+      const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');}catch(e){}
+      document.body.removeChild(ta);done();
+    }
+  });
+});
+</script>
+</body>
+</html>
