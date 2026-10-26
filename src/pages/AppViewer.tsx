@@ -55,13 +55,13 @@ function AppViewer() {
             <Minimize2 className="w-5 h-5" />
           </button>
         </div>
-        <iframe
-          src={app.path}
-          className="w-full h-full border-0"
-          title={app.name}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-        />
-      </div>
+            <iframe
+              src={app.path}
+              className="w-full h-full border-0"
+              title={app.name}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />      </div>
     );
   }
 
@@ -146,7 +146,8 @@ function AppViewer() {
               className="w-full border-0"
               style={{ height: 'calc(100% - 40px)' }}
               title={app.name}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
             />
           </div>
         </div>
