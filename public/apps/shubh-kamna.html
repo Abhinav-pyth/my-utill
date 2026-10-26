@@ -1,40 +1,37 @@
+```jsx
 import React, {
-  useState, useEffect, useMemo, useRef, useCallback,
+  useState, useEffect, useMemo, useCallback,
   createContext, useContext, useLayoutEffect
 } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer, AreaChart, Area, LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine
 } from "recharts";
 
 /* ============================================================================
- * TIMECAPSULE INDIA — "Apna Future Dekho"
- * Single-file React application (App.jsx) implementing the full product spec:
- *  - Bilingual hi-IN / en-IN (typed dictionary, localStorage persistence)
+ * TIMECAPSULE INDIA — "Apna Future Dekho"  (fixed build)
+ * Bilingual hi-IN / en-IN financial projection SPA.
  *  - Hash router: / , /future-wealth, /dream-home, /career-growth,
  *                 /habit-impact, /my-2036, /privacy
- *  - Working calculators (pure math in src/lib-equivalent section below)
- *  - Recharts visualisations, Framer Motion animations, reduced-motion aware
- *  - Scenario persistence in localStorage, My 2036 report + PNG card + share
- *  - SEO metadata per route (title/meta/OG/canonical/JSON-LD), semantic HTML
- *  - Ad/affiliate-ready slots (disabled by default via ADS.enabled = false)
- *  - Built-in math self-tests (equivalent of the Vitest unit-test suite):
- *      run `tcSelfTests()` in the browser console.
+ *  - Pure-math calculation core + built-in self-test suite:
+ *      run `tcSelfTests()` in the browser console (auto-runs once on mount).
+ *  - Recharts charts, restrained Framer Motion, reduced-motion aware.
+ *  - localStorage persistence (language, theme, saved scenarios).
+ *  - My 2036 report: PNG card (canvas), Web Share API, WhatsApp, copy link.
+ *  - Per-route SEO metadata (title/meta/OG/canonical/JSON-LD), semantic HTML.
+ *  - Ad/affiliate slots disabled by default (ADS.enabled = false).
  *
- * LOCAL DEV / DEPLOY NOTES (summary of README):
- *  - Vite scaffold:  npm create vite@latest timecapsule-india -- --template react-ts
- *    drop this file in as src/App.jsx (or split per the folder structure in
- *    PROJECT STRUCTURE below), npm i recharts framer-motion, npm run dev.
- *  - Build: npm run build && npm run preview. Deploy dist/ to Vercel
- *    (framework preset: Vite) or any Linux VPS behind nginx (SPA fallback to
- *    index.html). Hash routing means no server rewrite rules are required.
- *  - SEO: for production indexing add prerendering (vite-plugin-prerender /
- *    react-snap) or move to SSR; robots.txt + sitemap.xml go in public/.
- *  - Analytics/AdSense: fill the ADS config below with a real publisher ID;
- *    no ad scripts load until ADS.enabled = true. No GA is loaded by default.
- *  - Known limitation: PDF export uses a TXT report + PNG card (jsPDF omitted
- *    to keep the single-file bundle lean); all math, i18n, sharing and
+ * DEPLOY NOTES (README summary):
+ *  - Vite: npm create vite@latest timecapsule-india -- --template react-ts
+ *    use this file as src/App.jsx; npm i recharts framer-motion; npm run dev.
+ *  - Build: npm run build && npm run preview. Deploy dist/ to Vercel (Vite
+ *    preset) or an nginx VPS (SPA fallback to index.html). Hash routing needs
+ *    no rewrite rules.
+ *  - SEO: add prerendering (vite-plugin-prerender / react-snap) or SSR for
+ *    guaranteed crawler indexing; put robots.txt + sitemap.xml in public/.
+ *  - Known limitation: PDF export is a TXT report + PNG card (jsPDF omitted
+ *    to keep the single-file bundle lean). All math, i18n, sharing and
  *    persistence are fully functional.
  * ==========================================================================*/
 
@@ -45,13 +42,13 @@ const SITE = {
   url: typeof window !== "undefined" ? window.location.origin + window.location.pathname : "",
 };
 
-/* Central monetization configuration. Ads are DISABLED by default; no ad
-   script is ever loaded until a real publisher/unit config is supplied. */
+/* Central monetization config. Ads are DISABLED by default; no ad script is
+   ever loaded until a real publisher ID is supplied and enabled is true. */
 const ADS = {
-  enabled: false,                 // master flag (false during development)
-  provider: "adsense",            // 'adsense' | 'manual'
-  publisherId: "",                // e.g. "ca-pub-XXXXXXXXXXXXXXXX" — supply real value
-  showPlaceholders: true,         // reserve layout space to avoid CLS
+  enabled: false,
+  provider: "adsense",
+  publisherId: "",
+  showPlaceholders: true,
   units: {
     homeMid: "tc-home-mid",
     wealthResult: "tc-wealth-result",
@@ -59,11 +56,10 @@ const ADS = {
     careerResult: "tc-career-result",
     reportTop: "tc-report-top",
   },
-  affiliates: [],                 // [{title, titleHi, url, disclosure:true}] — optional
+  affiliates: [],
 };
 
 /* ============================== I18N ======================================*/
-/* Typed-by-key translation dictionary. Components ONLY call t(key, params). */
 
 const DICT = {
   en: {
@@ -81,12 +77,10 @@ const DICT = {
     "nav.privacy": "Privacy",
     "calculate": "Calculate",
     "calculating": "Calculating…",
-    "reset": "Reset",
     "tryAnother": "Try another scenario",
     "results": "Your estimated results",
     "optional": "optional",
     "yearsUnit": "years",
-    "yearUnit": "year",
     "assumptions": "Assumptions",
     "disclaimer": "Disclaimer",
     "share": "Share",
@@ -103,7 +97,6 @@ const DICT = {
     "notGuaranteed": "These are estimates based on your inputs — not guarantees.",
     "marketRisk": "Market-linked investments carry risk and can lose value. Actual outcomes may differ. This tool does not provide personalized investment advice.",
     "perMonth": "/month",
-    "perYear": "/year",
     "v.required": "This field is required.",
     "v.number": "Enter a valid number.",
     "v.min": "Minimum value is {min}.",
@@ -131,7 +124,7 @@ const DICT = {
     "how.title": "How it works",
     "how.sub": "Four simple steps, under two minutes.",
     "how.s1.t": "1 · Enter your current situation",
-    "how.s1.d": "Age, income, savings, expenses — all optional to share, none leaves your device.",
+    "how.s1.d": "Age, income, savings, expenses — nothing leaves your device.",
     "how.s2.t": "2 · Choose your goals",
     "how.s2.d": "Wealth target, dream home, salary goal or a daily habit you want to build.",
     "how.s3.t": "3 · Explore possible scenarios",
@@ -158,7 +151,7 @@ const DICT = {
     "faq.q3": "How does inflation affect my numbers?",
     "faq.a3": "Nominal future value tells you the rupee amount; inflation-adjusted value divides it by (1 + inflation)ʸᵉᵃʳˢ to show what that money is worth in today's purchasing power. Both are shown side by side.",
     "faq.q4": "Is my data stored anywhere?",
-    "faq.a4": "Only in your own browser's localStorage — language, theme, and scenarios you explicitly save. There is no account, no backend, and no transmission of your financial inputs. You can erase everything from the Privacy page or the report page in one click.",
+    "faq.a4": "Only in your own browser's localStorage — language, theme, and scenarios you explicitly save. There is no account, no backend, and no transmission of your financial inputs. You can erase everything from the Privacy page in one click.",
     "faq.q5": "How do I compare different scenarios?",
     "faq.a5": "Each calculator shows conservative, moderate and higher variants side by side. Use “Try another scenario” to change assumptions, and save each run to My 2036 to keep a history on your device.",
     "cta.title": "Your future is a series of today's decisions.",
@@ -173,7 +166,6 @@ const DICT = {
     "w.stepUp": "Annual investment increase (%)",
     "w.duration": "Investment duration (years)",
     "w.inflation": "Assumed inflation (%) — optional",
-    "w.presets": "Quick presets",
     "w.custom": "or enter a custom amount",
     "w.res.invested": "Total invested",
     "w.res.future": "Estimated future value",
@@ -213,11 +205,10 @@ const DICT = {
     "h.res.priceFuture": "Projected price in target year",
     "h.res.capacity": "Monthly savings capacity",
     "h.res.gap": "Current down-payment gap",
-    "h.res.time": "Est. time to reach down-payment target",
+    "h.res.time": "Est. time to reach target",
     "h.res.emi": "Illustrative monthly EMI",
     "h.res.interest": "Total interest over tenure",
     "h.res.ratio": "EMI-to-income ratio",
-    "h.monthsVal": "{m} months (≈ {y} years)",
     "h.notReachable": "Target not reached within 30 years at current savings — consider raising monthly savings or the target timeline.",
     "h.gapNone": "No gap — your current savings already cover today's down payment.",
     "h.chart": "Savings vs down-payment target",
@@ -239,7 +230,6 @@ const DICT = {
     "c.res.never": "Not reachable under this growth assumption",
     "c.res.targetMonthly": "Target monthly salary (pre-tax)",
     "c.chart": "Salary growth scenarios (hypothetical)",
-    "c.chart.salary": "Annual salary",
     "c.targetLine": "Target salary",
     "c.milestones": "Salary milestones (at your chosen {g}% growth)",
     "c.double": "Salary doubles",
@@ -285,6 +275,7 @@ const DICT = {
     "hb.healthNote": "For health-related habits we show time and consistency metrics only. No medical outcomes are predicted or implied.",
     "hb.report": "Your personalized habit report",
     "hb.hoursChart": "Hours invested per habit",
+    "hb.breakdown": "Habit-by-habit breakdown",
     "r.title": "My 2036 Future Report",
     "r.desc": "Combine your saved scenarios and goals into one shareable report. Everything stays on your device.",
     "r.sections": "Choose sections to include",
@@ -299,34 +290,33 @@ const DICT = {
     "r.actionPh": "e.g. Start a ₹5,000 monthly SIP",
     "r.add": "Add",
     "r.noData": "Run any calculator first — your saved scenario will appear here automatically.",
+    "r.savedScenarios": "Saved scenarios",
     "r.cardTitle": "My Future, 2036",
     "r.cardPreview": "Result card preview",
     "r.q1": "The future rewards those who plan on a Tuesday, not just in January.",
     "r.q2": "Small, boring, consistent actions — compounded — become an extraordinary life.",
     "r.q3": "You can't control the market. You can control your next move.",
     "r.motivation": "Your message",
-    "r.savedWealth": "{monthly}/month for {years} yrs @ {rate}% → est. {fv} (today's value ≈ {real})",
+    "r.savedWealth": "{monthly}/month × {years} yrs @ {rate}% → est. {fv} (today's value ≈ {real})",
     "r.savedCareer": "Target {target} annual salary — est. {years} at {growth}% growth",
     "r.savedHouse": "Home fund: {down} down payment, est. {time} to reach",
-    "r.savedHabit": "{n} habits × {years} years → {hours} hrs, {sessions} sessions" + "",
     "r.cleared": "All locally saved data has been cleared.",
     "r.shareMsg": "This is my 2036 future plan, made with TimeCapsule India 🚀\n\n{text}\n\nEstimates only — not predictions. Make yours free: {url}",
     "p.title": "Privacy, Data & Disclaimer",
     "p.b1": "TimeCapsule India works without an account. All calculations run locally in your browser, and your financial inputs are never transmitted to any server.",
-    "p.b2": "We store only three things in your browser's localStorage: your language preference, your theme preference, and the scenarios you explicitly save. Clearing them takes one click below (or via your browser settings).",
+    "p.b2": "We store only three things in your browser's localStorage: your language preference, your theme preference, and the scenarios you explicitly save. Clearing them takes one click below.",
     "p.b3": "No analytics events contain financial figures. Advertising is disabled by default; if enabled in future, ad providers may use cookies per their own policies, and reserved ad slots never overlap calculator controls.",
     "p.b4": "Disclaimer: every projection on this site is an estimate based on assumptions you choose. Nothing here is investment, tax, legal or medical advice, and no outcome is guaranteed. Market-linked investments can lose value.",
     "p.clear": "Clear all local data now",
     "f.rights": "© {y} TimeCapsule India. Free forever for users.",
     "f.note": "Estimates only · Not financial advice · Your data never leaves your device.",
     "f.made": "Made in India, for India.",
+    "f.tools": "Tools",
+    "f.legal": "Legal",
     "404.title": "Page not found",
     "404.sub": "The page you're looking for doesn't exist.",
     "404.btn": "Back to home",
     "skip": "Skip to main content",
-    "err.title": "Something went wrong",
-    "err.sub": "An unexpected error occurred. Your saved data is untouched.",
-    "err.reload": "Reload app",
     "share.wealth": "I simulated my future wealth with TimeCapsule India 💠\n{monthly}/month × {years} yrs @ {rate}% → est. {fv} (today's value ≈ {real}).\nEstimates, not guarantees. Try it free: {url}",
     "share.house": "Planning my dream home with TimeCapsule India 🏠\nDown-payment target {down}, est. {time} to reach, illustrative EMI {emi}.\nEstimates only. Try it: {url}",
     "share.career": "Simulated my career growth with TimeCapsule India 📈\nTarget {target}/yr — est. {years} at {growth}% hypothetical growth.\nNot a prediction, a plan. Try it: {url}",
@@ -347,12 +337,10 @@ const DICT = {
     "nav.privacy": "प्राइवेसी",
     "calculate": "गणना करें",
     "calculating": "गणना हो रही है…",
-    "reset": "रीसेट करें",
     "tryAnother": "दूसरा सीनारियो आज़माएँ",
     "results": "आपके अनुमानित परिणाम",
     "optional": "वैकल्पिक",
     "yearsUnit": "साल",
-    "yearUnit": "साल",
     "assumptions": "मान्यताएँ",
     "disclaimer": "डिस्क्लेमर",
     "share": "शेयर करें",
@@ -369,7 +357,6 @@ const DICT = {
     "notGuaranteed": "ये आपकी इनपुट पर आधारित अनुमान हैं — कोई गारंटी नहीं।",
     "marketRisk": "बाज़ार से जुड़े निवेश में जोखिम होता है और वैल्यू घट भी सकती है। असल परिणाम अलग हो सकते हैं। यह पर्सनल निवेश सलाह नहीं है।",
     "perMonth": "/महीना",
-    "perYear": "/साल",
     "v.required": "यह फ़ील्ड ज़रूरी है।",
     "v.number": "मान्य संख्या दर्ज करें।",
     "v.min": "न्यूनतम मान {min} है।",
@@ -397,7 +384,7 @@ const DICT = {
     "how.title": "यह कैसे काम करता है",
     "how.sub": "चार आसान स्टेप, दो मिनट से भी कम।",
     "how.s1.t": "1 · अपनी मौजूदा स्थिति भरें",
-    "how.s1.d": "उम्र, आय, बचत, खर्चे — कुछ भी शेयर करना ज़रूरी नहीं, कुछ भी डिवाइस से बाहर नहीं जाता।",
+    "how.s1.d": "उम्र, आय, बचत, खर्चे — कुछ भी आपके डिवाइस से बाहर नहीं जाता।",
     "how.s2.t": "2 · अपने गोल्स चुनें",
     "how.s2.d": "वेल्थ टारगेट, सपनों का घर, सैलरी गोल् या कोई रोज़ की आदत।",
     "how.s3.t": "3 · अलग-अलग सीनारियो देखें",
@@ -424,7 +411,7 @@ const DICT = {
     "faq.q3": "इंफ्लेशन का क्या असर है?",
     "faq.a3": "नॉमिनल फ्यूचर वैल्यू रुपये की रकम बताती है; इंफ्लेशन-एडजस्टेड वैल्यू उसे (1 + इंफ्लेशन)^साल से भाग देकर आज की खरीद क्षमता दिखाती है। दोनों साथ-साथ दिखती हैं।",
     "faq.q4": "मेरा डेटा कहाँ सेव होता है?",
-    "faq.a4": "सिर्फ़ आपके ब्राउज़र के localStorage में — भाषा, थीम और आपके सेव किए सीनारियो। कोई अकाउंट नहीं, कोई सर्वर नहीं। प्राइवेसी पेज या रिपोर्ट पेज से एक क्लिक में सब हटा सकते हैं।",
+    "faq.a4": "सिर्फ़ आपके ब्राउज़र के localStorage में — भाषा, थीम और आपके सेव किए सीनारियो। कोई अकाउंट नहीं, कोई सर्वर नहीं। प्राइवेसी पेज से एक क्लिक में सब हटा सकते हैं।",
     "faq.q5": "अलग-अलग सीनारियो की तुलना कैसे करें?",
     "faq.a5": "हर कैलकुलेटर कंज़र्वेटिव, मॉडरेट और हायर वेरिएंट साथ दिखाता है। “दूसरा सीनारियो आज़माएँ” से मान्यताएँ बदलें और हर रन को My 2036 में सेव करें।",
     "cta.title": "आपका फ्यूचर आज के फ़ैसलों से बनता है।",
@@ -439,7 +426,6 @@ const DICT = {
     "w.stepUp": "सालाना निवेश बढ़ोतरी (%)",
     "w.duration": "निवेश अवधि (साल)",
     "w.inflation": "माना गया इंफ्लेशन (%) — वैकल्पिक",
-    "w.presets": "क्विक प्रीसेट",
     "w.custom": "या अपनी राशि भरें",
     "w.res.invested": "कुल निवेश",
     "w.res.future": "अनुमानित फ्यूचर वैल्यू",
@@ -479,11 +465,10 @@ const DICT = {
     "h.res.priceFuture": "टारगेट वर्ष में अनुमानित कीमत",
     "h.res.capacity": "मासिक बचत क्षमता",
     "h.res.gap": "डाउन पेमेंट में अभी की कमी",
-    "h.res.time": "डाउन पेमेंट टारगेट तक अनुमानित समय",
+    "h.res.time": "टारगेट तक अनुमानित समय",
     "h.res.emi": "अनुमानित मासिक EMI",
     "h.res.interest": "पूरी अवधि का कुल अनुमानित ब्याज",
     "h.res.ratio": "EMI / आय अनुपात",
-    "h.monthsVal": "{m} महीने (≈ {y} साल)",
     "h.notReachable": "मौजूदा बचत से 30 साल में भी लक्ष्य पूरा नहीं दिख रहा — बचत बढ़ाएँ या समय-सीमा बदलें।",
     "h.gapNone": "कोई गैप नहीं — आपकी मौजूदा सेविंग्स आज के डाउन पेमेंट के लिए पर्याप्त हैं।",
     "h.chart": "सेविंग्स बनाम डाउन पेमेंट टारगेट",
@@ -505,7 +490,6 @@ const DICT = {
     "c.res.never": "इस ग्रोथ मान्यता पर टारगेट तक नहीं पहुँचते",
     "c.res.targetMonthly": "टारगेट मासिक सैलरी (टैक्स से पहले)",
     "c.chart": "सैलरी ग्रोथ सीनारियो (काल्पनिक)",
-    "c.chart.salary": "सालाना सैलरी",
     "c.targetLine": "टारगेट सैलरी",
     "c.milestones": "सैलरी मील के पत्थर (आपकी चुनी {g}% ग्रोथ पर)",
     "c.double": "सैलरी डबल होने में",
@@ -551,6 +535,7 @@ const DICT = {
     "hb.healthNote": "सेहत से जुड़ी आदतों के लिए हम केवल समय और निरंतरता के आंकड़े दिखाते हैं। कोई मेडिकल परिणाम नहीं बताया जाता।",
     "hb.report": "आपकी पर्सनल हैबिट रिपोर्ट",
     "hb.hoursChart": "प्रति आदत निवेशित घंटे",
+    "hb.breakdown": "आदत-वार विवरण",
     "r.title": "मेरा 2036 फ्यूचर रिपोर्ट",
     "r.desc": "अपने सेव किए सीनारियो और गोल्स को एक शेयर करने लायक रिपोर्ट में बदलें। सब कुछ आपके डिवाइस पर।",
     "r.sections": "रिपोर्ट में शामिल सेक्शन चुनें",
@@ -565,6 +550,7 @@ const DICT = {
     "r.actionPh": "जैसे: ₹5,000 महीना की SIP शुरू करें",
     "r.add": "जोड़ें",
     "r.noData": "पहले कोई कैलकुलेटर चलाएँ — आपका सेव किया सीनारियो यहाँ अपने आप दिखेगा।",
+    "r.savedScenarios": "सेव किए सीनारियो",
     "r.cardTitle": "मेरा फ्यूचर, 2036",
     "r.cardPreview": "रिज़ल्ट कार्ड प्रीव्यू",
     "r.q1": "भविष्य उनके इंतज़ार में नहीं, आज के छोटे फ़ैसलों में बनता है।",
@@ -574,7 +560,6 @@ const DICT = {
     "r.savedWealth": "{monthly}/महीना × {years} साल @ {rate}% → अनुमानित {fv} (आज की वैल्यू ≈ {real})",
     "r.savedCareer": "टारगेट {target} सालाना — {growth}% ग्रोथ पर अनुमानित {years}",
     "r.savedHouse": "होम फंड: {down} डाउन पेमेंट, पहुँचने में अनुमानित {time}",
-    "r.savedHabit": "{n} आदतें × {years} साल → {hours} घंटे, {sessions} सेशन",
     "r.cleared": "सारा लोकल डेटा हटा दिया गया।",
     "r.shareMsg": "यह मेरा 2036 फ्यूचर प्लान है — TimeCapsule India से बना 🚀\n\n{text}\n\nसिर्फ़ अनुमान, भविष्यवाणी नहीं। आपका भी बने, मुफ़्त: {url}",
     "p.title": "प्राइवेसी, डेटा और डिस्क्लेमर",
@@ -586,13 +571,12 @@ const DICT = {
     "f.rights": "© {y} TimeCapsule India. यूज़र्स के लिए हमेशा मुफ़्त।",
     "f.note": "केवल अनुमान · वित्तीय सलाह नहीं · आपका डेटा आपके डिवाइस से बाहर नहीं जाता।",
     "f.made": "भारत में बना, भारत के लिए।",
+    "f.tools": "टूल्स",
+    "f.legal": "कानूनी",
     "404.title": "पेज नहीं मिला",
     "404.sub": "आप जिस पेज की तलाश में हैं, वह मौजूद नहीं है।",
     "404.btn": "होम पर वापस जाएँ",
     "skip": "मुख्य सामग्री पर जाएँ",
-    "err.title": "कुछ गड़बड़ हो गई",
-    "err.sub": "एक अनपेक्षित त्रुटि हुई। आपका सेव किया डेटा सुरक्षित है।",
-    "err.reload": "ऐप फिर लोड करें",
     "share.wealth": "मैंने TimeCapsule India पर अपना फ्यूचर वेल्थ सिमुलेट किया 💠\n{monthly}/महीना × {years} साल @ {rate}% → अनुमानित {fv} (आज की वैल्यू ≈ {real}).\nये अनुमान हैं, गारंटी नहीं। मुफ़्त आज़माएँ: {url}",
     "share.house": "TimeCapsule India से अपने सपनों का घर प्लान कर रहा/रही हूँ 🏠\nडाउन पेमेंट टारगेट {down}, पहुँचने में अनुमानित {time}, illustrative EMI {emi}.\nकेवल अनुमान। आप भी देखें: {url}",
     "share.career": "TimeCapsule India पर अपनी करियर ग्रोथ सिमुलेट की 📈\nटारगेट {target}/साल — {growth}% काल्पनिक ग्रोथ पर अनुमानित {years}.\nभविष्यवाणी नहीं, प्लान। आज़माएँ: {url}",
@@ -601,7 +585,7 @@ const DICT = {
 };
 
 function translate(lang, key, params) {
-  let s = (DICT[lang] && DICT[lang][key]) != null ? DICT[lang][key] : DICT.en[key] != null ? DICT.en[key] : key;
+  let s = (DICT[lang] && DICT[lang][key] != null) ? DICT[lang][key] : (DICT.en[key] != null ? DICT.en[key] : key);
   if (params) Object.keys(params).forEach((p) => { s = s.split("{" + p + "}").join(String(params[p])); });
   return s;
 }
@@ -609,12 +593,10 @@ function translate(lang, key, params) {
 /* ============================ CALCULATIONS ================================
  * Pure functions, UI-independent. Convention: contributions are made at each
  * month-end; annual step-ups apply from the first month of each subsequent
- * year. Decimal precision is kept internally; rounding happens only in the
- * formatting layer.
+ * year. Precision kept internally; rounding only in the formatting layer.
  * ==========================================================================*/
 
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : NaN; };
-const clampInt = (v, lo, hi) => Math.min(hi, Math.max(lo, Math.round(v)));
 
 function fvLumpSum(present, annualRatePct, years) {
   const r = annualRatePct / 1200;
@@ -629,7 +611,7 @@ function fvContributionsConstant(monthly, annualRatePct, months) {
   return monthly * ((Math.pow(1 + r, n) - 1) / r);
 }
 
-function emi(principal, annualRatePct, years) {
+function emiCalc(principal, annualRatePct, years) {
   const n = Math.max(1, Math.round(years * 12));
   const r = annualRatePct / 1200;
   if (r === 0) return principal / n;
@@ -642,8 +624,14 @@ function deflate(nominal, inflationPct, years) {
   return nominal / Math.pow(1 + inflationPct / 100, years);
 }
 
-function projectWealth({ savings = 0, monthly = 0, annualRatePct = 0, stepUpPct = 0, years = 0, inflationPct = 0, startYear = new Date().getFullYear() }) {
-  const yrs = Math.max(0, Math.round(years));
+function projectWealth(opts) {
+  const savings = opts.savings || 0;
+  const monthly = opts.monthly || 0;
+  const annualRatePct = opts.annualRatePct || 0;
+  const stepUpPct = opts.stepUpPct || 0;
+  const inflationPct = opts.inflationPct || 0;
+  const startYear = opts.startYear || new Date().getFullYear();
+  const yrs = Math.max(0, Math.round(opts.years || 0));
   const months = yrs * 12;
   const r = annualRatePct / 1200;
   const step = stepUpPct / 100;
@@ -660,14 +648,7 @@ function projectWealth({ savings = 0, monthly = 0, annualRatePct = 0, stepUpPct 
     for (let i = 0; i < thresholds.length; i++) {
       if (milestonesHit[i] === null && bal >= thresholds[i]) milestonesHit[i] = Math.ceil(m / 12);
     }
-    if (m % 12 === 0) {
-      yearly.push({
-        year: startYear + m / 12,
-        invested: invested,
-        value: bal,
-        growth: bal - invested,
-      });
-    }
+    if (m % 12 === 0) yearly.push({ year: startYear + m / 12, invested, value: bal, growth: bal - invested });
   }
   const realValue = deflate(bal, inflationPct, yrs);
   const milestones = thresholds.map((v, i) => ({
@@ -682,17 +663,17 @@ function propertyValueInYears(price, growthPct, years) {
   return price * Math.pow(1 + growthPct / 100, Math.max(0, years));
 }
 
-function simulateHomeSavings({ initial, monthlySaving, targetNow, propertyGrowthPct, savingsReturnPct, maxYears = 30 }) {
-  const rm = savingsReturnPct / 1200;
-  const gm = propertyGrowthPct / 1200;
-  let bal = Math.max(0, initial);
-  let target = Math.max(0, targetNow);
-  const cap = Math.max(0, monthlySaving);
+function simulateHomeSavings(opts) {
+  const rm = opts.savingsReturnPct / 1200;
+  const gm = opts.propertyGrowthPct / 1200;
+  let bal = Math.max(0, opts.initial);
+  let target = Math.max(0, opts.targetNow);
+  const cap = Math.max(0, opts.monthlySaving);
+  const maxYears = opts.maxYears || 30;
   const yearly = [];
-  const maxM = maxYears * 12;
   let reachedMonth = null;
   if (bal >= target) reachedMonth = 0;
-  for (let m = 1; m <= maxM; m++) {
+  for (let m = 1; m <= maxYears * 12; m++) {
     bal = bal * (1 + rm) + cap;
     target = target * (1 + gm);
     if (reachedMonth === null && bal >= target) reachedMonth = m;
@@ -716,10 +697,7 @@ function projectSalary(annualNow, growthPct, years) {
 
 /* ============================== FORMATTING ================================*/
 
-const INR = (v) => {
-  if (!Number.isFinite(v)) return "—";
-  return "₹" + Math.round(v).toLocaleString("en-IN");
-};
+const INR = (v) => (Number.isFinite(v) ? "₹" + Math.round(v).toLocaleString("en-IN") : "—");
 
 const INRC = (v, lang) => {
   if (!Number.isFinite(v)) return "—";
@@ -732,87 +710,12 @@ const INRC = (v, lang) => {
   return "₹" + Math.round(v);
 };
 
-const NF = (v, d = 0) => Number.isFinite(v) ? v.toLocaleString("en-IN", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—";
-const HRS = (h, lang) => NF(h, h >= 1000 ? 0 : 1) + (lang === "hi" ? " घंटे" : " hrs");
+const NF = (v, d) => {
+  const dd = d || 0;
+  return Number.isFinite(v) ? v.toLocaleString("en-IN", { minimumFractionDigits: dd, maximumFractionDigits: dd }) : "—";
+};
 
-/* ============================ SELF-TESTS ==================================
- * Equivalent of the Vitest unit-test suite for the financial core.
- * Run `tcSelfTests()` in the browser console (auto-runs once on mount).
- * Covers: compound growth, monthly contributions, annual step-ups, inflation
- * adjustment, property growth, EMI, salary growth, zero-rate, zero-duration,
- * very large inputs, currency formatting, and invalid-input validation.
- * ==========================================================================*/
-
-export function tcSelfTests() {
-  const results = [];
-  const ok = (name, cond) => results.push({ name, pass: !!cond });
-  const near = (a, b, eps = 1e-6) => Number.isFinite(a) && Math.abs(a - b) <= eps * Math.max(1, Math.abs(b));
-
-  // Closed form vs month-by-month loop (constant contribution, 12% p.a., 10 yrs)
-  const closed = fvContributionsConstant(5000, 12, 120);
-  let loopBal = 0; const rr = 0.12 / 12;
-  for (let i = 0; i < 120; i++) loopBal = loopBal * (1 + rr) + 5000;
-  ok("fvContributionsConstant matches monthly loop", near(closed, loopBal, 1e-9));
-
-  // Zero interest
-  ok("fv r=0 → P×n", near(fvContributionsConstant(5000, 0, 120), 600000, 1e-9));
-  ok("emi r=0 → P/n", near(emi(120000, 0, 10), 1000, 1e-9));
-
-  // Lump sum: 1,00,000 @12% for 1 year = 112682.503
-  ok("fvLumpSum 12% 1yr", near(fvLumpSum(100000, 12, 1), 100000 * Math.pow(1.01, 12), 1e-9));
-
-  // Inflation adjustment
-  ok("deflate 6% 1yr", near(deflate(112682.503, 6, 1), 112682.503 / 1.06, 1e-9));
-
-  // Standard EMI: ₹10,00,000 @9% 20yr ≈ ₹8,997.26
-  ok("emi standard case", near(emi(1000000, 9, 20), 8997.26, 1e-4));
-
-  // Total interest = EMI×n − P ≥ 0
-  const e = emi(1000000, 9, 20);
-  ok("total interest positive", e * 240 - 1000000 > 0);
-
-  // Step-up projection: year-1 contributions must equal base monthly
-  const su = projectWealth({ savings: 0, monthly: 10000, annualRatePct: 10, stepUpPct: 10, years: 2 });
-  ok("stepUp invested after 2y = 10000×12 + 11000×12", near(su.invested, 252000, 1e-9));
-  ok("stepUp future value > no-stepup", su.futureValue > projectWealth({ savings: 0, monthly: 10000, annualRatePct: 10, stepUpPct: 0, years: 2 }).futureValue);
-
-  // Zero duration
-  const z = projectWealth({ savings: 50000, monthly: 5000, annualRatePct: 12, stepUpPct: 10, years: 0 });
-  ok("zero duration → value = savings", near(z.futureValue, 50000, 1e-9));
-
-  // Very large inputs stay finite
-  const big = projectWealth({ savings: 1e9, monthly: 1e7, annualRatePct: 30, stepUpPct: 20, years: 40 });
-  ok("very large inputs finite", Number.isFinite(big.futureValue));
-
-  // Property growth
-  ok("property growth 6% 5y", near(propertyValueInYears(5000000, 6, 5), 5000000 * Math.pow(1.06, 5), 1e-9));
-
-  // Salary projection & years-to-target
-  ok("yearsToTarget doubling @10%", near(yearsToTarget(500000, 1000000, 10), Math.log(2) / Math.log(1.1), 1e-9));
-  ok("yearsToTarget growth 0 → Infinity", yearsToTarget(500000, 1000000, 0) === Infinity);
-  const sal = projectSalary(600000, 10, 5);
-  ok("salary year5 = 600000×1.1^5", near(sal[5].annual, 600000 * Math.pow(1.1, 5), 1e-9));
-
-  // Milestone detection sanity: ₹10L crossed exactly once
-  const mw = projectWealth({ savings: 0, monthly: 25000, annualRatePct: 12, stepUpPct: 0, years: 3 });
-  ok("milestone 10L within 3 years", mw.milestones[0].yearReached !== null && mw.milestones[0].yearReached <= 3);
-
-  // Currency formatting
-  ok("INR grouping 1234567 → ₹12,34,567", INR(1234567) === "₹12,34,567");
-  ok("compact crore en", INRC(2.5e7, "en").indexOf("Cr") > -1);
-  ok("compact lakh hi", INRC(2.5e6, "hi").indexOf("लाख") > -1);
-  ok("invalid number → dash", INR(NaN) === "—");
-
-  // Invalid input validation helper
-  const errs = validateFields([
-    { key: "a", value: "", required: true, min: 1, max: 10 },
-    { key: "b", value: "abc", required: true, min: 1, max: 10 },
-    { key: "c", value: "50", required: true, min: 1, max: 10 },
-  ], translate.bind(null, "en"));
-  ok("validation catches required/number/max", errs.a && errs.b && errs.c && Object.keys(errs).length === 3);
-
-  return results;
-}
+/* ============================ SELF-TESTS ==================================*/
 
 function validateFields(fields, t) {
   const errors = {};
@@ -827,6 +730,48 @@ function validateFields(fields, t) {
     if (f.max != null && v > f.max) { errors[f.key] = t("v.max", { max: f.max }); return; }
   });
   return errors;
+}
+
+export function tcSelfTests() {
+  const results = [];
+  const ok = (name, cond) => results.push({ name, pass: !!cond });
+  const near = (a, b, eps) => { const e = eps == null ? 1e-6 : eps; return Number.isFinite(a) && Math.abs(a - b) <= e * Math.max(1, Math.abs(b)); };
+
+  const closed = fvContributionsConstant(5000, 12, 120);
+  let loopBal = 0; const rr = 0.12 / 12;
+  for (let i = 0; i < 120; i++) loopBal = loopBal * (1 + rr) + 5000;
+  ok("fvContributionsConstant matches monthly loop", near(closed, loopBal, 1e-9));
+  ok("fv r=0 -> P*n", near(fvContributionsConstant(5000, 0, 120), 600000, 1e-9));
+  ok("emi r=0 -> P/n", near(emiCalc(120000, 0, 10), 1000, 1e-9));
+  ok("fvLumpSum 12% 1yr", near(fvLumpSum(100000, 12, 1), 100000 * Math.pow(1.01, 12), 1e-9));
+  ok("deflate 6% 1yr", near(deflate(112682.503, 6, 1), 112682.503 / 1.06, 1e-9));
+  ok("emi standard case", near(emiCalc(1000000, 9, 20), 8997.26, 1e-4));
+  ok("total interest positive", emiCalc(1000000, 9, 20) * 240 - 1000000 > 0);
+  const su = projectWealth({ savings: 0, monthly: 10000, annualRatePct: 10, stepUpPct: 10, years: 2 });
+  ok("stepUp invested after 2y = 252000", near(su.invested, 252000, 1e-9));
+  ok("stepUp FV > no-stepup FV", su.futureValue > projectWealth({ savings: 0, monthly: 10000, annualRatePct: 10, stepUpPct: 0, years: 2 }).futureValue);
+  const z = projectWealth({ savings: 50000, monthly: 5000, annualRatePct: 12, stepUpPct: 10, years: 0 });
+  ok("zero duration -> value = savings", near(z.futureValue, 50000, 1e-9));
+  const big = projectWealth({ savings: 1e9, monthly: 1e7, annualRatePct: 30, stepUpPct: 20, years: 40 });
+  ok("very large inputs finite", Number.isFinite(big.futureValue));
+  ok("property growth 6% 5y", near(propertyValueInYears(5000000, 6, 5), 5000000 * Math.pow(1.06, 5), 1e-9));
+  ok("yearsToTarget doubling @10%", near(yearsToTarget(500000, 1000000, 10), Math.log(2) / Math.log(1.1), 1e-9));
+  ok("yearsToTarget growth 0 -> Infinity", yearsToTarget(500000, 1000000, 0) === Infinity);
+  const sal = projectSalary(600000, 10, 5);
+  ok("salary year5 = 600000*1.1^5", near(sal[5].annual, 600000 * Math.pow(1.1, 5), 1e-9));
+  const mw = projectWealth({ savings: 0, monthly: 25000, annualRatePct: 12, stepUpPct: 0, years: 3 });
+  ok("milestone 10L within 3 years", mw.milestones[0].yearReached !== null && mw.milestones[0].yearReached <= 3);
+  ok("INR grouping", INR(1234567) === "₹12,34,567");
+  ok("compact crore en", INRC(2.5e7, "en").indexOf("Cr") > -1);
+  ok("compact lakh hi", INRC(2.5e6, "hi").indexOf("लाख") > -1);
+  ok("invalid number -> dash", INR(NaN) === "—");
+  const errs = validateFields([
+    { key: "a", value: "", required: true, min: 1, max: 10 },
+    { key: "b", value: "abc", required: true, min: 1, max: 10 },
+    { key: "c", value: "50", required: true, min: 1, max: 10 },
+  ], translate.bind(null, "en"));
+  ok("validation catches required/number/max", !!errs.a && !!errs.b && !!errs.c && Object.keys(errs).length === 3);
+  return results;
 }
 
 if (typeof window !== "undefined") window.tcSelfTests = tcSelfTests;
@@ -865,12 +810,17 @@ const IP = {
   rupee: <><path d="M6 3h12M6 8h12" /><path d="M6 13h5c3.3 0 6-2.2 6-5s-2.7-5-6-5" /><path d="M6 13l8 8" /></>,
 };
 
-function Icon({ n, size = 18, className = "", strokeWidth = 2 }) {
+function Icon(props) {
+  const name = props.n;
+  const size = Number(props.size) > 0 ? Number(props.size) : 18;
+  const sw = Number(props.strokeWidth) > 0 ? Number(props.strokeWidth) : 2;
+  const cls = props.className || "";
+  const paths = IP[name] || null;
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
-      className={className} aria-hidden="true" focusable="false">
-      {IP[n]}
+      strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+      className={cls} aria-hidden="true" focusable="false">
+      {paths}
     </svg>
   );
 }
@@ -941,7 +891,7 @@ html.light .input{background:#f6f8fd}
 select.input{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
   background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat}
 .chip{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;padding:.35rem .8rem;font-size:.8rem;
-  font-weight:600;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;transition:all .18s}
+  font-weight:600;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;transition:all .18s;font-family:inherit}
 .chip:hover{border-color:var(--cyan);color:var(--cyan)}
 .chip-active{background:rgba(34,211,238,.14);border-color:var(--cyan);color:var(--cyan)}
 .stat-value{font-size:clamp(1.45rem,4.6vw,2.3rem);font-weight:800;letter-spacing:-.02em;line-height:1.1}
@@ -958,16 +908,14 @@ select.input{appearance:none;background-image:linear-gradient(45deg,transparent 
 .tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;padding:.5rem .6rem;border-bottom:1px solid var(--border)}
 .tbl td{padding:.6rem;border-bottom:1px solid var(--border)}
 .tbl tr:last-child td{border-bottom:0}
-.spinner{width:18px;height:18px;border-radius:50%;border:2px solid rgba(34,211,238,.25);border-top-color:var(--cyan);animation:spin .7s linear infinite}
+.spinner{width:18px;height:18px;border-radius:50%;border:2px solid rgba(34,211,238,.25);border-top-color:var(--cyan);animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .glow-ring{position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:var(--grad);
   -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.5;pointer-events:none}
 .hero-path{stroke-dasharray:1100;stroke-dashoffset:1100;animation:draw 2.6s cubic-bezier(.6,0,.3,1) .3s forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
 .hero-dot{opacity:0;animation:pop .5s ease forwards}
-.hero-dot circle.pulse{animation:pulse 2.4s ease-in-out infinite}
-@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
-@keyframes pulse{0%,100%{opacity:.35;r:12}50%{opacity:0;r:20}}
+@keyframes pop{from{opacity:0}to{opacity:1}}
 .float{animation:float 7s ease-in-out infinite}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .shimmer{background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);background-size:200% 100%;animation:shim 2.2s infinite}
@@ -985,13 +933,15 @@ input[type=range]{width:100%;accent-color:#22d3ee;height:1.4rem;cursor:pointer}
 .split{display:grid;grid-template-columns:1fr;gap:1.25rem;align-items:start}
 @media(min-width:1024px){.split{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}}
 .tag{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--purple)}
-.skip-link{position:absolute;left:-9999px;top:0;z-index:100;background:var(--cyan);color:#04101f;padding:.6rem 1rem;font-weight:700;border-radius:0 0 .6rem 0}
+.skip-link{position:absolute;left:-9999px;top:0;z-index:100;background:var(--cyan);color:#04101f;padding:.6rem 1rem;font-weight:700;border-radius:0 0 .6rem 0;text-decoration:none}
 .skip-link:focus{left:0}
 .h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:.3rem 0 .5rem}
 .hero-h1{font-size:clamp(2rem,6.4vw,3.4rem)}
 .h2{font-size:clamp(1.25rem,3.4vw,1.7rem);font-weight:800;letter-spacing:-.01em;margin:.2rem 0 .4rem}
-.recharts-wrapper{font-size:12px}
-.recharts-default-legend{font-size:.8rem}
+.md-nav{display:none}
+@media(min-width:1024px){.md-nav{display:flex;gap:.15rem}.lg-hide{display:none}}
+.hero-grid{display:grid;gap:2rem;align-items:center;grid-template-columns:1fr}
+@media(min-width:900px){.hero-grid{grid-template-columns:1.1fr .9fr}}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
   .hero-path{stroke-dashoffset:0}.hero-dot{opacity:1}
@@ -1013,9 +963,7 @@ function useBootstrap() {
     if (!hasTw) {
       const tw = document.createElement("script");
       tw.src = "https://cdn.tailwindcss.com";
-      tw.onload = () => {
-        if (window.tailwind) window.tailwind.config = { darkMode: "class", corePlugins: { preflight: false } };
-      };
+      tw.onload = () => { if (window.tailwind) window.tailwind.config = { corePlugins: { preflight: false } }; };
       document.head.appendChild(tw);
     }
     const fonts = [
@@ -1042,9 +990,9 @@ function useBootstrap() {
 function useLocalStorage(key, initial) {
   const [v, setV] = useState(() => {
     try { const s = localStorage.getItem(key); return s != null ? JSON.parse(s) : initial; }
-    catch { return initial; }
+    catch (e) { return initial; }
   });
-  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* storage full/blocked */ } }, [key, v]);
+  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* ignore */ } }, [key, v]);
   return [v, setV];
 }
 
@@ -1052,7 +1000,7 @@ const StoreCtx = createContext(null);
 const useStore = () => useContext(StoreCtx);
 
 function StoreProvider({ children }) {
-  const initialLang = (typeof navigator !== "undefined" && String(navigator.language || "").toLowerCase().startsWith("hi")) ? "hi" : "en";
+  const initialLang = (typeof navigator !== "undefined" && String(navigator.language || "").toLowerCase().indexOf("hi") === 0) ? "hi" : "en";
   const [lang, setLang] = useLocalStorage("tc_lang", initialLang);
   const [theme, setTheme] = useLocalStorage("tc_theme", "dark");
   const [saved, setSaved] = useLocalStorage("tc_saved", {});
@@ -1064,24 +1012,23 @@ function StoreProvider({ children }) {
 
   const t = useCallback((k, p) => translate(lang, k, p), [lang]);
   const saveScenario = useCallback((key, data) => {
-    setSaved((s) => ({ ...s, [key]: { ...data, ts: Date.now() } }));
+    setSaved((s) => ({ ...s, [key]: Object.assign({}, data, { ts: Date.now() }) }));
   }, [setSaved]);
   const clearAll = useCallback(() => setSaved({}), [setSaved]);
 
-  const value = useMemo(() => ({ lang, setLang, theme, setTheme, t, saved, saveScenario, clearAll }),
-    [lang, setLang, theme, setTheme, t, saved, saveScenario, clearAll]);
+  const value = useMemo(
+    () => ({ lang, setLang, theme, setTheme, t, saved, saveScenario, clearAll }),
+    [lang, setLang, theme, setTheme, t, saved, saveScenario, clearAll]
+  );
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
 }
 
 /* ============================ ROUTER & SEO ================================*/
 
-const ROUTES = ["/", "/future-wealth", "/dream-home", "/career-growth", "/habit-impact", "/my-2036", "/privacy"];
-
 function currentPath() {
   const h = window.location.hash.replace(/^#/, "");
   return h || "/";
 }
-function navigate(path) { window.location.hash = path; }
 
 function useHashRoute() {
   const [path, setPath] = useState(currentPath);
@@ -1093,18 +1040,21 @@ function useHashRoute() {
   return path;
 }
 
-function Link({ to, className = "", children, onClick, ...rest }) {
-  return <a href={"#" + to} className={className} onClick={onClick} {...rest}>{children}</a>;
+function Link({ to, className, children, style, ...rest }) {
+  return <a href={"#" + to} className={className} style={style} {...rest}>{children}</a>;
 }
 
 function setMeta(attr, name, content) {
-  let el = document.head.querySelector(`meta[${attr}="${name}"]`);
+  let el = document.head.querySelector('meta[' + attr + '="' + name + '"]');
   if (!el) { el = document.createElement("meta"); el.setAttribute(attr, name); document.head.appendChild(el); }
   el.setAttribute("content", content);
 }
 
-function useSeo({ title, description, jsonLd }) {
+function useSeo(cfg) {
   const { lang } = useStore();
+  const title = cfg.title;
+  const description = cfg.description;
+  const jsonLd = cfg.jsonLd;
   useEffect(() => {
     document.title = title;
     setMeta("name", "description", description);
@@ -1120,9 +1070,9 @@ function useSeo({ title, description, jsonLd }) {
     let vp = document.head.querySelector('meta[name="viewport"]');
     if (!vp) { vp = document.createElement("meta"); vp.name = "viewport"; document.head.appendChild(vp); }
     vp.content = "width=device-width, initial-scale=1";
-    let themeMeta = document.head.querySelector('meta[name="theme-color"]');
-    if (!themeMeta) { themeMeta = document.createElement("meta"); themeMeta.name = "theme-color"; document.head.appendChild(themeMeta); }
-    themeMeta.content = "#04070f";
+    let thm = document.head.querySelector('meta[name="theme-color"]');
+    if (!thm) { thm = document.createElement("meta"); thm.name = "theme-color"; document.head.appendChild(thm); }
+    thm.content = "#04070f";
     const prev = document.getElementById("tc-jsonld");
     if (prev) prev.remove();
     if (jsonLd) {
@@ -1136,54 +1086,59 @@ function useSeo({ title, description, jsonLd }) {
 
 /* ============================ UI PRIMITIVES ===============================*/
 
-const reduce = () => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduceMotion = () => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function Field({ id, label, error, hint, children }) {
   return (
     <div>
-      {label && <label className="field-label" htmlFor={id}>{label}</label>}
+      {label ? <label className="field-label" htmlFor={id}>{label}</label> : null}
       {children}
-      {hint && !error && <p className="dim" style={{ fontSize: ".74rem", marginTop: ".25rem" }}>{hint}</p>}
-      {error && <p className="field-error" id={id + "-err"} role="alert"><Icon n="alert" size={13} />{error}</p>}
+      {hint && !error ? <p className="dim" style={{ fontSize: ".74rem", marginTop: ".25rem" }}>{hint}</p> : null}
+      {error ? <p className="field-error" id={id + "-err"} role="alert"><Icon n="alert" size={13} />{error}</p> : null}
     </div>
   );
 }
 
-function NumInput({ id, label, value, onChange, prefix, suffix, error, hint, min, max, step = 1, slider = false }) {
+function NumInput(props) {
+  const id = props.id;
   return (
-    <Field id={id} label={label} error={error} hint={hint}>
+    <Field id={id} label={props.label} error={props.error} hint={props.hint}>
       <div className="input-wrap">
-        {prefix && <span className="input-prefix" aria-hidden="true">{prefix}</span>}
-        <input id={id} type="number" inputMode="decimal" className={"input" + (prefix ? " has-prefix" : "") + (suffix ? " has-suffix" : "")}
-          value={value} min={min} max={max} step={step}
-          onChange={(e) => onChange(e.target.value)}
-          aria-invalid={!!error} aria-describedby={error ? id + "-err" : undefined} />
-        {suffix && <span className="input-suffix" aria-hidden="true">{suffix}</span>}
+        {props.prefix ? <span className="input-prefix" aria-hidden="true">{props.prefix}</span> : null}
+        <input id={id} type="number" inputMode="decimal"
+          className={"input" + (props.prefix ? " has-prefix" : "") + (props.suffix ? " has-suffix" : "")}
+          value={props.value} min={props.min} max={props.max} step={props.step || 1}
+          onChange={(e) => props.onChange(e.target.value)}
+          aria-invalid={props.error ? "true" : "false"}
+          aria-describedby={props.error ? id + "-err" : undefined} />
+        {props.suffix ? <span className="input-suffix" aria-hidden="true">{props.suffix}</span> : null}
       </div>
-      {slider && (
-        <input type="range" aria-label={label} min={min} max={max} step={step} value={Number.isFinite(num(value)) ? num(value) : min}
-          onChange={(e) => onChange(e.target.value)} style={{ marginTop: ".4rem" }} />
-      )}
+      {props.slider ? (
+        <input type="range" aria-label={props.label || id} min={props.min} max={props.max} step={props.step || 1}
+          value={Number.isFinite(num(props.value)) ? num(props.value) : props.min}
+          onChange={(e) => props.onChange(e.target.value)} style={{ marginTop: ".4rem" }} />
+      ) : null}
     </Field>
   );
 }
 
 function Stat({ label, value, sub, accent }) {
   return (
-    <div className="card card-pad" style={{ padding: "1rem 1.1rem" }}>
+    <div className="card" style={{ padding: "1rem 1.1rem" }}>
       <div className="stat-label">{label}</div>
       <div className="stat-value" style={accent ? { color: accent } : undefined}>{value}</div>
-      {sub && <div className="muted" style={{ fontSize: ".78rem", marginTop: ".25rem" }}>{sub}</div>}
+      {sub ? <div className="muted" style={{ fontSize: ".78rem", marginTop: ".25rem" }}>{sub}</div> : null}
     </div>
   );
 }
 
 function PageHeader({ icon, title, desc }) {
-  const anim = !reduce();
+  const anim = !reduceMotion();
   return (
     <motion.header initial={anim ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: .4 }}>
-      <div className="badge" style={{ marginBottom: ".7rem" }}><Icon n={icon} size={14} />{title}</div>
-      <h1 className="h1">{title}</h1>
+      <h1 className="h1" style={{ display: "flex", alignItems: "center", gap: ".6rem" }}>
+        <span style={{ color: "var(--cyan)" }}><Icon n={icon} size={26} /></span>{title}
+      </h1>
       <p className="muted" style={{ maxWidth: 640 }}>{desc}</p>
     </motion.header>
   );
@@ -1192,9 +1147,9 @@ function PageHeader({ icon, title, desc }) {
 function SectionTitle({ kicker, title, sub, center }) {
   return (
     <div style={{ textAlign: center ? "center" : "left", marginBottom: "1.4rem" }}>
-      {kicker && <div className="tag">{kicker}</div>}
+      {kicker ? <div className="tag">{kicker}</div> : null}
       <h2 className="h2">{title}</h2>
-      {sub && <p className="muted" style={{ maxWidth: 620, margin: center ? "0 auto" : 0 }}>{sub}</p>}
+      {sub ? <p className="muted" style={{ maxWidth: 620, margin: center ? "0 auto" : 0 }}>{sub}</p> : null}
     </div>
   );
 }
@@ -1210,25 +1165,29 @@ function Warning({ children }) {
 
 function Spinner() { return <span className="spinner" role="status" aria-live="polite" />; }
 
-function ChartCard({ title, children, height = 280 }) {
+function ChartCard({ title, children, height }) {
   return (
     <div className="card card-pad">
       <div className="stat-label" style={{ marginBottom: ".6rem" }}>{title}</div>
-      <div style={{ width: "100%", height }}>
+      <div style={{ width: "100%", height: height || 280 }}>
         <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
       </div>
     </div>
   );
 }
 
-function ChartTooltip({ active, payload, label, fmt, lang }) {
+function ChartTooltip(props) {
+  const active = props.active;
+  const payload = props.payload;
+  const label = props.label;
+  const fmt = props.fmt;
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="card" style={{ padding: ".6rem .8rem", fontSize: ".8rem", background: "var(--card-solid)" }}>
       <div style={{ fontWeight: 700, marginBottom: ".3rem" }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: ".45rem", color: "var(--muted)" }}>
-          <span style={{ width: 9, height: 9, borderRadius: 9, background: p.color || p.stroke, display: "inline-block" }} />
+          <span style={{ width: 9, height: 9, borderRadius: 9, background: p.color || p.stroke || "#22d3ee", display: "inline-block" }} />
           {p.name}: <strong style={{ color: "var(--text)" }}>{fmt ? fmt(p.value) : NF(p.value)}</strong>
         </div>
       ))}
@@ -1238,17 +1197,17 @@ function ChartTooltip({ active, payload, label, fmt, lang }) {
 
 /* ============================ ADS & AFFILIATES ============================*/
 
-function AdSlot({ unit, style }) {
+function AdSlot(props) {
+  const unit = props.unit;
+  const style = props.style;
   if (!ADS.enabled) {
-    if (!ADS.showPlaceholders) return <div style={{ minHeight: 96, ...style }} aria-hidden="true" />;
+    if (!ADS.showPlaceholders) return <div style={Object.assign({ minHeight: 96 }, style)} aria-hidden="true" />;
     return (
       <div className="ad-slot" aria-hidden="true" style={style}>
         <span>{translate("en", "ad.reserved")}</span>
       </div>
     );
   }
-  /* Real ad container — scripts are only injected when ADS.enabled and a real
-     publisherId exists. Never overlaps calculator controls. */
   return (
     <div className="ad-slot" style={style}>
       <ins className="adsbygoogle" style={{ display: "block" }}
@@ -1259,8 +1218,8 @@ function AdSlot({ unit, style }) {
 }
 
 function AffiliateCards() {
+  const { lang } = useStore();
   if (!ADS.enabled || !ADS.affiliates || !ADS.affiliates.length) return null;
-  const { lang, t } = useStore();
   return (
     <div className="grid-feat" style={{ marginTop: "1.2rem" }}>
       {ADS.affiliates.map((a, i) => (
@@ -1273,7 +1232,7 @@ function AffiliateCards() {
   );
 }
 
-/* =============================== SHARING ==================================*/*/
+/* =============================== SHARING ==================================*/
 
 function pageUrl(path) {
   return SITE.url.replace(/#.*$/, "") + (path ? "#" + path : "");
@@ -1281,7 +1240,7 @@ function pageUrl(path) {
 
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; }
-  catch {
+  catch (e) {
     try {
       const ta = document.createElement("textarea");
       ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -1289,46 +1248,43 @@ async function copyText(text) {
       const okc = document.execCommand("copy");
       document.body.removeChild(ta);
       return okc;
-    } catch { return false; }
+    } catch (e2) { return false; }
   }
 }
 
-function ShareButtons({ text, path = "/my-2036", compact = false }) {
+function ShareButtons(props) {
+  const text = props.text;
+  const path = props.path || "/my-2036";
   const { t } = useStore();
   const [copied, setCopied] = useState(false);
   const url = pageUrl(path);
   const fullText = text + "\n\n" + url;
 
+  const flash = () => { setCopied(true); setTimeout(() => setCopied(false), 1800); };
   const doNative = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: t("brand"), text, url }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+      try { await navigator.share({ title: t("brand"), text, url }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
     }
-    const okc = await copyText(fullText);
-    if (okc) { setCopied(true); setTimeout(() => setCopied(false), 1800); }
+    if (await copyText(fullText)) flash();
   };
-  const doCopy = async () => {
-    const okc = await copyText(fullText);
-    if (okc) { setCopied(true); setTimeout(() => setCopied(false), 1800); }
-  };
+  const doCopy = async () => { if (await copyText(fullText)) flash(); };
   const doWa = () => window.open("https://wa.me/?text=" + encodeURIComponent(fullText), "_blank", "noopener");
-  const doCopyLink = async () => {
-    const okc = await copyText(url);
-    if (okc) { setCopied(true); setTimeout(() => setCopied(false), 1800); }
-  };
+  const doCopyLink = async () => { if (await copyText(url)) flash(); };
 
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem" }}>
-      <button className="btn btn-primary btn-sm" onClick={doNative}><Icon n="share" size={15} />{t("nativeShare")}</button>
-      <button className="btn btn-soft btn-sm" onClick={doWa} style={{ color: "var(--green)", borderColor: "rgba(52,211,153,.3)", background: "rgba(52,211,153,.08)" }}>
-        <Icon n="wa" size={15} />{compact ? "WhatsApp" : t("whatsapp")}
+      <button type="button" className="btn btn-primary btn-sm" onClick={doNative}><Icon n="share" size={15} />{t("nativeShare")}</button>
+      <button type="button" className="btn btn-sm" onClick={doWa} style={{ color: "var(--green)", borderColor: "rgba(52,211,153,.3)", background: "rgba(52,211,153,.08)" }}>
+        <Icon n="wa" size={15} />WhatsApp
       </button>
-      <button className="btn btn-ghost btn-sm" onClick={doCopy}><Icon n={copied ? "check" : "copy"} size={15} />{copied ? t("copied") : t("copySummary")}</button>
-      <button className="btn btn-ghost btn-sm" onClick={doCopyLink}><Icon n="copy" size={15} />{t("copyLink")}</button>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={doCopy}><Icon n={copied ? "check" : "copy"} size={15} />{copied ? t("copied") : t("copySummary")}</button>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={doCopyLink}><Icon n="copy" size={15} />{t("copyLink")}</button>
     </div>
   );
 }
 
-/* PNG result-card renderer (canvas based — no external libs, no CDN images). */
+/* PNG result-card renderer (pure canvas — no external libs or images). */
 function buildCardDataURL(lang, title, lines, footer) {
   const W = 1080, H = 1350;
   const c = document.createElement("canvas");
@@ -1338,10 +1294,10 @@ function buildCardDataURL(lang, title, lines, footer) {
   bg.addColorStop(0, "#050a1c"); bg.addColorStop(.5, "#141140"); bg.addColorStop(1, "#06283a");
   g.fillStyle = bg; g.fillRect(0, 0, W, H);
   const glow1 = g.createRadialGradient(W * .85, H * .05, 40, W * .85, H * .05, 520);
-  glow1.addColorStop(0, "rgba(167,139,250,.35)"); glow1.addColorStop(1, "transparent");
+  glow1.addColorStop(0, "rgba(167,139,250,.35)"); glow1.addColorStop(1, "rgba(0,0,0,0)");
   g.fillStyle = glow1; g.fillRect(0, 0, W, H);
   const glow2 = g.createRadialGradient(W * .1, H * .95, 40, W * .1, H * .95, 560);
-  glow2.addColorStop(0, "rgba(34,211,238,.28)"); glow2.addColorStop(1, "transparent");
+  glow2.addColorStop(0, "rgba(34,211,238,.28)"); glow2.addColorStop(1, "rgba(0,0,0,0)");
   g.fillStyle = glow2; g.fillRect(0, 0, W, H);
   g.strokeStyle = "rgba(255,255,255,.14)"; g.lineWidth = 3;
   g.strokeRect(46, 46, W - 92, H - 92);
@@ -1350,16 +1306,14 @@ function buildCardDataURL(lang, title, lines, footer) {
 
   g.fillStyle = gr;
   g.font = "700 30px Inter, 'Noto Sans Devanagari', sans-serif";
-  g.fillText("⏳ TIMECAPSULE INDIA", 84, 128);
+  g.fillText("TIMECAPSULE INDIA", 84, 128);
   g.font = "800 74px Inter, 'Noto Sans Devanagari', sans-serif";
   g.fillText(title, 84, 232);
   g.fillStyle = "rgba(232,236,251,.55)";
   g.font = "500 30px Inter, 'Noto Sans Devanagari', sans-serif";
   g.fillText(new Date().toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { year: "numeric", month: "long" }), 84, 284);
 
-  let y = 356;
-  g.textBaseline = "top";
-  const maxW = W - 170;
+  const maxW = W - 190;
   const wrap = (txt, font) => {
     g.font = font;
     const words = String(txt).split(" ");
@@ -1371,18 +1325,22 @@ function buildCardDataURL(lang, title, lines, footer) {
     if (cur) out.push(cur);
     return out;
   };
+
+  let y = 356;
+  g.textBaseline = "top";
   lines.forEach((ln) => {
-    if (y > H - 240) return;
+    if (y > H - 260) return;
     if (ln.h) {
       y += 14;
       g.fillStyle = "#22d3ee";
-      g.font = "700 34px Inter, 'Noto Sans Devanagari', sans-serif";
-      wrap(ln.text, g.font).forEach((wl) => { if (y < H - 240) { g.fillText(wl, 84, y); y += 46; } });
+      wrap(ln.text, "700 34px Inter, 'Noto Sans Devanagari', sans-serif").forEach((wl) => {
+        if (y < H - 260) { g.fillText(wl, 84, y); y += 46; }
+      });
       y += 6;
     } else {
       g.fillStyle = "rgba(232,236,251,.92)";
       wrap(ln.text, "500 30px Inter, 'Noto Sans Devanagari', sans-serif").forEach((wl) => {
-        if (y < H - 240) { g.fillText("• " + wl.replace(/^•\s*/, ""), 96, y); y += 42; }
+        if (y < H - 260) { g.fillText("•  " + wl, 96, y); y += 42; }
       });
       y += 4;
     }
@@ -1390,24 +1348,24 @@ function buildCardDataURL(lang, title, lines, footer) {
 
   g.textBaseline = "alphabetic";
   g.fillStyle = "rgba(232,236,251,.6)";
-  g.font = "500 26px Inter, 'Noto Sans Devanagari', sans-serif";
-  const fwrap = wrap(footer, g.font);
-  fwrap.slice(0, 2).forEach((wl, i) => g.fillText(wl, 84, H - 130 + i * 36));
+  wrap(footer, "500 26px Inter, 'Noto Sans Devanagari', sans-serif").slice(0, 2).forEach((wl, i) => {
+    g.fillText(wl, 84, H - 130 + i * 36);
+  });
   g.fillStyle = gr;
   g.font = "700 28px Inter, sans-serif";
   g.fillText("timecapsule.india", 84, H - 62);
   return c.toDataURL("image/png");
 }
 
-function downloadDataURL(dataURL, filename) {
+function triggerDownload(href, filename) {
   const a = document.createElement("a");
-  a.href = dataURL; a.download = filename;
+  a.href = href; a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 function downloadText(filename, text) {
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const u = URL.createObjectURL(blob);
-  downloadDataURL(u, filename);
+  triggerDownload(u, filename);
   setTimeout(() => URL.revokeObjectURL(u), 4000);
 }
 
@@ -1422,7 +1380,8 @@ const NAV_ITEMS = [
   { path: "/my-2036", key: "nav.report", icon: "spark" },
 ];
 
-function Header({ path }) {
+function Header(props) {
+  const path = props.path;
   const { t, lang, setLang, theme, setTheme } = useStore();
   const [open, setOpen] = useState(false);
   useEffect(() => { setOpen(false); }, [path]);
@@ -1437,30 +1396,32 @@ function Header({ path }) {
             TimeCapsule <span className="grad-text">India</span>
           </span>
         </Link>
-        <nav aria-label="Main" style={{ display: "none" }} className="md-nav">
+        <nav aria-label="Main" className="md-nav">
           {NAV_ITEMS.map((it) => (
             <Link key={it.path} to={it.path} className={"nav-link" + (path === it.path ? " nav-link-active" : "")}>{t(it.key)}</Link>
           ))}
         </nav>
         <div role="group" aria-label={t("langLabel")} style={{ display: "flex", border: "1px solid var(--border)", borderRadius: 999, overflow: "hidden", flexShrink: 0 }}>
           {["hi", "en"].map((l) => (
-            <button key={l} onClick={() => setLang(l)} aria-pressed={lang === l}
+            <button key={l} type="button" onClick={() => setLang(l)} aria-pressed={lang === l}
               style={{
                 padding: ".3rem .6rem", fontSize: ".78rem", fontWeight: 700, border: 0, cursor: "pointer", fontFamily: "inherit",
                 background: lang === l ? "rgba(34,211,238,.16)" : "transparent", color: lang === l ? "var(--cyan)" : "var(--muted)",
               }}>{l === "hi" ? "हिं" : "EN"}</button>
           ))}
         </div>
-        <button className="btn btn-ghost btn-sm" style={{ padding: ".4rem", borderRadius: 999 }} onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={t("themeLabel")}>
+        <button type="button" className="btn btn-ghost btn-sm" style={{ padding: ".4rem", borderRadius: 999 }}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={t("themeLabel")}>
           <Icon n={theme === "dark" ? "sun" : "moon"} size={16} />
         </button>
-        <button className="btn btn-ghost btn-sm" style={{ padding: ".4rem", borderRadius: 999 }} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={t("menu")} className-mobile-only="true">
+        <button type="button" className="btn btn-ghost btn-sm lg-only" style={{ padding: ".4rem", borderRadius: 999 }}
+          onClick={() => setOpen(!open)} aria-expanded={open} aria-label={t("menu")}>
           <Icon n={open ? "x" : "menu"} size={18} />
         </button>
       </div>
       <AnimatePresence>
         {open && (
-          <motion.nav aria-label="Mobile" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .22 }} style={{ overflow: "hidden" }} className="lg-hide">
+          <motion.nav aria-label="Mobile" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .22 }} className="lg-hide" style={{ overflow: "hidden" }}>
             <div className="container" style={{ display: "flex", flexDirection: "column", padding: ".4rem 1rem 1rem", gap: ".15rem" }}>
               {NAV_ITEMS.map((it) => (
                 <Link key={it.path} to={it.path} className={"nav-link" + (path === it.path ? " nav-link-active" : "")}
@@ -1475,11 +1436,7 @@ function Header({ path }) {
           </motion.nav>
         )}
       </AnimatePresence>
-      <style>{`
-        .md-nav{display:none!important}
-        .lg-hide{display:block}
-        @media(min-width:1024px){.md-nav{display:flex!important;gap:.15rem}.lg-hide{display:none!important}}
-      `}</style>
+      <style>{`.lg-only{display:inline-flex}@media(min-width:1024px){.lg-only{display:none}}`}</style>
     </header>
   );
 }
@@ -1488,7 +1445,7 @@ function Footer() {
   const { t, lang } = useStore();
   return (
     <footer style={{ marginTop: "3.5rem", borderTop: "1px solid var(--border)" }}>
-      <div className="container" style={{ padding: "2.2rem 1rem 2.6rem", display: "grid", gap: "1.6rem" }}>
+      <div className="container" style={{ padding: "2.2rem 1rem 2.6rem" }}>
         <div style={{ display: "grid", gap: "1.6rem", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: ".5rem", fontWeight: 800 }}>
@@ -1498,23 +1455,23 @@ function Footer() {
             <p className="muted" style={{ fontSize: ".85rem", marginTop: ".5rem", maxWidth: 300 }}>{t("tagline")}</p>
             <p className="dim" style={{ fontSize: ".8rem" }}>{t("f.made")}</p>
           </div>
-          <nav aria-label="Footer">
-            <div className="stat-label">{lang === "hi" ? "टूल्स" : "Tools"}</div>
+          <nav aria-label="Footer tools">
+            <div className="stat-label">{t("f.tools")}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: ".35rem", marginTop: ".5rem" }}>
               {NAV_ITEMS.slice(1).map((it) => <Link key={it.path} to={it.path} className="muted" style={{ fontSize: ".85rem", textDecoration: "none" }}>{t(it.key)}</Link>)}
             </div>
           </nav>
-          <nav aria-label="Legal">
-            <div className="stat-label">{lang === "hi" ? "कानूनी" : "Legal"}</div>
+          <nav aria-label="Footer legal">
+            <div className="stat-label">{t("f.legal")}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: ".35rem", marginTop: ".5rem" }}>
               <Link to="/privacy" className="muted" style={{ fontSize: ".85rem", textDecoration: "none" }}>{t("nav.privacy")}</Link>
               <Link to="/privacy" className="muted" style={{ fontSize: ".85rem", textDecoration: "none" }}>{t("disclaimer")}</Link>
             </div>
           </nav>
         </div>
-        <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexWrap: "wrap", gap: ".5rem", justifyContent: "space-between" }}>
+        <div style={{ borderTop: "1px solid var(--border)", marginTop: "1.6rem", paddingTop: "1rem", display: "flex", flexWrap: "wrap", gap: ".5rem", justifyContent: "space-between" }}>
           <span className="dim" style={{ fontSize: ".78rem" }}>{t("f.rights", { y: new Date().getFullYear() })}</span>
-          <span className="dim" style={{ fontSize: ".78rem" }}>{t("f.note")}</span>
+          <span className="dim" style={{ fontSize: ".78rem" }}>{lang === "hi" ? t("f.note") : t("f.note")}</span>
         </div>
       </div>
     </footer>
@@ -1526,9 +1483,9 @@ function Footer() {
 function HeroTimeline() {
   const { t } = useStore();
   const stops = [
-    { x: 70, y: 208, label: "2025", icon: "🌱", d: ".9s" },
-    { x: 210, y: 168, label: "2028", icon: "💰", d: "1.5s" },
-    { x: 355, y: 112, label: "2031", icon: "🏠", d: "2.0s" },
+    { x: 70, y: 208, label: "2026", icon: "🌱", d: ".9s" },
+    { x: 210, y: 168, label: "2029", icon: "💰", d: "1.5s" },
+    { x: 355, y: 112, label: "2032", icon: "🏠", d: "2.0s" },
     { x: 520, y: 46, label: "2036", icon: "🚀", d: "2.5s" },
   ];
   return (
@@ -1537,59 +1494,83 @@ function HeroTimeline() {
         <linearGradient id="tlGrad" x1="0" y1="1" x2="1" y2="0">
           <stop offset="0%" stopColor="#22d3ee" /><stop offset="55%" stopColor="#818cf8" /><stop offset="100%" stopColor="#c084fc" />
         </linearGradient>
-        <linearGradient id="tlFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(129,140,248,.28)" /><stop offset="100%" stopColor="rgba(129,140,248,0)" />
-        </linearGradient>
       </defs>
-      <path d="M30 232 C 150 226, 190 180, 290 140 S 450 70, 575 30" fill="none" stroke="url(#tlFill)" strokeWidth="46" opacity=".5" className="hero-path" />
+      <path d="M30 232 C 150 226, 190 180, 290 140 S 450 70, 575 30" fill="none" stroke="rgba(129,140,248,.18)" strokeWidth="40" strokeLinecap="round" className="hero-path" />
       <path d="M30 232 C 150 226, 190 180, 290 140 S 450 70, 575 30" fill="none" stroke="url(#tlGrad)" strokeWidth="4" strokeLinecap="round" className="hero-path" />
       {stops.map((s, i) => (
-        <g key={i} className="hero-dot" style={{ animationDelay: s.d, transformOrigin: `${s.x}px ${s.y}px` }}>
-          <circle className="pulse" cx={s.x} cy={s.y} r="12" fill="rgba(34,211,238,.3)" />
+        <g key={i} className="hero-dot" style={{ animationDelay: s.d }}>
+          <circle cx={s.x} cy={s.y} r="13" fill="rgba(34,211,238,.18)" />
           <circle cx={s.x} cy={s.y} r="7" fill="#0a1024" stroke="url(#tlGrad)" strokeWidth="3" />
-          <text x={s.x} y={s.y + 32} textAnchor="middle" fill="#9aa6c7" fontSize="15" fontWeight="700" fontFamily="Inter,sans-serif">{s.label}</text>
-          <text x={s.x} y={s.y - 18} textAnchor="middle" fontSize="20">{s.icon}</text>
+          <text x={s.x} y={s.y + 34} textAnchor="middle" fill="#9aa6c7" fontSize="15" fontWeight="700" fontFamily="Inter,sans-serif">{s.label}</text>
+          <text x={s.x} y={s.y - 16} textAnchor="middle" fontSize="20">{s.icon}</text>
         </g>
       ))}
     </svg>
   );
 }
 
+function FaqList() {
+  const { t } = useStore();
+  const [openIdx, setOpenIdx] = useState(null);
+  const anim = !reduceMotion();
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: ".6rem" }}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <motion.div key={i} className="acc-item"
+          initial={anim ? { opacity: 0, y: 12 } : false}
+          whileInView={anim ? { opacity: 1, y: 0 } : undefined}
+          viewport={{ once: true }} transition={{ duration: .35, delay: anim ? i * .04 : 0 }}>
+          <h3 style={{ margin: 0 }}>
+            <button type="button" className="acc-btn" aria-expanded={openIdx === i} onClick={() => setOpenIdx(openIdx === i ? null : i)}>
+              {t("faq.q" + i)}
+              <motion.span animate={{ rotate: openIdx === i ? 180 : 0 }} transition={{ duration: .2 }} style={{ display: "inline-flex", flexShrink: 0 }}>
+                <Icon n="chev" size={16} />
+              </motion.span>
+            </button>
+          </h3>
+          <AnimatePresence initial={false}>
+            {openIdx === i && (
+              <motion.div className="acc-body" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .25 }} style={{ overflow: "hidden" }}>
+                {t("faq.a" + i)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 function Home() {
   const { t, lang } = useStore();
-  const anim = !reduce();
+  const anim = !reduceMotion();
+  const faqLd = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [1, 2, 3, 4, 5].map((i) => ({
+      "@type": "Question",
+      name: translate(lang, "faq.q" + i),
+      acceptedAnswer: { "@type": "Answer", text: translate(lang, "faq.a" + i) },
+    })),
+  }), [lang]);
+
+  const appLd = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: SITE.name,
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Any",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+    inLanguage: ["en-IN", "hi-IN"],
+  }), []);
+
   useSeo({
     title: (lang === "hi" ? "आपका फ्यूचर कैसा होगा? | " : "What Could Your Future Look Like? | ") + "TimeCapsule India",
     description: lang === "hi"
       ? "मुफ़्त हिंदी-अंग्रेज़ी टूल्स से अपनी वेल्थ, ड्रीम होम, करियर ग्रोथ और आदतों का भविष्य देखें। सारी गणना आपके डिवाइस पर — कोई साइन-अप नहीं।"
       : "Free bilingual tools to project your future wealth, dream home affordability, career growth and daily-habit impact. All calculations run privately in your browser.",
-    jsonLd: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      name: SITE.name,
-      applicationCategory: "FinanceApplication",
-      operatingSystem: "Any",
-      offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
-      inLanguage: ["en-IN", "hi-IN"],
-    },
+    jsonLd: Object.assign({}, appLd, { "@graph": [appLd, faqLd] }),
   });
-
-  const faqJsonLd = useMemo(() => ({
-    "@context": "https://schema.org", "@type": "FAQPage",
-    mainEntity: [1, 2, 3, 4, 5].map((i) => ({
-      "@type": "Question", name: t("faq.q" + i),
-      acceptedAnswer: { "@type": "Answer", text: t("faq.a" + i) },
-    })),
-  }), [t]);
-
-  useEffect(() => {
-    const prev = document.getElementById("tc-faq-ld");
-    if (prev) prev.remove();
-    const s = document.createElement("script");
-    s.id = "tc-faq-ld"; s.type = "application/ld+json"; s.textContent = JSON.stringify(faqJsonLd);
-    document.head.appendChild(s);
-    return () => { const el = document.getElementById("tc-faq-ld"); if (el) el.remove(); };
-  }, [faqJsonLd]);
 
   const features = [
     { path: "/future-wealth", icon: "trend", name: "feat.wealth.name", desc: "feat.wealth.desc", color: "#22d3ee" },
@@ -1605,11 +1586,10 @@ function Home() {
 
   return (
     <div>
-      {/* HERO */}
       <section className="container" style={{ paddingTop: "2.8rem", paddingBottom: "1rem" }}>
-        <div style={{ display: "grid", gap: "2rem", alignItems: "center", gridTemplateColumns: "1fr" }} className="hero-grid">
+        <div className="hero-grid">
           <div>
-            <motion.div {...(anim ? { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { duration: .45 } } : {})}>
+            <motion.div initial={anim ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: .45 }}>
               <span className="badge"><Icon n="shield" size={13} />{t("hero.badge")}</span>
             </motion.div>
             <h1 className="h1 hero-h1" style={{ marginTop: "1rem" }}>
@@ -1621,20 +1601,19 @@ function Home() {
               <Link to="/future-wealth" className="btn btn-primary"><Icon n="spark" size={17} />{t("hero.cta1")}</Link>
               <a href="#features" className="btn btn-ghost">{t("hero.cta2")}<Icon n="arrow" size={16} /></a>
             </div>
-            <p className="dim" style={{ fontSize: ".76rem", marginTop: "1rem" }}><Icon n="info" size={12} className="inline-icon" /> {t("notGuaranteed")}</p>
+            <p className="dim" style={{ fontSize: ".76rem", marginTop: "1rem" }}>{t("notGuaranteed")}</p>
           </div>
-          <motion.div className="float" {...(anim ? { initial: { opacity: 0, scale: .96 }, animate: { opacity: 1, scale: 1 }, transition: { duration: .7 } } : {})} style={{ display: "flex", justifyContent: "center" }}>
+          <motion.div className="float" initial={anim ? { opacity: 0, scale: .96 } : false} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} style={{ display: "flex", justifyContent: "center" }}>
             <HeroTimeline />
           </motion.div>
         </div>
       </section>
 
-      {/* FEATURES */}
       <section id="features" className="container" style={{ paddingTop: "2.6rem" }} aria-labelledby="feat-h">
         <motion.div {...M}><SectionTitle kicker={lang === "hi" ? "टूल्स" : "TOOLS"} title={t("feat.title")} sub={t("feat.sub")} /></motion.div>
         <div className="grid-feat">
           {features.map((f, i) => (
-            <motion.div key={f.path} {...M} transition={{ duration: .4, delay: anim ? i * .06 : 0 }}>
+            <motion.div key={f.path} {...M} transition={{ duration: .4, delay: anim ? i * .06 : 0 }} style={{ height: "100%" }}>
               <Link to={f.path} className="card card-pad card-hover" style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%" }}>
                 <span style={{ width: 42, height: 42, borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", background: f.color + "1f", color: f.color, marginBottom: ".8rem" }}>
                   <Icon n={f.icon} size={21} />
@@ -1650,7 +1629,7 @@ function Home() {
           <motion.div {...M} className="card card-pad" style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: ".5rem", borderColor: "rgba(34,211,238,.3)", background: "linear-gradient(135deg, rgba(34,211,238,.08), rgba(167,139,250,.08))" }}>
             <div className="tag">{lang === "hi" ? "प्राइवेसी" : "PRIVACY FIRST"}</div>
             <div style={{ fontWeight: 700 }}>{t("savedNote")}</div>
-            <Link to="/privacy" style={{ color: "var(--cyan)", fontSize: ".83rem", fontWeight: 600 }}>{t("nav.privacy")} →</Link>
+            <Link to="/privacy" style={{ color: "var(--cyan)", fontSize: ".83rem", fontWeight: 600, textDecoration: "none" }}>{t("nav.privacy")} →</Link>
           </motion.div>
         </div>
       </section>
@@ -1658,41 +1637,36 @@ function Home() {
       <div className="container" style={{ marginTop: "2.4rem" }}><AdSlot unit="homeMid" /></div>
       <div className="container"><AffiliateCards /></div>
 
-      {/* HOW IT WORKS */}
       <section className="container" style={{ paddingTop: "2.8rem" }} aria-labelledby="how-h">
         <motion.div {...M}><SectionTitle kicker={lang === "hi" ? "प्रक्रिया" : "PROCESS"} title={t("how.title")} sub={t("how.sub")} /></motion.div>
-        <div className="grid-feat" style={{ gridTemplateColumns: undefined }}>
+        <div className="grid-feat">
           {[1, 2, 3, 4].map((i) => (
             <motion.div key={i} {...M} transition={{ duration: .4, delay: anim ? i * .05 : 0 }} className="card card-pad">
-              <div style={{ fontWeight: 800, fontSize: ".95rem", marginBottom: ".35rem" }}>{t(`how.s${i}.t`)}</div>
-              <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}>{t(`how.s${i}.d`)}</p>
+              <div style={{ fontWeight: 800, fontSize: ".95rem", marginBottom: ".35rem" }}>{t("how.s" + i + ".t")}</div>
+              <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}>{t("how.s" + i + ".d")}</p>
             </motion.div>
           ))}
         </div>
-        <style>{`.grid-feat{grid-template-columns:1fr!important}@media(min-width:640px){.grid-feat{grid-template-columns:1fr 1fr!important}}@media(min-width:1024px){.grid-feat{grid-template-columns:repeat(3,1fr)!important}}`}</style>
       </section>
 
-      {/* EDUCATION */}
       <section className="container" style={{ paddingTop: "2.8rem" }}>
         <motion.div {...M}><SectionTitle kicker={lang === "hi" ? "सीखें" : "LEARN"} title={t("edu.title")} sub={t("edu.sub")} /></motion.div>
         <div className="grid-feat">
           {eduKeys.map((k, i) => (
             <motion.article key={k} {...M} transition={{ duration: .4, delay: anim ? i * .05 : 0 }} className="card card-pad">
               <span style={{ color: "var(--purple)", display: "inline-flex", marginBottom: ".5rem" }}><Icon n={eduIcons[i]} size={20} /></span>
-              <h3 style={{ fontWeight: 700, fontSize: ".98rem", margin: "0 0 .4rem" }}>{t(`edu.${k}.t`)}</h3>
-              <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}>{t(`edu.${k}.d`)}</p>
+              <h3 style={{ fontWeight: 700, fontSize: ".98rem", margin: "0 0 .4rem" }}>{t("edu." + k + ".t")}</h3>
+              <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}>{t("edu." + k + ".d")}</p>
             </motion.article>
           ))}
         </div>
       </section>
 
-      {/* FAQ */}
       <section className="container" style={{ paddingTop: "2.8rem", maxWidth: 800 }}>
         <motion.div {...M}><SectionTitle kicker="FAQ" title={t("faq.title")} center /></motion.div>
         <FaqList />
       </section>
 
-      {/* CTA */}
       <section className="container" style={{ paddingTop: "3rem" }}>
         <motion.div {...M} className="card" style={{ padding: "2.4rem 1.5rem", textAlign: "center", position: "relative", overflow: "hidden" }}>
           <div className="glow-ring" />
@@ -1701,36 +1675,6 @@ function Home() {
           <Link to="/future-wealth" className="btn btn-primary">{t("cta.btn")}<Icon n="arrow" size={16} /></Link>
         </motion.div>
       </section>
-      <style>{`@media(min-width:900px){.hero-grid{grid-template-columns:1.1fr .9fr!important}}`}</style>
-    </div>
-  );
-}
-
-function FaqList() {
-  const { t } = useStore();
-  const [openIdx, setOpenIdx] = useState(null);
-  const anim = !reduce();
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: ".6rem" }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <motion.div key={i} className="acc-item" {...(anim ? { initial: { opacity: 0, y: 12 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: .35, delay: i * .04 } } : {})}>
-          <h3 style={{ margin: 0 }}>
-            <button className="acc-btn" aria-expanded={openIdx === i} onClick={() => setOpenIdx(openIdx === i ? null : i)}>
-              {t("faq.q" + i)}
-              <motion.span animate={{ rotate: openIdx === i ? 180 : 0 }} transition={{ duration: .2 }} style={{ display: "inline-flex", flexShrink: 0 }}>
-                <Icon n="chev" size={16} />
-              </motion.span>
-            </button>
-          </h3>
-          <AnimatePresence initial={false}>
-            {openIdx === i && (
-              <motion.div className="acc-body" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .25 }}>
-                {t("faq.a" + i)}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      ))}
     </div>
   );
 }
@@ -1741,8 +1685,8 @@ const WEALTH_PRESETS = [1000, 5000, 10000, 25000, 50000];
 const MILE_KEYS = ["m.10l", "m.25l", "m.50l", "m.1cr"];
 
 function FutureWealth() {
-  const { t, lang, saveScenario, saved } = useStore();
-  const anim = !reduce();
+  const { t, lang, theme, saveScenario } = useStore();
+  const anim = !reduceMotion();
   useSeo({
     title: (lang === "hi" ? "फ्यूचर वेल्थ कैलकुलेटर — SIP और निवेश प्रोजेक्शन | " : "Future Wealth Calculator — SIP & Investment Projection | ") + "TimeCapsule India",
     description: lang === "hi"
@@ -1755,7 +1699,8 @@ function FutureWealth() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k) => (v) => setForm((f) => Object.assign({}, f, { [k]: v }));
+  const tickColor = theme === "light" ? "#525f80" : "#9aa6c7";
 
   const schema = [
     { key: "age", value: form.age, min: 16, max: 80 },
@@ -1782,9 +1727,9 @@ function FutureWealth() {
       const cons = Math.max(0, inputs.annualRatePct - 3);
       const high = inputs.annualRatePct + 3;
       const scenarios = [
-        { key: "w.cons", rate: cons, out: projectWealth({ ...inputs, annualRatePct: cons }) },
-        { key: "w.mod", rate: inputs.annualRatePct, out: projectWealth({ ...inputs, annualRatePct: inputs.annualRatePct }) },
-        { key: "w.high", rate: high, out: projectWealth({ ...inputs, annualRatePct: high }) },
+        { key: "w.cons", rate: cons, out: projectWealth(Object.assign({}, inputs, { annualRatePct: cons })) },
+        { key: "w.mod", rate: inputs.annualRatePct, out: projectWealth(Object.assign({}, inputs, { annualRatePct: inputs.annualRatePct })) },
+        { key: "w.high", rate: high, out: projectWealth(Object.assign({}, inputs, { annualRatePct: high })) },
       ];
       setResult({ base, scenarios, startYear, ageAtEnd: Math.round(num(form.age) + inputs.years) });
       setBusy(false);
@@ -1796,20 +1741,15 @@ function FutureWealth() {
     }, 420);
   };
 
-  const resetAll = () => { setResult(null); setErrors({}); };
-
   const shareText = result ? translate(lang, "share.wealth", {
     monthly: INR(num(form.monthly)), years: result.base.years, rate: form.rate,
     fv: INRC(result.base.futureValue, lang), real: INRC(result.base.realValue, lang), url: "",
   }).trim() : "";
 
-  const tickColor = lang && useStore().theme === "light" ? "#525f80" : "#9aa6c7";
-
   return (
     <div className="container" style={{ paddingTop: "2rem" }}>
       <PageHeader icon="trend" title={t("w.title")} desc={t("w.desc")} />
       <div className="split" style={{ marginTop: "1.4rem" }}>
-        {/* FORM */}
         <form className="card card-pad" onSubmit={(e) => { e.preventDefault(); calculate(); }} noValidate aria-label={t("w.title")}>
           <div className="stat-label">{t("assumptions")}</div>
           <div className="grid2" style={{ marginTop: ".7rem" }}>
@@ -1817,8 +1757,8 @@ function FutureWealth() {
             <NumInput id="w-savings" label={t("w.savings")} value={form.savings} onChange={set("savings")} error={errors.savings} prefix="₹" min={0} max={1000000000} step={10000} />
           </div>
           <div style={{ marginTop: ".9rem" }}>
-            <div className="field-label">{t("w.monthly")}</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: ".4rem", marginBottom: ".55rem" }} role="group" aria-label={t("w.presets")}>
+            <div className="field-label" id="w-preset-label">{t("w.monthly")}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: ".4rem", marginBottom: ".55rem" }} role="group" aria-labelledby="w-preset-label">
               {WEALTH_PRESETS.map((p) => (
                 <button type="button" key={p} className={"chip" + (num(form.monthly) === p ? " chip-active" : "")} onClick={() => set("monthly")(String(p))}>
                   ₹{p.toLocaleString("en-IN")}
@@ -1839,32 +1779,32 @@ function FutureWealth() {
             <button type="submit" className="btn btn-primary" disabled={busy} style={{ flex: 1, minWidth: 160 }}>
               {busy ? <><Spinner />{t("calculating")}</> : <><Icon n="calc" size={17} />{t("calculate")}</>}
             </button>
-            {result && <button type="button" className="btn btn-ghost" onClick={resetAll}><Icon n="spark" size={15} />{t("tryAnother")}</button>}
+            {result ? <button type="button" className="btn btn-ghost" onClick={() => { setResult(null); setErrors({}); }}><Icon n="spark" size={15} />{t("tryAnother")}</button> : null}
           </div>
           <p className="dim" style={{ fontSize: ".72rem", marginTop: ".8rem" }}>{t("w.stepNote")}</p>
         </form>
 
-        {/* RESULTS */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <AnimatePresence mode="wait">
-            {!result && !busy && (
+            {!result && !busy ? (
               <motion.div key="empty" className="card card-pad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ textAlign: "center", padding: "2.6rem 1.2rem" }}>
-                <span style={{ color: "var(--dim)" }}><Icon n="trend" size={38} strokeWidth={1.4} /></span>
+                <span style={{ color: "var(--dim)", display: "inline-block" }}><Icon n="trend" size={38} strokeWidth={1.4} /></span>
                 <p className="muted" style={{ marginTop: ".7rem", fontSize: ".9rem" }}>
                   {lang === "hi" ? "अपनी जानकारी भरें और “गणना करें” दबाएँ — आपका प्रोजेक्शन यहाँ दिखेगा।" : "Fill in your details and press Calculate — your projection will appear here."}
                 </p>
               </motion.div>
-            )}
-            {busy && (
-              <motion.div key="busy" className="card card-pad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: "2.6rem", textAlign: "center" }}>
+            ) : null}
+            {busy ? (
+              <motion.div key="busy" className="card card-pad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: "1.4rem" }}>
                 <div className="card shimmer" style={{ height: 90, marginBottom: ".8rem", borderRadius: ".8rem" }} />
                 <div className="card shimmer" style={{ height: 160, borderRadius: ".8rem" }} />
+                <div style={{ textAlign: "center", marginTop: ".8rem" }} className="muted"><Spinner /> {t("calculating")}</div>
               </motion.div>
-            )}
-            {result && !busy && (
+            ) : null}
+            {result && !busy ? (
               <motion.div key="res" initial={anim ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: .4 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div>
-                  <div className="stat-label">{t("results")} {savedFlash && <span style={{ color: "var(--green)", textTransform: "none", letterSpacing: 0 }}>· {t("savedToReport")}</span>}</div>
+                  <div className="stat-label">{t("results")} {savedFlash ? <span style={{ color: "var(--green)", textTransform: "none", letterSpacing: 0 }}>· {t("savedToReport")}</span> : null}</div>
                   <div className="card card-pad" style={{ position: "relative", overflow: "hidden" }}>
                     <div className="glow-ring" />
                     <div style={{ fontSize: ".8rem", fontWeight: 600, color: "var(--muted)" }}>{t("w.res.future")}</div>
@@ -1872,8 +1812,8 @@ function FutureWealth() {
                       {INRC(result.base.futureValue, lang)}
                     </div>
                     <div className="muted" style={{ fontSize: ".85rem" }}>
-                      {lang === "hi" ? "आज की खरीद क्षमता में ≈ " : "≈ in today's purchasing power: "}<strong style={{ color: "var(--text)" }}>{INRC(result.base.realValue, lang)}</strong>
-                      {result.base.inflationPct !== 0 && form.inflation ? ` · ${t("w.inflation").replace(" — " + t("optional"), "")}: ${form.inflation}%` : ""}
+                      {lang === "hi" ? "आज की खरीद क्षमता में ≈ " : "≈ in today's purchasing power: "}
+                      <strong style={{ color: "var(--text)" }}>{INRC(result.base.realValue, lang)}</strong>
                     </div>
                   </div>
                 </div>
@@ -1897,14 +1837,13 @@ function FutureWealth() {
                     <CartesianGrid stroke="rgba(148,163,184,.12)" vertical={false} />
                     <XAxis dataKey="year" tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} />
                     <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={64} tickFormatter={(v) => INRC(v, lang)} />
-                    <Tooltip content={<ChartTooltip lang={lang} fmt={(v) => INR(v)} />} />
+                    <Tooltip content={<ChartTooltip fmt={(v) => INR(v)} />} />
                     <Legend wrapperStyle={{ fontSize: ".78rem" }} />
                     <Area type="monotone" dataKey="value" name={t("w.chart.value")} stroke="#22d3ee" strokeWidth={2.5} fill="url(#wVal)" isAnimationActive={anim} />
                     <Area type="monotone" dataKey="invested" name={t("w.chart.invested")} stroke="#a78bfa" strokeWidth={2} fill="url(#wInv)" isAnimationActive={anim} />
                   </AreaChart>
                 </ChartCard>
 
-                {/* MILESTONES */}
                 <div className="card card-pad">
                   <div className="stat-label" style={{ marginBottom: ".7rem" }}>{t("w.milestones")}</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: ".7rem" }}>
@@ -1919,28 +1858,29 @@ function FutureWealth() {
                   </div>
                 </div>
 
-                {/* SCENARIOS */}
                 <div className="card card-pad">
                   <div className="stat-label" style={{ marginBottom: ".7rem" }}>{t("w.scenarios")}</div>
-                  <table className="tbl">
-                    <thead><tr><th>{t("assumptions")}</th><th style={{ textAlign: "right" }}>{t("w.res.future")}</th><th style={{ textAlign: "right" }}>{t("w.res.real")}</th></tr></thead>
-                    <tbody>
-                      {result.scenarios.map((s) => (
-                        <tr key={s.key} style={s.key === "w.mod" ? { background: "rgba(34,211,238,.06)" } : undefined}>
-                          <td>{t(s.key, { r: s.rate.toFixed(1) })}{s.key === "w.mod" && <span className="dim"> · {lang === "hi" ? "(आपकी चुनी दर)" : "(your rate)"}</span>}</td>
-                          <td style={{ textAlign: "right", fontWeight: 700 }}>{INRC(s.out.futureValue, lang)}</td>
-                          <td style={{ textAlign: "right" }} className="muted">{INRC(s.out.realValue, lang)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div style={{ overflowX: "auto" }}>
+                    <table className="tbl">
+                      <thead><tr><th>{t("assumptions")}</th><th style={{ textAlign: "right" }}>{t("w.res.future")}</th><th style={{ textAlign: "right" }}>{t("w.res.real")}</th></tr></thead>
+                      <tbody>
+                        {result.scenarios.map((s) => (
+                          <tr key={s.key} style={s.key === "w.mod" ? { background: "rgba(34,211,238,.06)" } : undefined}>
+                            <td>{t(s.key, { r: s.rate.toFixed(1) })}{s.key === "w.mod" ? <span className="dim"> · {lang === "hi" ? "(आपकी चुनी दर)" : "(your rate)"}</span> : null}</td>
+                            <td style={{ textAlign: "right", fontWeight: 700 }}>{INRC(s.out.futureValue, lang)}</td>
+                            <td style={{ textAlign: "right" }} className="muted">{INRC(s.out.realValue, lang)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                   <div style={{ height: 200, marginTop: ".9rem" }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={result.scenarios.map((s) => ({ name: t(s.key, { r: s.rate.toFixed(0) }), fv: Math.round(s.out.futureValue), fill: s.key === "w.mod" ? "#22d3ee" : "#818cf8" }))} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                         <CartesianGrid stroke="rgba(148,163,184,.12)" vertical={false} />
                         <XAxis dataKey="name" tick={{ fill: tickColor, fontSize: 10 }} tickLine={false} axisLine={false} interval={0} />
                         <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={64} tickFormatter={(v) => INRC(v, lang)} />
-                        <Tooltip content={<ChartTooltip lang={lang} fmt={(v) => INR(v)} />} cursor={{ fill: "rgba(255,255,255,.04)" }} />
+                        <Tooltip content={<ChartTooltip fmt={(v) => INR(v)} />} cursor={{ fill: "rgba(255,255,255,.04)" }} />
                         <Bar dataKey="fv" name={t("w.res.future")} radius={[8, 8, 0, 0]} isAnimationActive={anim} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -1948,17 +1888,14 @@ function FutureWealth() {
                 </div>
 
                 <AdSlot unit="wealthResult" />
-
                 <div className="card card-pad">
                   <div className="stat-label" style={{ marginBottom: ".6rem" }}>{t("share")}</div>
                   <ShareButtons text={shareText} path="/future-wealth" />
                 </div>
                 <Warning>{t("marketRisk")}</Warning>
-                <p className="dim" style={{ fontSize: ".74rem", margin: 0 }}>
-                  <Icon n="info" size={12} /> {t("notGuaranteed")}
-                </p>
+                <p className="dim" style={{ fontSize: ".74rem", margin: 0 }}>{t("notGuaranteed")}</p>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       </div>
@@ -1969,9 +1906,8 @@ function FutureWealth() {
 /* ========================= DREAM HOME PAGE ================================*/
 
 function DreamHome() {
-  const { t, lang, saveScenario } = useStore();
-  const { theme } = useStore();
-  const anim = !reduce();
+  const { t, lang, theme, saveScenario } = useStore();
+  const anim = !reduceMotion();
   useSeo({
     title: (lang === "hi" ? "ड्रीम होम प्लानर — घर की अफ़ोर्डेबिलिटी और EMI कैलकुलेटर | " : "Dream Home Planner — Affordability & EMI Calculator | ") + "TimeCapsule India",
     description: lang === "hi"
@@ -1984,7 +1920,8 @@ function DreamHome() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k) => (v) => setForm((f) => Object.assign({}, f, { [k]: v }));
+  const tickColor = theme === "light" ? "#525f80" : "#9aa6c7";
 
   const schema = [
     { key: "price", value: form.price, min: 100000, max: 1e9 },
@@ -2012,32 +1949,33 @@ function DreamHome() {
       const ty = num(form.ty);
       const priceFuture = propertyValueInYears(price, num(form.pg), ty);
       const downFuture = priceFuture * (num(form.downPct) / 100);
-      const sim = simulateHomeSavings({ initial: savings, monthlySaving: capacity, targetNow: downNow, propertyGrowthPct: num(form.pg), savingsReturnPct: num(form.sr) });
+      const sim = simulateHomeSavings({
+        initial: savings, monthlySaving: capacity, targetNow: downNow,
+        propertyGrowthPct: num(form.pg), savingsReturnPct: num(form.sr),
+      });
       const gap = Math.max(0, downNow - savings);
-      let emiVal = null, interestVal = null, loanAmount = null;
+      let emiVal = null, interestVal = null;
       if (form.rate !== "" && form.tenure !== "") {
-        loanAmount = Math.max(0, priceFuture - downFuture);
-        emiVal = emi(loanAmount, num(form.rate) || 0, num(form.tenure) || 20);
+        const loanAmount = Math.max(0, priceFuture - downFuture);
+        emiVal = emiCalc(loanAmount, num(form.rate) || 0, num(form.tenure) || 20);
         interestVal = emiVal * Math.round((num(form.tenure) || 20) * 12) - loanAmount;
       }
-      setResult({ price, downNow, gap, capacity, priceFuture, downFuture, ty, sim, emiVal, interestVal, loanAmount, income });
+      setResult({ price, downNow, gap, capacity, priceFuture, downFuture, ty, sim, emiVal, interestVal, income });
       setBusy(false);
-      saveScenario("home", {
-        price, downNow, downFuture, ty,
-        reachedMonth: sim.reachedMonth, emiVal, income,
-      });
+      saveScenario("home", { price, downNow, downFuture, ty, reachedMonth: sim.reachedMonth, emiVal, income });
       setSavedFlash(true); setTimeout(() => setSavedFlash(false), 2500);
     }, 420);
   };
 
-  const tickColor = theme === "light" ? "#525f80" : "#9aa6c7";
   const shareText = result ? translate(lang, "share.house", {
     down: INRC(result.downFuture, lang),
-    time: result.sim.reachedMonth != null ? translate(lang, "h.monthsVal", { m: result.sim.reachedMonth, y: (result.sim.reachedMonth / 12).toFixed(1) }) : "—",
+    time: result.sim.reachedMonth != null ? result.sim.reachedMonth + (lang === "hi" ? " महीने" : " mo") : "—",
     emi: result.emiVal ? INR(result.emiVal) : "—", url: "",
   }).trim() : "";
 
-  const chartData = result ? result.sim.yearly.slice(0, Math.max(result.ty + 3, 6)).map((p) => ({ year: new Date().getFullYear() + p.year, savings: Math.round(p.savings), target: Math.round(p.target) })) : [];
+  const chartData = result
+    ? result.sim.yearly.slice(0, Math.max(result.ty + 3, 6)).map((p) => ({ year: new Date().getFullYear() + p.year, savings: Math.round(p.savings), target: Math.round(p.target) }))
+    : [];
 
   return (
     <div className="container" style={{ paddingTop: "2rem" }}>
@@ -2063,34 +2001,41 @@ function DreamHome() {
           </div>
           <div className="grid2" style={{ marginTop: ".9rem" }}>
             <NumInput id="h-sr" label={t("h.sr")} value={form.sr} onChange={set("sr")} error={errors.sr} min={0} max={20} step={0.5} suffix="%" />
-            <NumInput id="h-rate" label={t("h.rate")} value={form.rate} onChange={set("rate")} error={errors.rate} min={0} max={20} step={0.25} suffix="%" hint={t("optional")} />
+            <NumInput id="h-rate" label={t("h.rate")} value={form.rate} onChange={set("rate")} error={errors.rate} min={0} max={20} step={0.25} suffix="%" />
           </div>
-          <div style={{ marginTop: ".9rem", maxWidth: 240 }}>
+          <div style={{ marginTop: ".9rem", maxWidth: 260 }}>
             <NumInput id="h-tenure" label={t("h.tenure")} value={form.tenure} onChange={set("tenure")} error={errors.tenure} min={1} max={30} suffix={t("yearsUnit")} hint={t("optional")} />
           </div>
           <div style={{ display: "flex", gap: ".6rem", marginTop: "1.2rem", flexWrap: "wrap" }}>
             <button type="submit" className="btn btn-primary" disabled={busy} style={{ flex: 1, minWidth: 160 }}>
               {busy ? <><Spinner />{t("calculating")}</> : <><Icon n="calc" size={17} />{t("calculate")}</>}
             </button>
-            {result && <button type="button" className="btn btn-ghost" onClick={() => { setResult(null); setErrors({}); }}><Icon n="spark" size={15} />{t("tryAnother")}</button>}
+            {result ? <button type="button" className="btn btn-ghost" onClick={() => { setResult(null); setErrors({}); }}><Icon n="spark" size={15} />{t("tryAnother")}</button> : null}
           </div>
         </form>
 
         <div>
           <AnimatePresence mode="wait">
-            {!result && !busy && (
+            {!result && !busy ? (
               <motion.div key="empty" className="card card-pad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ textAlign: "center", padding: "2.6rem 1.2rem" }}>
-                <span style={{ color: "var(--dim)" }}><Icon n="home" size={38} strokeWidth={1.4} /></span>
+                <span style={{ color: "var(--dim)", display: "inline-block" }}><Icon n="home" size={38} strokeWidth={1.4} /></span>
                 <p className="muted" style={{ marginTop: ".7rem", fontSize: ".9rem" }}>
                   {lang === "hi" ? "अपनी जानकारी भरें — डाउन पेमेंट, टाइमलाइन और EMI अनुमान यहाँ दिखेंगे।" : "Enter your details — down payment, timeline and EMI estimates will appear here."}
                 </p>
               </motion.div>
-            )}
-            {result && !busy && (
+            ) : null}
+            {busy ? (
+              <motion.div key="busy" className="card card-pad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: "1.4rem" }}>
+                <div className="card shimmer" style={{ height: 110, marginBottom: ".8rem", borderRadius: ".8rem" }} />
+                <div className="card shimmer" style={{ height: 160, borderRadius: ".8rem" }} />
+                <div style={{ textAlign: "center", marginTop: ".8rem" }} className="muted"><Spinner /> {t("calculating")}</div>
+              </motion.div>
+            ) : null}
+            {result && !busy ? (
               <motion.div key="res" initial={anim ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: .4 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div className="card card-pad" style={{ position: "relative", overflow: "hidden" }}>
                   <div className="glow-ring" />
-                  <div className="stat-label">{t("results")} {savedFlash && <span style={{ color: "var(--green)", textTransform: "none", letterSpacing: 0 }}>· {t("savedToReport")}</span>}</div>
+                  <div className="stat-label">{t("results")} {savedFlash ? <span style={{ color: "var(--green)", textTransform: "none", letterSpacing: 0 }}>· {t("savedToReport")}</span> : null}</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: ".9rem", marginTop: ".5rem" }}>
                     <div>
                       <div className="muted" style={{ fontSize: ".76rem" }}>{t("h.res.downNow")}</div>
@@ -2110,18 +2055,26 @@ function DreamHome() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: ".8rem" }}>
                   <Stat label={t("h.res.capacity")} value={INR(result.capacity)} sub={t("perMonth")} accent="var(--green)" />
                   <Stat label={t("h.res.gap")} value={result.gap > 0 ? INRC(result.gap, lang) : "✓"} sub={result.gap > 0 ? undefined : t("h.gapNone")} accent={result.gap > 0 ? "var(--amber)" : "var(--green)"} />
-                  <Stat label={t("h.res.time")} value={result.sim.reachedMonth != null ? `${result.sim.reachedMonth} ${lang === "hi" ? "महीने" : "mo"}` : "30+"} sub={result.sim.reachedMonth != null ? `≈ ${(result.sim.reachedMonth / 12).toFixed(1)} ${t("yearsUnit")}` : t("h.notReachable")} />
-                  {result.emiVal != null && <Stat label={t("h.res.emi")} value={INR(result.emiVal)} sub={t("perMonth")} accent="var(--cyan)" />}
+                  <Stat label={t("h.res.time")}
+                    value={result.sim.reachedMonth != null ? result.sim.reachedMonth + (lang === "hi" ? " महीने" : " mo") : "30+"}
+                    sub={result.sim.reachedMonth != null ? "≈ " + (result.sim.reachedMonth / 12).toFixed(1) + " " + t("yearsUnit") : t("h.notReachable")} />
+                  {result.emiVal != null ? <Stat label={t("h.res.emi")} value={INR(result.emiVal)} sub={t("perMonth")} accent="var(--cyan)" /> : null}
                 </div>
 
-                {result.sim.reachedMonth == null && <Warning>{t("h.notReachable")}</Warning>}
-                {result.gap === 0 && <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}><Icon n="check" size={13} /> {t("h.gapNone")}</p>}
+                {result.sim.reachedMonth == null ? <Warning>{t("h.notReachable")}</Warning> : null}
+                {result.gap === 0 ? <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}>{t("h.gapNone")}</p> : null}
 
-                {result.emiVal != null && (
+                {result.emiVal != null ? (
                   <div className="card card-pad">
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: ".8rem" }}>
-                      <div><div className="muted" style={{ fontSize: ".76rem" }}>{t("h.res.interest")}</div><div style={{ fontWeight: 800, fontSize: "1.15rem" }}>{INRC(result.interestVal, lang)}</div></div>
-                      <div><div className="muted" style={{ fontSize: ".76rem" }}>{t("h.res.ratio")}</div><div style={{ fontWeight: 800, fontSize: "1.15rem" }}>{result.income > 0 ? Math.round((result.emiVal / result.income) * 100) + "%" : "—"}</div></div>
+                      <div>
+                        <div className="muted" style={{ fontSize: ".76rem" }}>{t("h.res.interest")}</div>
+                        <div style={{ fontWeight: 800, fontSize: "1.15rem" }}>{INRC(result.interestVal, lang)}</div>
+                      </div>
+                      <div>
+                        <div className="muted" style={{ fontSize: ".76rem" }}>{t("h.res.ratio")}</div>
+                        <div style={{ fontWeight: 800, fontSize: "1.15rem" }}>{result.income > 0 ? Math.round((result.emiVal / result.income) * 100) + "%" : "—"}</div>
+                      </div>
                     </div>
                     <p className="muted" style={{ fontSize: ".8rem", marginTop: ".7rem", marginBottom: 0 }}>
                       {result.income > 0 && result.emiVal / result.income <= 0.4
@@ -2129,21 +2082,21 @@ function DreamHome() {
                         : t("h.emiHigh", { pct: result.income > 0 ? Math.round((result.emiVal / result.income) * 100) : "—" })}
                     </p>
                   </div>
-                )}
+                ) : null}
 
-                {chartData.length > 0 && (
+                {chartData.length > 0 ? (
                   <ChartCard title={t("h.chart")} height={250}>
                     <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid stroke="rgba(148,163,184,.12)" vertical={false} />
                       <XAxis dataKey="year" tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={64} tickFormatter={(v) => INRC(v, lang)} />
-                      <Tooltip content={<ChartTooltip lang={lang} fmt={(v) => INR(v)} />} />
+                      <Tooltip content={<ChartTooltip fmt={(v) => INR(v)} />} />
                       <Legend wrapperStyle={{ fontSize: ".78rem" }} />
                       <Line type="monotone" dataKey="savings" name={t("h.chart.savings")} stroke="#22d3ee" strokeWidth={2.5} dot={false} isAnimationActive={anim} />
                       <Line type="monotone" dataKey="target" name={t("h.chart.target")} stroke="#a78bfa" strokeWidth={2} strokeDasharray="6 4" dot={false} isAnimationActive={anim} />
                     </LineChart>
                   </ChartCard>
-                )}
+                ) : null}
 
                 <AdSlot unit="homePlannerResult" />
                 <div className="card card-pad">
@@ -2151,9 +2104,9 @@ function DreamHome() {
                   <ShareButtons text={shareText} path="/dream-home" />
                 </div>
                 <Warning>{t("h.warn")}</Warning>
-                <p className="dim" style={{ fontSize: ".74rem", margin: 0 }}><Icon n="info" size={12} /> {t("h.downNote")}</p>
+                <p className="dim" style={{ fontSize: ".74rem", margin: 0 }}>{t("h.downNote")}</p>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       </div>
@@ -2165,16 +2118,16 @@ function DreamHome() {
 
 const GROWTH_SCENARIOS = [5, 8, 10, 15, 20];
 const CAREER_CATS = ["tech", "biz", "design", "health", "edu", "sales"];
+const LINE_COLORS = ["#64748b", "#34d399", "#22d3ee", "#a78bfa", "#f472b6"];
 
 function CareerGrowth() {
-  const { t, lang, saveScenario, theme } = useStore();
-  const anim = !reduce();
+  const { t, lang, theme, saveScenario } = useStore();
+  const anim = !reduceMotion();
   useSeo({
     title: (lang === "hi" ? "करियर ग्रोथ सिम्युलेटर — सैलरी प्रोजेक्शन | " : "Career Growth Simulator — Salary Projection | ") + "TimeCapsule India",
-    useSeoFix: undefined,
     description: lang === "hi"
       ? "5% से 20% सालाना ग्रोथ की काल्पनिक मान्यताओं के साथ अपनी सैलरी प्रोजेक्ट करें और टारगेट तक पहुँचने का समय देखें।"
-      : "Model hypothetical 5%–20% annual salary growth, compare scenarios, find years to your target salary and get a generic skill-development plan. Free.",
+      : "Model hypothetical 5%-20% annual salary growth, compare scenarios, find years to your target salary and get a generic skill-development plan. Free.",
   });
 
   const [form, setForm] = useState({ monthly: "50000", growth: "10", target: "2500000", upskill: "1000", cat: "tech" });
@@ -2183,14 +2136,16 @@ function CareerGrowth() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k) => (v) => setForm((f) => Object.assign({}, f, { [k]: v }));
+  const tickColor = theme === "light" ? "#525f80" : "#9aa6c7";
 
   const annual = annualManual != null ? annualManual : (Number.isFinite(num(form.monthly)) ? Math.round(num(form.monthly) * 12) : 0);
+  const targetVal = annualManual != null ? annualManual : form.target;
 
   const schema = [
     { key: "monthly", value: form.monthly, min: 0, max: 1e7 },
     { key: "growth", value: form.growth, min: 0, max: 40 },
-    { key: "target", value: String(annualManual != null ? annualManual : form.target), min: 1, max: 1e9 },
+    { key: "target", value: String(targetVal), min: 1, max: 1e9 },
     { key: "upskill", value: form.upskill, required: false, min: 0, max: 1e6 },
   ];
 
@@ -2201,7 +2156,7 @@ function CareerGrowth() {
     setBusy(true);
     setTimeout(() => {
       const g = num(form.growth);
-      const tgt = num(annualManual != null ? annualManual : form.target);
+      const tgt = num(targetVal);
       const yrsRaw = yearsToTarget(annual, tgt, g);
       const yrs = Number.isFinite(yrsRaw) ? Math.ceil(yrsRaw * 10) / 10 : null;
       const horizon = Math.min(25, Math.max(5, yrs ? Math.ceil(yrs) + 2 : 20));
@@ -2209,14 +2164,17 @@ function CareerGrowth() {
       const scenarios = GROWTH_SCENARIOS.map((gr) => ({
         rate: gr,
         years: yearsToTarget(annual, tgt, gr),
-        series: projectSalary(annual, gr, horizon).map((p) => ({ ...p, year: startYear + p.yearOffset })),
+        series: projectSalary(annual, gr, horizon),
       }));
       const mile = [
         { key: "c.double", target: annual * 2 },
         { key: "c.triple", target: annual * 3 },
         { key: "c.50l", target: 5000000 },
         { key: "c.1cr", target: 10000000 },
-      ].map((m) => ({ ...m, years: annual > 0 ? yearsToTarget(annual, Math.max(m.target, annual + 1), g) : Infinity }));
+      ].map((m) => ({
+        key: m.key,
+        years: annual > 0 && m.target > annual ? yearsToTarget(annual, m.target, g) : (m.target <= annual ? 0 : Infinity),
+      }));
       const upskillTotal = num(form.upskill) && yrs ? Math.round(num(form.upskill) * 12 * Math.min(yrs, 30)) : null;
       setResult({ g, tgt, yrs, horizon, scenarios, mile, startYear, upskillTotal, annualNow: annual });
       setBusy(false);
@@ -2224,9 +2182,6 @@ function CareerGrowth() {
       setSavedFlash(true); setTimeout(() => setSavedFlash(false), 2500);
     }, 420);
   };
-
-  const tickColor = theme === "light" ? "#525f80" : "#9aa6c7";
-  const LINE_COLORS = ["#64748b", "#34d399", "#22d3ee", "#a78bfa", "#f472b6"];
 
   const mergedChart = useMemo(() => {
     if (!result) return [];
@@ -2241,9 +2196,11 @@ function CareerGrowth() {
 
   const shareText = result ? translate(lang, "share.career", {
     target: INRC(result.tgt, lang),
-    years: result.yrs ? `${result.yrs} ${lang === "hi" ? "साल" : "yrs"}` : "—",
+    years: result.yrs ? result.yrs + (lang === "hi" ? " साल" : " yrs") : "—",
     growth: result.g, url: "",
   }).trim() : "";
+
+  const skillItems = (DICT[lang] && DICT[lang]["sk." + form.cat]) || DICT.en["sk." + form.cat];
 
   return (
     <div className="container" style={{ paddingTop: "2rem" }}>
@@ -2252,8 +2209,12 @@ function CareerGrowth() {
         <form className="card card-pad" onSubmit={(e) => { e.preventDefault(); calculate(); }} noValidate>
           <div className="stat-label">{t("assumptions")}</div>
           <div className="grid2" style={{ marginTop: ".7rem" }}>
-            <NumInput id="c-monthly" label={t("c.monthly")} value={form.monthly} onChange={(v) => { set("monthly")(v); setAnnualManual(null); }} error={errors.monthly} prefix="₹" min={0} max={10000000} step={1000} />
-            <NumInput id="c-annual" label={t("c.annual")} value={String(annual)} onChange={(v) => { const n2 = num(v); setAnnualManual(n2); if (Number.isFinite(n2)) set("monthly")(String(Math.round(n2 / 12))); }} prefix="₹" min={0} max={100000000} step={12000} />
+            <NumInput id="c-monthly" label={t("c.monthly")} value={form.monthly}
+              onChange={(v) => { set("monthly")(v); setAnnualManual(null); }}
+              error={errors.monthly} prefix="₹" min={0} max={10000000} step={1000} />
+            <NumInput id="c-annual" label={t("c.annual")} value={String(annual)}
+              onChange={(v) => { const n2 = num(v); setAnnualManual(n2); if (Number.isFinite(n2)) set("monthly")(String(Math.round(n2 / 12))); }}
+              prefix="₹" min={0} max={100000000} step={12000} />
           </div>
           <div style={{ marginTop: ".9rem" }}>
             <div className="field-label" id="c-growth-label">{t("c.growth")}</div>
@@ -2262,10 +2223,12 @@ function CareerGrowth() {
                 <button type="button" key={gr} className={"chip" + (num(form.growth) === gr ? " chip-active" : "")} onClick={() => set("growth")(String(gr))}>{gr}%</button>
               ))}
             </div>
-            <NumInput id="c-growth" value={form.growth} onChange={set("growth")} error={errors.growth} min={0} max={40} step={0.5} suffix="%" slider label="" />
+            <NumInput id="c-growth" label="" value={form.growth} onChange={set("growth")} error={errors.growth} min={0} max={40} step={0.5} suffix="%" slider />
           </div>
           <div className="grid2" style={{ marginTop: ".9rem" }}>
-            <NumInput id="c-target" label={t("c.target")} value={String(annualManual != null ? annualManual : form.target)} onChange={(v) => { set("target")(v); const n2 = num(v); setAnnualManual(Number.isFinite(n2) ? n2 : null); }} error={errors.target} prefix="₹" min={1} max={1000000000} step={100000} />
+            <NumInput id="c-target" label={t("c.target")} value={String(targetVal)}
+              onChange={(v) => { set("target")(v); const n2 = num(v); setAnnualManual(Number.isFinite(n2) ? n2 : null); }}
+              error={errors.target} prefix="₹" min={1} max={1000000000} step={100000} />
             <NumInput id="c-upskill" label={t("c.upskill")} value={form.upskill} onChange={set("upskill")} error={errors.upskill} prefix="₹" min={0} max={1000000} step={500} hint={t("optional")} />
           </div>
           <div style={{ marginTop: ".9rem" }}>
@@ -2278,26 +2241,33 @@ function CareerGrowth() {
             <button type="submit" className="btn btn-primary" disabled={busy} style={{ flex: 1, minWidth: 160 }}>
               {busy ? <><Spinner />{t("calculating")}</> : <><Icon n="calc" size={17} />{t("calculate")}</>}
             </button>
-            {result && <button type="button" className="btn btn-ghost" onClick={() => { setResult(null); setErrors({}); }}><Icon n="spark" size={15} />{t("tryAnother")}</button>}
+            {result ? <button type="button" className="btn btn-ghost" onClick={() => { setResult(null); setErrors({}); }}><Icon n="spark" size={15} />{t("tryAnother")}</button> : null}
           </div>
         </form>
 
         <div>
           <AnimatePresence mode="wait">
-            {!result && !busy && (
+            {!result && !busy ? (
               <motion.div key="empty" className="card card-pad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ textAlign: "center", padding: "2.6rem 1.2rem" }}>
-                <span style={{ color: "var(--dim)" }}><Icon n="brief" size={38} strokeWidth={1.4} /></span>
+                <span style={{ color: "var(--dim)", display: "inline-block" }}><Icon n="brief" size={38} strokeWidth={1.4} /></span>
                 <p className="muted" style={{ marginTop: ".7rem", fontSize: ".9rem" }}>
                   {lang === "hi" ? "अपनी सैलरी और ग्रोथ मान्यता भरें — प्रोजेक्शन यहाँ दिखेगा।" : "Enter your salary and growth assumption — projections appear here."}
                 </p>
               </motion.div>
-            )}
-            {result && !busy && (
+            ) : null}
+            {busy ? (
+              <motion.div key="busy" className="card card-pad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: "1.4rem" }}>
+                <div className="card shimmer" style={{ height: 100, marginBottom: ".8rem", borderRadius: ".8rem" }} />
+                <div className="card shimmer" style={{ height: 180, borderRadius: ".8rem" }} />
+                <div style={{ textAlign: "center", marginTop: ".8rem" }} className="muted"><Spinner /> {t("calculating")}</div>
+              </motion.div>
+            ) : null}
+            {result && !busy ? (
               <motion.div key="res" initial={anim ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: .4 }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div className="card card-pad" style={{ position: "relative", overflow: "hidden" }}>
                   <div className="glow-ring" />
-                  <div className="stat-label">{t("c.res.years")} {savedFlash && <span style={{ color: "var(--green)", textTransform: "none", letterSpacing: 0 }}>· {t("savedToReport")}</span>}</div>
-                  <div className="grad-text" style={{ fontSize: "clamp(1.9rem,7vw,3rem)", fontWeight: 800, letterSpacing: "-.02em" }}>
+                  <div className="stat-label">{t("c.res.years")} {savedFlash ? <span style={{ color: "var(--green)", textTransform: "none", letterSpacing: 0 }}>· {t("savedToReport")}</span> : null}</div>
+                  <div className="grad-text" style={{ fontSize: "clamp(1.7rem,6vw,2.8rem)", fontWeight: 800, letterSpacing: "-.02em" }}>
                     {result.yrs != null
                       ? t("c.res.yearsVal", { y: result.yrs % 1 === 0 ? result.yrs : result.yrs.toFixed(1), year: result.startYear + Math.ceil(result.yrs) })
                       : t("c.res.never")}
@@ -2307,23 +2277,26 @@ function CareerGrowth() {
                   </div>
                 </div>
 
-                {result.upskillTotal != null && (
-                  <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}><Icon n="book" size={13} /> {t("c.upskillTotal", { y: result.yrs ? Math.min(Math.ceil(result.yrs), 30) : 30, amt: INRC(result.upskillTotal, lang) })}</p>
-                )}
+                {result.upskillTotal != null ? (
+                  <p className="muted" style={{ fontSize: ".84rem", margin: 0 }}>
+                    {t("c.upskillTotal", { y: result.yrs ? Math.min(Math.ceil(result.yrs), 30) : 30, amt: INRC(result.upskillTotal, lang) })}
+                  </p>
+                ) : null}
 
                 <ChartCard title={t("c.chart")} height={280}>
-                  <LineChart data={mergedChart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <LineChart data={mergedChart} margin={{ top: 14, right: 8, left: 0, bottom: 0 }}>
                     <CartesianGrid stroke="rgba(148,163,184,.12)" vertical={false} />
                     <XAxis dataKey="year" tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} />
                     <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={64} tickFormatter={(v) => INRC(v, lang)} />
-                    <Tooltip content={<ChartTooltip lang={lang} fmt={(v) => INRC(v, lang)} />} />
+                    <Tooltip content={<ChartTooltip fmt={(v) => INRC(v, lang)} />} />
                     <Legend wrapperStyle={{ fontSize: ".74rem" }} />
                     {GROWTH_SCENARIOS.map((gr, i) => (
                       <Line key={gr} type="monotone" dataKey={"g" + gr} name={gr + "%"}
                         stroke={LINE_COLORS[i]} strokeWidth={num(form.growth) === gr ? 3.4 : 1.6}
-                        strokeOpacity={num(form.growth) === gr ? 1 : .65} dot={false} isAnimationActive={anim} />
+                        strokeOpacity={num(form.growth) === gr ? 1 : .6} dot={false} isAnimationActive={anim} />
                     ))}
-                    <ReferenceLine y={result.tgt} stroke="#fbbf24" strokeDasharray="6 4" label={{ value: t("c.targetLine"), fill: "#fbbf24", fontSize: 11, position: "insideTopRight" }} />
+                    <ReferenceLine y={result.tgt} stroke="#fbbf24" strokeDasharray="6 4"
+                      label={{ value: t("c.targetLine"), fill: "#fbbf24", fontSize: 11, position: "insideTopRight" }} />
                   </LineChart>
                 </ChartCard>
 
@@ -2336,7 +2309,7 @@ function CareerGrowth() {
                         <div key={m.key} className="card" style={{ padding: ".7rem .85rem", borderColor: finite ? "rgba(52,211,153,.35)" : undefined }}>
                           <div style={{ fontWeight: 700, fontSize: ".86rem", color: finite ? "var(--green)" : "var(--dim)" }}>{t(m.key)}</div>
                           <div className="dim" style={{ fontSize: ".72rem", marginTop: ".2rem" }}>
-                            {finite ? `${m.years.toFixed(1)} ${t("yearsUnit")} · ${result.startYear + Math.ceil(m.years)}` : t("c.res.never")}
+                            {finite ? m.years.toFixed(1) + " " + t("yearsUnit") + " · " + (result.startYear + Math.ceil(m.years)) : t("c.res.never")}
                           </div>
                         </div>
                       );
@@ -2344,14 +2317,11 @@ function CareerGrowth() {
                   </div>
                 </div>
 
-                {/* Skill planner */}
                 <div className="card card-pad">
                   <div className="stat-label" style={{ marginBottom: ".2rem" }}>{t("c.skills")}</div>
                   <div style={{ fontWeight: 700, marginBottom: ".5rem" }}>{t("cat." + form.cat)}</div>
                   <ul style={{ margin: 0, paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: ".5rem" }}>
-                    {(DICT[lang]["sk." + form.cat] || DICT.en["sk." + form.cat]).map((s, i) => (
-                      <li key={i} className="muted" style={{ fontSize: ".86rem" }}>{s}</li>
-                    ))}
+                    {skillItems.map((s, i) => <li key={i} className="muted" style={{ fontSize: ".86rem" }}>{s}</li>)}
                   </ul>
                   <p className="dim" style={{ fontSize: ".72rem", marginTop: ".7rem", marginBottom: 0 }}>{t("c.skillsTitle")}</p>
                 </div>
@@ -2363,7 +2333,7 @@ function CareerGrowth() {
                 </div>
                 <Warning>{t("c.warn")}</Warning>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       </div>
@@ -2383,8 +2353,8 @@ const HABITS = [
 const HABIT_DURATIONS = [1, 3, 5, 10];
 
 function HabitImpact() {
-  const { t, lang, saveScenario, theme } = useStore();
-  const anim = !reduce();
+  const { t, lang, theme, saveScenario } = useStore();
+  const anim = !reduceMotion();
   useSeo({
     title: (lang === "hi" ? "हैबिट इम्पैक्ट सिम्युलेटर — रोज़ की आदतों की गणना | " : "Habit Impact Simulator — The Math of Daily Habits | ") + "TimeCapsule India",
     description: lang === "hi"
@@ -2398,21 +2368,27 @@ function HabitImpact() {
   const [error, setError] = useState(null);
   const tickColor = theme === "light" ? "#525f80" : "#9aa6c7";
 
-  const toggle = (id) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
+  const toggle = (id) => setSelected((s) => s.indexOf(id) > -1 ? s.filter((x) => x !== id) : s.concat([id]));
 
   const generate = () => {
     if (!selected.length) { setError(t("hb.selectNone")); setResult(null); return; }
     setError(null);
     const days = duration * 365;
-    const perHabit = HABITS.filter((h) => selected.includes(h.id)).map((h) => {
+    const perHabit = HABITS.filter((h) => selected.indexOf(h.id) > -1).map((h) => {
       if (h.type === "time") {
         const hours = (h.minutes * days) / 60;
-        return { ...h, sessions: days, hours, weeklyHours: (h.minutes * 7) / 60, monthlyHours: (h.minutes * 30) / 60, yearlyHours: (h.minutes * 365) / 60 };
+        return Object.assign({}, h, {
+          sessions: days, hours,
+          monthlyHours: (h.minutes * 30) / 60, yearlyHours: (h.minutes * 365) / 60,
+        });
       }
       const total = h.perDay * days;
       const monthly = (h.perDay * 365) / 12;
       const fv = fvContributionsConstant(monthly, 7, duration * 12);
-      return { ...h, sessions: days, total, fv, weekly: h.perDay * 7, monthly: Math.round(monthly), yearly: h.perDay * 365 };
+      return Object.assign({}, h, {
+        sessions: days, total, fv,
+        weekly: h.perDay * 7, monthly: Math.round(monthly), yearly: h.perDay * 365,
+      });
     });
     const totalHours = perHabit.reduce((a, h) => a + (h.hours || 0), 0);
     const totalSessions = perHabit.reduce((a, h) => a + h.sessions, 0);
@@ -2428,20 +2404,24 @@ function HabitImpact() {
     hours: NF(Math.round(result.totalHours)), sessions: NF(result.totalSessions), url: "",
   }).trim() : "";
 
+  const timeChart = result
+    ? result.perHabit.filter((h) => h.type === "time").map((h) => ({ name: t("hb." + h.id), hours: Math.round(h.hours), fill: h.color }))
+    : [];
+
   return (
     <div className="container" style={{ paddingTop: "2rem", maxWidth: 900 }}>
       <PageHeader icon="zap" title={t("hb.title")} desc={t("hb.desc")} />
       <div className="card card-pad" style={{ marginTop: "1.4rem" }}>
-        <div className="stat-label">{t("hb.pick")}</div>
-        <div style={{ display: "grid", gap: ".6rem", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", marginTop: ".6rem" }} role="group" aria-label={t("hb.pick")}>
+        <div className="stat-label" id="hb-pick-label">{t("hb.pick")}</div>
+        <div style={{ display: "grid", gap: ".6rem", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", marginTop: ".6rem" }} role="group" aria-labelledby="hb-pick-label">
           {HABITS.map((h) => {
-            const on = selected.includes(h.id);
+            const on = selected.indexOf(h.id) > -1;
             return (
               <button type="button" key={h.id} onClick={() => toggle(h.id)} aria-pressed={on}
                 className="card" style={{
                   display: "flex", alignItems: "center", gap: ".7rem", padding: ".8rem .9rem", cursor: "pointer",
                   borderColor: on ? h.color : "var(--border)", background: on ? h.color + "14" : "var(--card)",
-                  fontFamily: "inherit", color: "var(--text)", textAlign: "left", transition: "all .2s",
+                  fontFamily: "inherit", color: "var(--text)", textAlign: "left", transition: "border-color .2s, background .2s",
                 }}>
                 <span style={{ width: 34, height: 34, borderRadius: 9, display: "inline-flex", alignItems: "center", justifyContent: "center", background: h.color + "22", color: h.color, flexShrink: 0 }}>
                   <Icon n={h.icon} size={17} />
@@ -2449,45 +2429,51 @@ function HabitImpact() {
                 <span>
                   <span style={{ display: "block", fontWeight: 700, fontSize: ".88rem" }}>{t("hb." + h.id)}</span>
                   <span className="dim" style={{ fontSize: ".72rem" }}>
-                    {h.type === "time" ? `${h.minutes} min · ${t("hb.days").toLowerCase()}` : `${INR(h.perDay)} / day`}
+                    {h.type === "time" ? h.minutes + " min / day" : INR(h.perDay) + " / day"}
                   </span>
                 </span>
-                <span style={{ marginLeft: "auto", color: on ? h.color : "var(--dim)" }}>{on ? <Icon n="check" size={17} /> : <Icon n="plus" size={15} />}</span>
+                <span style={{ marginLeft: "auto", color: on ? h.color : "var(--dim)", flexShrink: 0 }}>
+                  {on ? <Icon n="check" size={17} /> : <Icon n="plus" size={15} />}
+                </span>
               </button>
             );
           })}
         </div>
-        <div className="stat-label" style={{ marginTop: "1.2rem" }}>{t("hb.duration")}</div>
-        <div style={{ display: "flex", gap: ".45rem", flexWrap: "wrap", marginTop: ".5rem" }} role="group" aria-label={t("hb.duration")}>
+        <div className="stat-label" style={{ marginTop: "1.2rem" }} id="hb-dur-label">{t("hb.duration")}</div>
+        <div style={{ display: "flex", gap: ".45rem", flexWrap: "wrap", marginTop: ".5rem" }} role="group" aria-labelledby="hb-dur-label">
           {HABIT_DURATIONS.map((d) => (
             <button type="button" key={d} className={"chip" + (duration === d ? " chip-active" : "")} onClick={() => setDuration(d)}>{d} {t("yearsUnit")}</button>
           ))}
         </div>
-        {error && <p className="field-error" role="alert" style={{ marginTop: ".8rem" }}><Icon n="alert" size={13} />{error}</p>}
+        {error ? <p className="field-error" role="alert" style={{ marginTop: ".8rem" }}><Icon n="alert" size={13} />{error}</p> : null}
         <div style={{ display: "flex", gap: ".6rem", marginTop: "1.2rem", flexWrap: "wrap" }}>
-          <button type="button" className="btn btn-primary" onClick={generate}><Icon n="spark" size={17} />{result ? t("calculate") : (lang === "hi" ? "रिपोर्ट बनाएँ" : "Generate report")}</button>
-          {result && <button type="button" className="btn btn-ghost" onClick={() => { setResult(null); setError(null); }}>{t("tryAnother")}</button>}
+          <button type="button" className="btn btn-primary" onClick={generate}>
+            <Icon n="spark" size={17} />{result ? t("calculate") : (lang === "hi" ? "रिपोर्ट बनाएँ" : "Generate report")}
+          </button>
+          {result ? <button type="button" className="btn btn-ghost" onClick={() => { setResult(null); setError(null); }}>{t("tryAnother")}</button> : null}
         </div>
       </div>
 
       <AnimatePresence>
-        {result && (
+        {result ? (
           <motion.div initial={anim ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: .4 }} style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1.2rem" }}>
             <h2 className="h2">{t("hb.report")}</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: ".8rem" }}>
-              <Stat label={t("hb.days")} value={NF(result.days)} sub={`${result.duration} ${t("yearsUnit")}`} />
+              <Stat label={t("hb.days")} value={NF(result.days)} sub={result.duration + " " + t("yearsUnit")} />
               <Stat label={t("hb.sessions")} value={NF(result.totalSessions)} accent="var(--cyan)" />
-              <Stat label={t("hb.hours")} value={NF(Math.round(result.totalHours))} sub={lang === "hi" ? "कुल घंटे" : "total hours"} accent="var(--purple)" />
-              {result.totalSaved > 0 && <Stat label={t("hb.savedFV", { r: 7 })} value={INRC(result.totalFv, lang)} sub={`${t("hb.savedTotal")}: ${INRC(result.totalSaved, lang)}`} accent="var(--green)" />}
+              <Stat label={t("hb.hours")} value={NF(Math.round(result.totalHours))} accent="var(--purple)" />
+              {result.totalSaved > 0 ? (
+                <Stat label={t("hb.savedFV", { r: 7 })} value={INRC(result.totalFv, lang)} sub={t("hb.savedTotal") + ": " + INRC(result.totalSaved, lang)} accent="var(--green)" />
+              ) : null}
             </div>
 
             <div className="card card-pad">
-              <div className="stat-label" style={{ marginBottom: ".8rem" }}>{lang === "hi" ? "आदत-वार विवरण" : "Habit-by-habit breakdown"}</div>
+              <div className="stat-label" style={{ marginBottom: ".8rem" }}>{t("hb.breakdown")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
                 {result.perHabit.map((h) => (
                   <div key={h.id} className="card" style={{ padding: ".9rem 1rem", borderColor: h.color + "44" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: ".6rem", marginBottom: ".5rem" }}>
-                      <span style={{ color: h.color }}><Icon n={h.icon} size={17} /></span>
+                      <span style={{ color: h.color, display: "inline-flex" }}><Icon n={h.icon} size={17} /></span>
                       <strong style={{ fontSize: ".92rem" }}>{t("hb." + h.id)}</strong>
                     </div>
                     {h.type === "time" ? (
@@ -2498,7 +2484,7 @@ function HabitImpact() {
                           <span>{t("hb.yearly2")}: <strong style={{ color: "var(--text)" }}>{NF(h.yearlyHours)} h</strong></span>
                           <span>{t("hb.hours")}: <strong style={{ color: "var(--text)" }}>{NF(Math.round(h.hours))} h</strong></span>
                         </div>
-                        {h.id === "read" && <p className="dim" style={{ fontSize: ".74rem", margin: ".4rem 0 0" }}>{t("hb.readDetail", { books: Math.round(h.hours / 6) })}</p>}
+                        {h.id === "read" ? <p className="dim" style={{ fontSize: ".74rem", margin: ".4rem 0 0" }}>{t("hb.readDetail", { books: Math.round(h.hours / 6) })}</p> : null}
                       </>
                     ) : (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: ".4rem 1.2rem", fontSize: ".82rem" }} className="muted">
@@ -2514,17 +2500,17 @@ function HabitImpact() {
               </div>
             </div>
 
-            {result.perHabit.some((h) => h.type === "time") && (
+            {timeChart.length ? (
               <ChartCard title={t("hb.hoursChart")} height={220}>
-                <BarChart data={result.perHabit.filter((h) => h.type === "time").map((h) => ({ name: t("hb." + h.id), hours: Math.round(h.hours), fill: h.color }))} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <BarChart data={timeChart} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke="rgba(148,163,184,.12)" vertical={false} />
                   <XAxis dataKey="name" tick={{ fill: tickColor, fontSize: 10 }} tickLine={false} axisLine={false} interval={0} />
                   <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={48} />
-                  <Tooltip content={<ChartTooltip lang={lang} fmt={(v) => NF(v) + (lang === "hi" ? " घंटे" : " hrs")} />} cursor={{ fill: "rgba(255,255,255,.04)" }} />
+                  <Tooltip content={<ChartTooltip fmt={(v) => NF(v) + (lang === "hi" ? " घंटे" : " hrs")} />} cursor={{ fill: "rgba(255,255,255,.04)" }} />
                   <Bar dataKey="hours" name={t("hb.hours")} radius={[8, 8, 0, 0]} isAnimationActive={anim} />
                 </BarChart>
               </ChartCard>
-            )}
+            ) : null}
 
             <div className="card card-pad">
               <div className="stat-label" style={{ marginBottom: ".6rem" }}>{t("share")}</div>
@@ -2532,7 +2518,7 @@ function HabitImpact() {
             </div>
             <Warning>{t("hb.healthNote")}</Warning>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
@@ -2542,13 +2528,54 @@ function HabitImpact() {
 
 const DEFAULT_SECTIONS = { goals: true, savings: true, career: true, house: true, milestones: true, actions: true };
 
+function ListEditor(props) {
+  const { lang } = useStore();
+  const items = props.items;
+  const max = props.max;
+  return (
+    <div className="card card-pad">
+      <div style={{ display: "flex", alignItems: "center", gap: ".5rem", marginBottom: ".6rem" }}>
+        <span style={{ color: "var(--purple)", display: "inline-flex" }}><Icon n={props.icon} size={16} /></span>
+        <div className="stat-label" style={{ margin: 0 }}>{props.title}</div>
+        <span className="dim" style={{ fontSize: ".72rem", marginLeft: "auto" }}>{items.length}/{max}</span>
+      </div>
+      {items.length > 0 ? (
+        <ul style={{ listStyle: "none", margin: "0 0 .7rem", padding: 0, display: "flex", flexDirection: "column", gap: ".4rem" }}>
+          {items.map((it, i) => (
+            <li key={i} style={{ display: "flex", alignItems: "center", gap: ".5rem", fontSize: ".86rem", background: "rgba(255,255,255,.04)", borderRadius: ".55rem", padding: ".45rem .7rem" }}>
+              <span className="dim" style={{ fontSize: ".74rem" }}>{i + 1}.</span>
+              <span style={{ flex: 1, wordBreak: "break-word" }}>{it}</span>
+              <button type="button" onClick={() => props.onRemove(i)}
+                aria-label={(lang === "hi" ? "हटाएँ: " : "Remove: ") + it}
+                style={{ background: "transparent", border: 0, color: "var(--dim)", cursor: "pointer", padding: 2 }}>
+                <Icon n="x" size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {items.length < max ? (
+        <div style={{ display: "flex", gap: ".5rem" }}>
+          <input className="input" value={props.draft} placeholder={props.ph}
+            onChange={(e) => props.setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); props.onAdd(); } }}
+            aria-label={props.title} />
+          <button type="button" className="btn btn-soft btn-sm" onClick={props.onAdd} disabled={!props.draft.trim()} style={{ flexShrink: 0 }}>
+            <Icon n="plus" size={14} />{props.addLabel}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function My2036() {
   const { t, lang, saved, saveScenario, clearAll } = useStore();
-  const anim = !reduce();
+  const anim = !reduceMotion();
   useSeo({
     title: (lang === "hi" ? "मेरा 2036 फ्यूचर रिपोर्ट — शेयर करने लायक प्लान | " : "My 2036 Future Report — Your Shareable Plan | ") + "TimeCapsule India",
     description: lang === "hi"
-      ? "अपने सेव किए गए फाइनेंशियल सीनारियो, गोल्स और मील के पत्थरों से एक_personal 2036 रिपोर्ट कार्ड बनाएँ और WhatsApp पर शेयर करें।"
+      ? "अपने सेव किए गए फाइनेंशियल सीनारियो, गोल्स और मील के पत्थरों से एक पर्सनल 2036 रिपोर्ट कार्ड बनाएँ और WhatsApp पर शेयर करें।"
       : "Turn your saved scenarios, goals and milestones into a personalized, shareable My Future 2036 report card — PNG download, WhatsApp share, all private on-device.",
   });
 
@@ -2556,27 +2583,31 @@ function My2036() {
   const goals = report.goals || [];
   const milestones = report.milestones || [];
   const actions = report.actions || [];
-  const sections = { ...DEFAULT_SECTIONS, ...(report.sections || {}) };
+  const sections = Object.assign({}, DEFAULT_SECTIONS, report.sections || {});
   const [goalDraft, setGoalDraft] = useState("");
   const [mileDraft, setMileDraft] = useState("");
   const [actionDraft, setActionDraft] = useState("");
   const [clearedFlash, setClearedFlash] = useState(false);
-  const [cardMsg, setCardMsg] = useState(null);
 
-  const upd = (patch) => saveScenario("report", { ...report, ...patch });
+  const upd = (patch) => saveScenario("report", Object.assign({}, report, patch));
   const addToList = (key, draft, setter, max) => {
     const v = draft.trim();
     if (!v) return;
-    const list = (report[key] || []).length >= max ? (report[key] || []) : [...(report[key] || []), v];
-    upd({ [key]: list });
+    const cur = report[key] || [];
+    if (cur.length >= max) return;
+    const patch = {}; patch[key] = cur.concat([v]);
+    upd(patch);
     setter("");
   };
-  const removeFromList = (key, idx) => upd({ [key]: (report[key] || []).filter((_, i) => i !== idx) });
+  const removeFromList = (key, idx) => {
+    const patch = {}; patch[key] = (report[key] || []).filter((x, i) => i !== idx);
+    upd(patch);
+  };
 
   const quoteKeys = ["r.q1", "r.q2", "r.q3"];
-  const motivation = quoteKeys[(new Date().getMonth()) % quoteKeys.length];
+  const motivation = quoteKeys[new Date().getMonth() % quoteKeys.length];
 
-  const hasAny = saved.wealth || saved.career || saved.home || saved.habit || goals.length || milestones.length || actions.length;
+  const hasAny = !!(saved.wealth || saved.career || saved.home || saved.habit || goals.length || milestones.length || actions.length);
 
   const buildLines = useCallback(() => {
     const lines = [];
@@ -2590,11 +2621,11 @@ function My2036() {
     }
     if (sections.career && saved.career) {
       lines.push({ h: true, text: t("r.career") });
-      lines.push({ h: false, text: t("r.savedCareer", { target: INRC(saved.career.target, lang), years: saved.career.years ? `${Math.ceil(saved.career.years)} ${lang === "hi" ? "साल" : "yrs"}` : "—", growth: saved.career.growth }) });
+      lines.push({ h: false, text: t("r.savedCareer", { target: INRC(saved.career.target, lang), years: saved.career.years ? Math.ceil(saved.career.years) + (lang === "hi" ? " साल" : " yrs") : "—", growth: saved.career.growth }) });
     }
     if (sections.house && saved.home) {
       lines.push({ h: true, text: t("r.house") });
-      lines.push({ h: false, text: t("r.savedHouse", { down: INRC(saved.home.downFuture, lang), time: saved.home.reachedMonth != null ? `${saved.home.reachedMonth} ${lang === "hi" ? "महीने" : "mo"}` : "30+" }) });
+      lines.push({ h: false, text: t("r.savedHouse", { down: INRC(saved.home.downFuture, lang), time: saved.home.reachedMonth != null ? saved.home.reachedMonth + (lang === "hi" ? " महीने" : " mo") : "30+" }) });
     }
     if (sections.milestones && milestones.length) {
       lines.push({ h: true, text: t("r.milestones") });
@@ -2607,20 +2638,23 @@ function My2036() {
     return lines;
   }, [sections, goals, milestones, actions, saved, t, lang]);
 
+  const cardLines = buildLines();
+
   const buildShareText = useCallback(() => {
-    return buildLines().map((l) => (l.h ? `— ${l.text} —` : `• ${l.text}')).join("\n");
+    return buildLines().map((l) => (l.h ? "— " + l.text + " —" : "• " + l.text)).join("\n");
   }, [buildLines]);
 
   const doDownloadPNG = () => {
-    const dataURL = buildCardDataURL(lang, t("r.cardTitle"), buildLines(), `${t("notGuaranteed")} · ${t("brand")}`);
-    downloadDataURL(dataURL, "my-future-2036.png");
+    const dataURL = buildCardDataURL(lang, t("r.cardTitle"), buildLines(), t("notGuaranteed") + " · " + t("brand"));
+    triggerDownload(dataURL, "my-future-2036.png");
   };
   const doDownloadTXT = () => {
-    const text = `${t("r.cardTitle")} — ${t("brand")}\n${t("tagline")}\n\n${buildShareText()}\n\n${t("r.motivation")}: ${t(motivation)}\n\n${t("notGuaranteed")}\n${pageUrl("/my-2036")}`;
+    const text = t("r.cardTitle") + " — " + t("brand") + "\n" + t("tagline") + "\n\n" +
+      buildShareText() + "\n\n" + t("r.motivation") + ": " + t(motivation) + "\n\n" +
+      t("notGuaranteed") + "\n" + pageUrl("/my-2036");
     downloadText("my-2036-report.txt", text);
   };
   const shareFull = () => t("r.shareMsg", { text: buildShareText(), url: pageUrl("/my-2036") });
-
   const doClear = () => { clearAll(); setClearedFlash(true); setTimeout(() => setClearedFlash(false), 2500); };
 
   const savedChips = [
@@ -2636,7 +2670,7 @@ function My2036() {
       <AdSlot unit="reportTop" style={{ marginTop: "1.2rem" }} />
 
       <div className="card card-pad" style={{ marginTop: "1.2rem" }}>
-        <div className="stat-label">{lang === "hi" ? "सेव किए सीनारियो" : "Saved scenarios"}</div>
+        <div className="stat-label">{t("r.savedScenarios")}</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem", marginTop: ".5rem" }}>
           {savedChips.map((c) => (
             <Link key={c.key} to={c.nav} className={"chip" + (c.has ? " chip-active" : "")} style={{ textDecoration: "none" }}>
@@ -2644,121 +2678,78 @@ function My2036() {
             </Link>
           ))}
         </div>
-        {!hasAny && <p className="muted" style={{ fontSize: ".85rem", marginTop: ".9rem", marginBottom: 0 }}><Icon n="info" size={13} /> {t("r.noData")}</p>}
+        {!hasAny ? <p className="muted" style={{ fontSize: ".85rem", marginTop: ".9rem", marginBottom: 0 }}>{t("r.noData")}</p> : null}
       </div>
 
       <div className="split" style={{ marginTop: "1.2rem" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {/* Section toggles */}
           <div className="card card-pad">
             <div className="stat-label">{t("r.sections")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ".5rem", marginTop: ".6rem" }}>
               {Object.keys(DEFAULT_SECTIONS).map((k) => (
                 <label key={k} style={{ display: "flex", alignItems: "center", gap: ".45rem", fontSize: ".84rem", cursor: "pointer", fontWeight: sections[k] ? 600 : 400, color: sections[k] ? "var(--text)" : "var(--muted)" }}>
-                  <input type="checkbox" checked={sections[k]} onChange={(e) => upd({ sections: { ...sections, [k]: e.target.checked } })} style={{ accentColor: "#22d3ee" }} />
+                  <input type="checkbox" checked={!!sections[k]} onChange={(e) => upd({ sections: Object.assign({}, sections, { [k]: e.target.checked }) })} style={{ accentColor: "#22d3ee" }} />
                   {t("r." + k)}
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Goals */}
           <ListEditor title={t("r.goals")} icon="target" items={goals} draft={goalDraft} setDraft={setGoalDraft} ph={t("r.goalPh")}
             onAdd={() => addToList("goals", goalDraft, setGoalDraft, 6)} onRemove={(i) => removeFromList("goals", i)} max={6} addLabel={t("r.add")} />
-          {/* Milestones */}
           <ListEditor title={t("r.milestones")} icon="spark" items={milestones} draft={mileDraft} setDraft={setMileDraft} ph={t("r.milePh")}
             onAdd={() => addToList("milestones", mileDraft, setMileDraft, 3)} onRemove={(i) => removeFromList("milestones", i)} max={3} addLabel={t("r.add")} />
-          {/* Actions */}
           <ListEditor title={t("r.actions")} icon="check" items={actions} draft={actionDraft} setDraft={setActionDraft} ph={t("r.actionPh")}
             onAdd={() => addToList("actions", actionDraft, setActionDraft, 6)} onRemove={(i) => removeFromList("actions", i)} max={6} addLabel={t("r.add")} />
         </div>
 
-        {/* Card preview + actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="card card-pad">
             <div className="stat-label" style={{ marginBottom: ".7rem" }}>{t("r.cardPreview")}</div>
             <div style={{ background: "linear-gradient(145deg,#050a1c,#171246 55%,#062a3c)", borderRadius: "1rem", padding: "1.4rem 1.2rem", border: "1px solid rgba(255,255,255,.12)", minHeight: 320, position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: -50, right: -50, width: 180, height: 180, borderRadius: "50%", background: "rgba(167,139,250,.25)", filter: "blur(40px)" }} />
-              <div className="tag" style={{ color: "#22d3ee" }}>⏳ TIMECAPSULE INDIA</div>
+              <div className="tag" style={{ color: "#22d3ee" }}>TIMECAPSULE INDIA</div>
               <div className="grad-text" style={{ fontSize: "clamp(1.5rem,5vw,2rem)", fontWeight: 800, marginTop: ".3rem" }}>{t("r.cardTitle")}</div>
               <div style={{ fontSize: ".78rem", color: "rgba(232,236,251,.55)" }}>
                 {new Date().toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { year: "numeric", month: "long" })}
               </div>
-              <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: ".65rem", maxHeight: 300, overflow: "hidden" }}>
-                {buildLines().slice(0, 12).map((l, i) => l.h ? (
+              <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: ".55rem", maxHeight: 320, overflow: "hidden" }}>
+                {cardLines.length ? cardLines.slice(0, 13).map((l, i) => l.h ? (
                   <div key={i} style={{ fontWeight: 800, fontSize: ".84rem", color: "#22d3ee", marginTop: i ? ".3rem" : 0 }}>{l.text}</div>
                 ) : (
                   <div key={i} style={{ fontSize: ".82rem", color: "rgba(232,236,251,.9)", paddingLeft: ".7rem" }}>• {l.text}</div>
-                ))}
-                {!buildLines().length && <div className="dim" style={{ fontSize: ".82rem" }}>{t("r.noData")}</div>}
+                )) : <div style={{ fontSize: ".82rem", color: "rgba(232,236,251,.5)" }}>{t("r.noData")}</div>}
               </div>
-              <div style={{ marginTop: "1.1rem", paddingTop: ".8rem", borderTop: "1px solid rgba(255,255,255,.12)", fontSize: ".78rem", color: "rgba(232,236,251,.75)", fontStyle: "italic" }}>
+              <div style={{ marginTop: "1.1rem", paddingTop: ".8rem", borderTop: "1px solid rgba(255,255,255,.12)", fontSize: ".8rem", color: "rgba(232,236,251,.78)", fontStyle: "italic" }}>
                 “{t(motivation)}”
               </div>
-              <div className="dim" style={{ fontSize: ".68rem", marginTop: ".5rem" }}>{t("notGuaranteed")}</div>
+              <div style={{ fontSize: ".66rem", color: "rgba(232,236,251,.45)", marginTop: ".5rem" }}>{t("notGuaranteed")}</div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem", marginTop: "1rem" }}>
-              <button className="btn btn-primary btn-sm" onClick={doDownloadPNG} disabled={!hasAny}><Icon n="down" size={15} />{t("downloadPNG")}</button>
-              <button className="btn btn-ghost btn-sm" onClick={doDownloadTXT} disabled={!hasAny}><Icon n="file" size={15} />{t("downloadReport")}</button>
+              <button type="button" className="btn btn-primary btn-sm" onClick={doDownloadPNG} disabled={!hasAny}><Icon n="down" size={15} />{t("downloadPNG")}</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={doDownloadTXT} disabled={!hasAny}><Icon n="file" size={15} />{t("downloadReport")}</button>
             </div>
-            {cardMsg && <p className="field-error" style={{ color: "var(--green)" }}>{cardMsg}</p>}
           </div>
 
-          {hasAny && (
+          {hasAny ? (
             <motion.div initial={anim ? { opacity: 0, y: 10 } : false} animate={{ opacity: 1, y: 0 }} className="card card-pad">
               <div className="stat-label" style={{ marginBottom: ".6rem" }}>{t("share")}</div>
               <ShareButtons text={shareFull()} path="/my-2036" />
             </motion.div>
-          )}
+          ) : null}
 
           <div className="card card-pad">
             <div style={{ display: "flex", alignItems: "center", gap: ".6rem", fontWeight: 700, fontSize: ".9rem" }}>
-              <span style={{ color: "var(--red)" }}><Icon n="trash" size={16} /></span>{t("clearSaved")}
+              <span style={{ color: "var(--red)", display: "inline-flex" }}><Icon n="trash" size={16} /></span>{t("clearSaved")}
             </div>
             <p className="muted" style={{ fontSize: ".8rem", margin: ".4rem 0 .8rem" }}>{t("savedNote")}</p>
-            <button className="btn btn-ghost btn-sm" onClick={doClear} style={{ color: "var(--red)", borderColor: "rgba(248,113,113,.4)" }}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={doClear} style={{ color: "var(--red)", borderColor: "rgba(248,113,113,.4)" }}>
               <Icon n="trash" size={14} />{clearedFlash ? t("r.cleared") : t("p.clear")}
             </button>
           </div>
           <Warning>{t("notGuaranteed")} {t("marketRisk")}</Warning>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ListEditor({ title, icon, items, draft, setDraft, ph, onAdd, onRemove, max, addLabel }) {
-  const { lang } = useStore();
-  return (
-    <div className="card card-pad">
-      <div style={{ display: "flex", alignItems: "center", gap: ".5rem", marginBottom: ".6rem" }}>
-        <span style={{ color: "var(--purple)" }}><Icon n={icon} size={16} /></span>
-        <div className="stat-label" style={{ margin: 0 }}>{title}</div>
-        <span className="dim" style={{ fontSize: ".72rem", marginLeft: "auto" }}>{items.length}/{max}</span>
-      </div>
-      {items.length > 0 && (
-        <ul style={{ listStyle: "none", margin: "0 0 .7rem", padding: 0, display: "flex", flexDirection: "column", gap: ".4rem" }}>
-          {items.map((it, i) => (
-            <li key={i} style={{ display: "flex", alignItems: "center", gap: ".5rem", fontSize: ".86rem", background: "rgba(255,255,255,.04)", borderRadius: ".55rem", padding: ".45rem .7rem" }}>
-              <span className="dim" style={{ fontSize: ".74rem" }}>{i + 1}.</span>
-              <span style={{ flex: 1, wordBreak: "break-word" }}>{it}</span>
-              <button onClick={() => onRemove(i)} aria-label={(lang === "hi" ? "हटाएँ: " : "Remove: ") + it}
-                style={{ background: "transparent", border: 0, color: "var(--dim)", cursor: "pointer", padding: 2 }}>
-                <Icon n="x" size={14} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {items.length < max && (
-        <div style={{ display: "flex", gap: ".5rem" }}>
-          <input className="input" value={draft} placeholder={ph} onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onAdd(); } }} aria-label={title} />
-          <button className="btn btn-soft btn-sm" onClick={onAdd} disabled={!draft.trim()} style={{ flexShrink: 0 }}>
-            <Icon n="plus" size={14} />{addLabel}
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -2782,25 +2773,25 @@ function Privacy() {
           <p key={k} className="muted" style={{ margin: 0, fontSize: ".92rem" }}>{t(k)}</p>
         ))}
         <div className="divider" />
-        <button className="btn btn-ghost" style={{ color: "var(--red)", borderColor: "rgba(248,113,113,.4)", alignSelf: "flex-start" }}
-          onClick={() => { clearAll(); try { localStorage.removeItem("tc_saved"); } catch { } setCleared(true); }}>
+        <button type="button" className="btn btn-ghost" style={{ color: "var(--red)", borderColor: "rgba(248,113,113,.4)", alignSelf: "flex-start" }}
+          onClick={() => { clearAll(); setCleared(true); }}>
           <Icon n="trash" size={16} />{t("p.clear")}
         </button>
-        {cleared && <p style={{ color: "var(--green)", fontSize: ".85rem", margin: 0 }} role="status"><Icon n="check" size={14} /> {t("r.cleared")}</p>}
+        {cleared ? <p style={{ color: "var(--green)", fontSize: ".85rem", margin: 0 }} role="status">{t("r.cleared")}</p> : null}
       </div>
     </div>
   );
 }
 
 function NotFound() {
-  const { t, lang } = useStore();
+  const { t } = useStore();
   useSeo({ title: t("404.title") + " | TimeCapsule India", description: t("404.sub") });
   return (
     <div className="container" style={{ paddingTop: "4rem", textAlign: "center" }}>
       <div className="grad-text" style={{ fontSize: "4rem", fontWeight: 800 }}>404</div>
       <h1 className="h2">{t("404.title")}</h1>
       <p className="muted">{t("404.sub")}</p>
-      <Link to="/" className="btn btn-primary" style={{ marginTop: "1rem" }}>{t("404.btn")}</Link>
+      <Link to="/" className="btn btn-primary" style={{ marginTop: "1rem", display: "inline-flex" }}>{t("404.btn")}</Link>
     </div>
   );
 }
@@ -2814,9 +2805,9 @@ class ErrorBoundary extends React.Component {
     if (this.state.err) {
       return (
         <div className="container" style={{ paddingTop: "4rem", textAlign: "center" }}>
-          <h1 className="h2">⚠️ Something went wrong</h1>
-          <p className="muted">{String(this.state.err && this.state.err.message || this.state.err)}</p>
-          <button className="btn btn-primary" onClick={() => window.location.reload()}>Reload</button>
+          <h1 className="h2">Something went wrong</h1>
+          <p className="muted" style={{ wordBreak: "break-word" }}>{String((this.state.err && this.state.err.message) || this.state.err)}</p>
+          <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Reload</button>
         </div>
       );
     }
@@ -2839,16 +2830,15 @@ const PAGE_MAP = {
 function Shell() {
   useBootstrap();
   const path = useHashRoute();
-  const anim = !reduce();
-  useEffect(() => { window.scrollTo({ top: 0, behavior: anim ? "smooth" : "auto" }); }, [path]);
+  const anim = !reduceMotion();
+  useEffect(() => { window.scrollTo(0, 0); }, [path]);
   useEffect(() => {
     if (typeof window !== "undefined" && !window.__tcTestsRun) {
       window.__tcTestsRun = true;
       try {
         const res = tcSelfTests();
         const failed = res.filter((r) => !r.pass);
-        // eslint-disable-next-line no-console
-        console.info(`[TimeCapsule] self-tests: ${res.length - failed.length}/${res.length} passed`, failed.length ? failed : "✓");
+        console.info("[TimeCapsule] self-tests: " + (res.length - failed.length) + "/" + res.length + " passed", failed.length ? failed : "OK");
       } catch (e) { /* silent */ }
     }
   }, []);
@@ -2881,3 +2871,4 @@ export default function App() {
     </StoreProvider>
   );
 }
+```
