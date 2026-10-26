@@ -29,6 +29,10 @@
       transition: all 0.2s; cursor: pointer;
     }
     .agent:hover { border-color: #d946ef; background: #fdf4ff; transform: translateY(-2px); }
+    .agent.selected { border-color: #d946ef; background: #fdf4ff; box-shadow: 0 0 0 3px rgba(217,70,239,.25); }
+    .detail { display: none; background: #fdf4ff; border: 2px solid #f0abfc; border-radius: 16px; padding: 20px 24px; margin: -12px 0 28px; text-align: left; font-size: 14px; color: #581c87; line-height: 1.6; }
+    .detail.show { display: block; animation: fadein .25s ease; }
+    @keyframes fadein { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
     .agent .icon { font-size: 32px; margin-bottom: 10px; }
     .agent h3 { font-size: 14px; color: #1e1b4b; margin-bottom: 4px; }
     .agent p { font-size: 11px; color: #64748b; }
@@ -88,6 +92,7 @@
         <p>Collaborative AI systems</p>
       </div>
     </div>
+    <div class="detail" id="agentDetail"></div>
     <div class="mcp-section">
       <h3>🔌 MCP Quick Start</h3>
       <div class="mcp-code">
@@ -98,7 +103,37 @@
 }
       </div>
     </div>
-    <a href="#" class="cta">🚀 Explore AgentVerse</a>
+    <a href="#" class="cta" id="ctaBtn">🚀 Explore AgentVerse</a>
   </div>
+  <script>
+    // ---- interactive agent cards ----
+    var details = {
+      "AI Agents": "🤖 AI Agents autonomously perceive their environment, reason about goals, and execute tasks using tools — e.g. browsing the web, running code, or calling APIs — with minimal human intervention.",
+      "MCP Protocol": "🔗 The Model Context Protocol (MCP) is an open standard that connects AI models to external data sources and tools through a uniform client–server interface, so one integration works across every MCP-compatible model.",
+      "Agentic AI": "🧠 Agentic AI goes beyond single prompts: it plans multi-step strategies, reflects on intermediate results, recovers from errors, and iterates until the goal is achieved.",
+      "Tool Use": "🛠️ Function calling lets a model emit structured JSON to invoke external functions — search, calculators, databases — and incorporate the results back into its reasoning loop.",
+      "Memory": "💾 Agents maintain short-term context (conversation state) and long-term memory (vector stores, summaries) so they can recall facts, preferences, and past outcomes across sessions.",
+      "Multi-Agent": "🔄 Multi-agent systems split work among specialized agents (researcher, coder, reviewer) that communicate, delegate, and collaborate to solve complex problems faster than a single agent."
+    };
+    var cards = document.querySelectorAll(".agent");
+    var detailBox = document.getElementById("agentDetail");
+    cards.forEach(function (card) {
+      card.addEventListener("click", function () {
+        var name = card.querySelector("h3").textContent;
+        var already = card.classList.contains("selected");
+        cards.forEach(function (c) { c.classList.remove("selected"); });
+        if (already) { detailBox.classList.remove("show"); return; }
+        card.classList.add("selected");
+        detailBox.textContent = details[name] || "";
+        detailBox.classList.add("show");
+      });
+    });
+
+    // ---- CTA button now does something instead of dead href="#" ----
+    document.getElementById("ctaBtn").addEventListener("click", function (e) {
+      e.preventDefault();
+      document.querySelector(".mcp-section").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  </script>
 </body>
 </html>

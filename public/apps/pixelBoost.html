@@ -39,10 +39,11 @@
   <div class="container">
     <h1>🖼️ pixelBoost</h1>
     <p class="subtitle">AI-powered image enhancement tool</p>
-    <div class="upload-zone">
+    <div class="upload-zone" id="uploadZone">
       <div class="icon">✨</div>
       <h3>Drop your image here</h3>
-      <p>or click to browse — JPG, PNG, WebP supported</p>
+      <p id="zoneHint">or click to browse — JPG, PNG, WebP supported</p>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
     </div>
     <div class="features">
       <div class="feature">
@@ -62,5 +63,26 @@
       </div>
     </div>
   </div>
+  <script>
+    // ---- make the upload zone actually clickable/droppable (it was dead before) ----
+    var zone = document.getElementById('uploadZone');
+    var input = document.getElementById('fileInput');
+    var hint = document.getElementById('zoneHint');
+    zone.addEventListener('click', function () { input.click(); });
+    input.addEventListener('change', function () { show(input.files[0]); });
+    ['dragover', 'dragenter'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) { e.preventDefault(); zone.style.borderColor = '#f59e0b'; });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) { e.preventDefault(); zone.style.borderColor = ''; });
+    });
+    zone.addEventListener('drop', function (e) { show(e.dataTransfer.files[0]); });
+    function show(f) {
+      if (!f || !/^image\//.test(f.type)) { hint.textContent = '❌ Please choose an image file (JPG, PNG, WebP)'; return; }
+      var url = URL.createObjectURL(f);
+      zone.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:220px;border-radius:12px;">' +
+        '<p style="margin-top:10px;color:#334155;font-weight:600;">📈 ' + f.name + ' — ready to enhance!</p>';
+    }
+  </script>
 </body>
 </html>

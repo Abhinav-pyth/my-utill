@@ -29,6 +29,10 @@
       text-align: left; transition: all 0.2s; cursor: pointer;
     }
     .tool:hover { border-color: #7c3aed; background: #faf5ff; transform: translateY(-2px); }
+    .tool.selected { border-color: #7c3aed; background: #faf5ff; box-shadow: 0 0 0 3px rgba(124,58,237,.2); }
+    .detail { display: none; background: #faf5ff; border: 2px solid #ddd6fe; border-radius: 16px; padding: 20px 24px; margin: -12px 0 28px; text-align: left; font-size: 14px; color: #4c1d95; line-height: 1.6; }
+    .detail.show { display: block; animation: fadein .25s ease; }
+    @keyframes fadein { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
     .tool .icon { font-size: 28px; margin-bottom: 10px; }
     .tool h3 { font-size: 15px; color: #1e1b4b; margin-bottom: 4px; }
     .tool p { font-size: 12px; color: #64748b; }
@@ -86,12 +90,42 @@
         <p>Full songs from text</p>
       </div>
     </div>
-    <a href="#" class="cta">🚀 Start Full AI Pipeline</a>
+    <div class="detail" id="toolDetail"></div>
+    <a href="#" class="cta" id="ctaBtn">🚀 Start Full AI Pipeline</a>
     <div class="stats">
       <div class="stat"><div class="value">8</div><div class="label">AI Agents</div></div>
       <div class="stat"><div class="value">∞</div><div class="label">Free Usage</div></div>
       <div class="stat"><div class="value">50min</div><div class="label">Max Video</div></div>
     </div>
   </div>
+  <script>
+    // ---- interactive tool cards ----
+    var details = {
+      "Script Writer": "✍️ Turn a one-line idea into a full structured script — scenes, dialogue, hooks and CTAs — ready for the rest of the pipeline.",
+      "Image Generator": "🖼️ Generate on-brand images from text prompts with multiple styles, aspect ratios and variations per scene.",
+      "Video Generator": "🎬 Convert scripts or stills into cinematic clips with camera moves, transitions and timing up to 50 minutes.",
+      "AI Voice": "🎤 Ultra-realistic narration in 30+ voices and languages — adjust speed, pitch and emotion per line.",
+      "Music Generator": "🎵 Create royalty-free full songs, loops and beds from a text description of mood, genre and tempo."
+    };
+    var cards = document.querySelectorAll(".tool");
+    var detailBox = document.getElementById("toolDetail");
+    cards.forEach(function (card) {
+      card.addEventListener("click", function () {
+        var name = card.querySelector("h3").textContent;
+        var already = card.classList.contains("selected");
+        cards.forEach(function (c) { c.classList.remove("selected"); });
+        if (already) { detailBox.classList.remove("show"); return; }
+        card.classList.add("selected");
+        detailBox.textContent = details[name] || "";
+        detailBox.classList.add("show");
+      });
+    });
+
+    // ---- CTA scrolls to stats instead of dead href="#" ----
+    document.getElementById("ctaBtn").addEventListener("click", function (e) {
+      e.preventDefault();
+      document.querySelector(".stats").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  </script>
 </body>
 </html>
