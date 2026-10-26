@@ -4,16 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diwali Wish Generator ✨ | Create Your दीपावली Greeting Image</title>
-<meta name="description" content="Create a personalized Diwali greeting image with your name — दीपावली की शुभकामनाएँ! Generate, download and share festive wishes on WhatsApp, Instagram & Facebook. Free, in-browser, no signup, no photo needed.">
+<meta name="description" content="Create a personalized Diwali greeting image with your name — दीपावली की शुभकामनाएँ! Choose from 5 festive designs with glowing diyas, rangoli, lanterns & fireworks. Download as PNG and share on WhatsApp, Instagram & Facebook. Free, in-browser, no signup.">
 <meta name="keywords" content="Diwali wish generator, दीपावली की शुभकामनाएँ, Happy Diwali greeting card, Diwali name image, WhatsApp Diwali wish">
 <meta name="theme-color" content="#2a0a52">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Diwali Wish Generator ✨ — Create Your दीपावली Greeting">
-<meta property="og:description" content="Type your name, generate a beautiful दीपावली की शुभकामनाएँ greeting image with glowing diyas & rangoli, then download or share it on WhatsApp instantly.">
+<meta property="og:description" content="Type your name, pick a design, and get a beautiful दीपावली की शुभकामनाएँ greeting image — download or share on WhatsApp instantly. 5 festive designs!">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Diwali Wish Generator ✨">
-<meta name="twitter:description" content="Personalized दीपावली की शुभकामनाएँ greeting images with your name — free & in-browser.">
+<meta name="twitter:description" content="Personalized दीपावली की शुभकामनाएँ greeting images with your name — 5 designs, free & in-browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪔</text></svg>">
 <!-- Fonts via Fontsource CDN (Devanagari + Latin) -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -25,7 +25,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-devanagari@5/400.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-devanagari@5/700.css">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"Diwali Wish Generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"INR"},"description":"Create personalized Diwali greeting images (दीपावली की शुभकामनाएँ) with your name, download as PNG and share on WhatsApp — fully in-browser."}
+{"@context":"https://schema.org","@type":"WebApplication","name":"Diwali Wish Generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"INR"},"description":"Create personalized Diwali greeting images (दीपावली की शुभकामनाएँ) with your name in 5 festive designs, download as PNG and share on WhatsApp — fully in-browser."}
 </script>
 <style>
   :root{
@@ -61,7 +61,7 @@
     -webkit-background-clip:text; background-clip:text; color:transparent;
     filter:drop-shadow(0 6px 22px rgba(246,196,83,.28));
   }
-  .tagline{color:var(--muted);max-width:620px;margin:0 auto;font-size:clamp(.95rem,2.6vw,1.06rem);line-height:1.6}
+  .tagline{color:var(--muted);max-width:640px;margin:0 auto;font-size:clamp(.95rem,2.6vw,1.06rem);line-height:1.6}
   .tagline .hindi{color:var(--cream);font-family:"Noto Sans Devanagari","Outfit",sans-serif}
 
   main.wrap{
@@ -115,6 +115,23 @@
   ol.steps{margin:20px 0 0;padding-left:20px;color:var(--muted);font-size:.9rem;line-height:1.7}
   ol.steps li::marker{color:var(--gold);font-weight:700}
 
+  /* ---- Design picker ---- */
+  .sel-label{margin:0 0 10px;font-size:.95rem;font-weight:600;color:var(--cream);letter-spacing:.3px;text-align:left;width:100%}
+  .design-row{display:flex;gap:12px;overflow-x:auto;width:100%;padding:4px 2px 12px;scrollbar-width:thin;scrollbar-color:var(--gold-soft) transparent}
+  .design-row::-webkit-scrollbar{height:8px}
+  .design-row::-webkit-scrollbar-thumb{background:var(--gold-soft);border-radius:99px}
+  .design-btn{
+    flex:0 0 auto;border:2px solid transparent;border-radius:14px;padding:7px 7px 9px;cursor:pointer;
+    background:rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;gap:7px;
+    transition:border-color .2s, background .2s, transform .18s;
+  }
+  .design-btn:hover{transform:translateY(-2px);background:rgba(255,255,255,.09)}
+  .design-btn:focus-visible{outline:3px solid rgba(246,196,83,.6);outline-offset:2px}
+  .design-btn canvas{width:92px;height:115px;border-radius:9px;display:block;background:#200a3f}
+  .design-btn span{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.2px;white-space:nowrap}
+  .design-btn[aria-pressed="true"]{border-color:var(--gold);background:rgba(246,196,83,.14);box-shadow:0 6px 20px rgba(246,196,83,.25)}
+  .design-btn[aria-pressed="true"] span{color:var(--gold)}
+
   .preview-card{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
   #wishCanvas{
     width:100%;max-width:440px;height:auto;border-radius:18px;display:block;
@@ -146,14 +163,14 @@
 <header>
   <span class="badge">🪔 Festival of Lights • 2026</span>
   <h1>Create Your Diwali Wish ✨</h1>
-  <p class="tagline">Type your name and instantly get a beautiful <span class="hindi">दीपावली की शुभकामनाएँ</span> greeting image with glowing diyas, golden lights, marigolds &amp; rangoli — ready to download and share. No photo needed.</p>
+  <p class="tagline">Type your name, pick one of <strong>5 festive designs</strong>, and instantly get a beautiful <span class="hindi">दीपावली की शुभकामनाएँ</span> greeting image with glowing diyas, golden lights, marigolds &amp; rangoli — ready to download and share. No photo needed.</p>
 </header>
 
 <main class="wrap">
   <!-- ============ FORM ============ -->
   <section class="card" aria-labelledby="formTitle">
     <h2 class="card-title" id="formTitle">Your Name, Your Wish</h2>
-    <p class="card-sub">Just your name — the canvas paints the rest: diyas, rangoli, fireworks &amp; golden glow.</p>
+    <p class="card-sub">Just your name — the canvas paints the rest: diyas, rangoli, lanterns, fireworks &amp; golden glow.</p>
 
     <form id="wishForm" novalidate>
       <label for="nameInput">Your Name</label>
@@ -175,14 +192,18 @@
 
     <ol class="steps">
       <li>Enter your name above.</li>
-      <li>Tap <strong>Generate Diwali Wish</strong> — preview updates live.</li>
+      <li>Pick a design style — preview updates live.</li>
       <li>Download the PNG or share it on WhatsApp.</li>
     </ol>
   </section>
 
-  <!-- ============ PREVIEW ============ -->
+  <!-- ============ PREVIEW + DESIGNS ============ -->
   <section class="card preview-card" aria-labelledby="previewTitle">
     <h2 class="card-title" id="previewTitle">Live Preview</h2>
+
+    <p class="sel-label" id="designLabel">🎨 Choose a Design (5 styles)</p>
+    <div class="design-row" id="designRow" role="group" aria-labelledby="designLabel"></div>
+
     <canvas id="wishCanvas" width="1080" height="1350" role="img"
             aria-label="Personalized Diwali greeting image with Hindi text दीपावली की शुभकामनाएँ and the user's name"></canvas>
     <p class="preview-note">PNG • 1080 × 1350 px • perfect for WhatsApp Status, Instagram &amp; Facebook</p>
@@ -214,18 +235,21 @@
   "use strict";
   /* ---------- Elements ---------- */
   var canvas = document.getElementById('wishCanvas');
-  var ctx = canvas.getContext('2d');
+  var view = canvas.getContext('2d');
+  var ctx = view;                       /* helpers draw into whichever ctx is active */
   var nameInput = document.getElementById('nameInput');
   var form = document.getElementById('wishForm');
   var errorEl = document.getElementById('nameError');
   var downloadBtn = document.getElementById('downloadBtn');
   var whatsappBtn = document.getElementById('whatsappBtn');
   var shareBtn = document.getElementById('shareBtn');
+  var designRow = document.getElementById('designRow');
   var toastEl = document.getElementById('toast');
   var statusEl = document.getElementById('status');
 
   var W = 1080, H = 1350;
   var currentName = '';
+  var currentDesign = 'royal';
   var generated = false;
   var fontsReady = false;
   var toastTimer = null;
@@ -239,7 +263,7 @@
   function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2600);}
   function debounce(fn,ms){var t;return function(){var a=arguments,c=this;clearTimeout(t);t=setTimeout(function(){fn.apply(c,a);},ms);};}
 
-  /* ---------- Validation (safe special-char handling) ---------- */
+  /* ---------- Validation ---------- */
   function validateName(raw){
     var v = String(raw||'').replace(/[\u0000-\u001F\u007F]/g,'').replace(/\s+/g,' ').trim();
     if(!v) return {ok:false,msg:'Please enter your name to generate the wish. 🪔'};
@@ -251,10 +275,10 @@
   function clearError(){errorEl.classList.remove('show');nameInput.removeAttribute('aria-invalid');}
   function safeFileName(name){
     var base=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-    return 'diwali-wish-'+(base||'shubh-deepavali')+'.png';
+    return 'diwali-wish-'+(base||'shubh-deepavali')+'-'+currentDesign+'.png';
   }
 
-  /* ---------- Canvas painting ---------- */
+  /* ---------- Shared painting pieces ---------- */
   function firework(x,y,r,color,rnd){
     ctx.save();
     var spokes=26,i,a,x1,y1,x2,y2,g;
@@ -367,7 +391,12 @@
     ctx.closePath(); ctx.fill();
     ctx.restore();
   }
-  function frame(){
+  function diyaRow(y){
+    var dx=[150,345,540,735,930], ds=[0.85,0.95,1.12,0.95,0.85];
+    glow(540,y+32,480,'255,140,40',0.14);
+    for(var d=0;d<5;d++){diya(dx[d],y,ds[d]);}
+  }
+  function frameDouble(){
     ctx.save();
     ctx.strokeStyle='rgba(244,196,110,0.9)'; ctx.lineWidth=3; ctx.strokeRect(26,26,W-52,H-52);
     ctx.strokeStyle='rgba(244,196,110,0.45)'; ctx.lineWidth=1.5; ctx.strokeRect(42,42,W-84,H-84);
@@ -376,62 +405,96 @@
     for(var i=0;i<cs.length;i++){ctx.beginPath();ctx.arc(cs[i][0],cs[i][1],52,cs[i][2],cs[i][3]);ctx.stroke();}
     ctx.restore();
   }
-  function texts(name){
+  function stars(n,ymax,cols,rnd){
+    for(var i=0;i<n;i++){
+      var sx=rnd()*W, sy=rnd()*H*ymax, sr=0.6+rnd()*1.7, sc=cols[Math.floor(rnd()*cols.length)];
+      ctx.save(); ctx.globalAlpha=0.35+rnd()*0.6; ctx.shadowColor=sc; ctx.shadowBlur=6;
+      ctx.fillStyle=sc; ctx.beginPath(); ctx.arc(sx,sy,sr,0,7); ctx.fill(); ctx.restore();
+    }
+  }
+  function vignette(){
+    var vg=ctx.createRadialGradient(540,675,420,540,675,980);
+    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(8,0,24,0.42)');
+    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  }
+  function lantern(x,y,s,rnd){
+    ctx.save();
+    ctx.strokeStyle='rgba(80,20,5,0.85)'; ctx.lineWidth=3*s;
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,y-74*s); ctx.stroke();
+    glow(x,y-30*s,95*s,'255,180,60',0.45);
+    ctx.fillStyle='#8a2f0d'; ctx.fillRect(x-14*s,y-80*s,28*s,12*s);
+    var bg=ctx.createRadialGradient(x,y-34*s,4,x,y-30*s,48*s);
+    bg.addColorStop(0,'#fff3c4'); bg.addColorStop(.5,'#ffb703'); bg.addColorStop(1,'#e05e00');
+    ctx.fillStyle=bg;
+    ctx.beginPath(); ctx.ellipse(x,y-30*s,34*s,44*s,0,0,7); ctx.fill();
+    ctx.strokeStyle='rgba(120,30,5,0.55)'; ctx.lineWidth=1.6*s;
+    for(var k=1;k<=3;k++){ctx.beginPath();ctx.ellipse(x,y-30*s,34*s*(k/4),44*s,0,0,7);ctx.stroke();}
+    ctx.fillStyle='#8a2f0d'; ctx.fillRect(x-10*s,y+10*s,20*s,10*s);
+    ctx.strokeStyle='rgba(80,20,5,0.85)'; ctx.lineWidth=2*s;
+    ctx.beginPath(); ctx.moveTo(x,y+20*s); ctx.lineTo(x,y+44*s); ctx.stroke();
+    ctx.save(); ctx.shadowColor='#f6c453'; ctx.shadowBlur=8; ctx.fillStyle='#c2410c';
+    ctx.beginPath(); ctx.arc(x,y+50*s,6*s,0,7); ctx.fill(); ctx.restore();
+    ctx.restore();
+  }
+
+  /* ---------- Text block (shared, palette-driven) ---------- */
+  function texts(name,P){
     ctx.save(); ctx.textAlign='center';
-    /* top label */
     try{ctx.letterSpacing='10px';}catch(e){}
     ctx.font='600 30px Outfit, sans-serif';
-    ctx.fillStyle='rgba(255,224,168,0.92)';
+    ctx.fillStyle=P.top;
     var tl='HAPPY DIWALI';
     ctx.fillText(tl,540,170);
     var tw=ctx.measureText(tl).width;
     try{ctx.letterSpacing='0px';}catch(e){}
-    drawSparkle(540-tw/2-46,160,8,'rgba(255,214,120,0.9)');
-    drawSparkle(540+tw/2+46,160,8,'rgba(255,214,120,0.9)');
+    drawSparkle(540-tw/2-46,160,8,P.spark);
+    drawSparkle(540+tw/2+46,160,8,P.spark);
     /* main Hindi heading */
     var hTxt='दीपावली की शुभकामनाएँ';
     var hSize=fit(hTxt,104,58,940,function(s){return '400 '+s+'px "Yatra One","Noto Sans Devanagari","Mangal",serif';});
     ctx.font='400 '+hSize+'px "Yatra One","Noto Sans Devanagari","Mangal",serif';
     var hg=ctx.createLinearGradient(0,340,0,470);
-    hg.addColorStop(0,'#ffefb0'); hg.addColorStop(.5,'#f6c453'); hg.addColorStop(1,'#d98e2b');
-    ctx.save(); ctx.shadowColor='rgba(255,170,60,0.45)'; ctx.shadowBlur=34; ctx.fillStyle=hg;
+    hg.addColorStop(0,P.head[0]); hg.addColorStop(.5,P.head[1]); hg.addColorStop(1,P.head[2]);
+    ctx.save(); ctx.shadowColor=P.headShadow; ctx.shadowBlur=34; ctx.fillStyle=hg;
     ctx.fillText(hTxt,540,440); ctx.restore();
     /* divider */
-    ctx.strokeStyle='rgba(255,205,120,0.7)'; ctx.lineWidth=2;
+    ctx.strokeStyle=P.line; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(330,505); ctx.lineTo(495,505); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(585,505); ctx.lineTo(750,505); ctx.stroke();
-    drawSparkle(540,505,11,'rgba(255,214,120,0.95)');
-    ctx.fillStyle='rgba(255,205,120,0.8)';
+    drawSparkle(540,505,11,P.spark);
+    ctx.fillStyle=P.line;
     ctx.beginPath(); ctx.arc(322,505,3,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(758,505,3,0,7); ctx.fill();
     /* message line */
     var mTxt='शुभ दीपावली! शुभकामनाएँ —';
     var mSize=fit(mTxt,52,32,900,function(s){return '400 '+s+'px "Noto Sans Devanagari","Mangal",sans-serif';});
     ctx.font='400 '+mSize+'px "Noto Sans Devanagari","Mangal",sans-serif';
-    ctx.fillStyle='#ffeacf'; ctx.fillText(mTxt,540,600);
+    ctx.fillStyle=P.msg; ctx.fillText(mTxt,540,600);
     /* name */
     var nSize=fit(name,96,42,820,function(s){return '400 '+s+'px "Great Vibes","Noto Sans Devanagari",cursive';});
     ctx.font='400 '+nSize+'px "Great Vibes","Noto Sans Devanagari",cursive';
     var ng=ctx.createLinearGradient(0,640,0,745);
-    ng.addColorStop(0,'#ffe9ad'); ng.addColorStop(.55,'#f6c453'); ng.addColorStop(1,'#e0a23f');
-    ctx.save(); ctx.shadowColor='rgba(246,196,83,0.4)'; ctx.shadowBlur=26; ctx.fillStyle=ng;
+    ng.addColorStop(0,P.name[0]); ng.addColorStop(.55,P.name[1]); ng.addColorStop(1,P.name[2]);
+    ctx.save(); ctx.shadowColor=P.nameShadow; ctx.shadowBlur=26; ctx.fillStyle=ng;
     ctx.fillText(name,540,715); ctx.restore();
     var nw=ctx.measureText(name).width;
-    ctx.strokeStyle='rgba(246,196,83,0.65)'; ctx.lineWidth=2;
+    ctx.strokeStyle=P.nameShadow; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(540-nw/2-150,685); ctx.lineTo(540-nw/2-40,685); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(540+nw/2+40,685); ctx.lineTo(540+nw/2+150,685); ctx.stroke();
-    drawSparkle(540-nw/2-165,685,7,'rgba(255,214,120,0.9)');
-    drawSparkle(540+nw/2+165,685,7,'rgba(255,214,120,0.9)');
+    drawSparkle(540-nw/2-165,685,7,P.spark);
+    drawSparkle(540+nw/2+165,685,7,P.spark);
     ctx.restore();
   }
 
-  function render(name){
-    var rnd=mulberry32(20261026);
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.clearRect(0,0,W,H);
-    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-    ctx.globalAlpha=1; ctx.shadowBlur=0; ctx.setLineDash([]);
-    /* background */
+  /* ---------- Palettes ---------- */
+  var P_ROYAL={top:'rgba(255,224,168,0.92)',head:['#ffefb0','#f6c453','#d98e2b'],headShadow:'rgba(255,170,60,0.45)',msg:'#ffeacf',name:['#ffe9ad','#f6c453','#e0a23f'],nameShadow:'rgba(246,196,83,0.65)',line:'rgba(255,205,120,0.7)',spark:'rgba(255,214,120,0.9)'};
+  var P_SAFFRON={top:'rgba(255,241,214,0.95)',head:['#fff7d6','#ffd24a','#ff9d2e'],headShadow:'rgba(110,25,0,0.6)',msg:'#fff3da',name:['#fff7d6','#ffd24a','#f08c1a'],nameShadow:'rgba(255,235,180,0.8)',line:'rgba(255,235,190,0.8)',spark:'rgba(255,235,180,0.95)'};
+  var P_MIDNIGHT={top:'rgba(214,228,255,0.92)',head:['#fffbe8','#ffe08a','#f6c453'],headShadow:'rgba(255,190,80,0.4)',msg:'#e8f0ff',name:['#fffbe8','#ffe08a','#d9a441'],nameShadow:'rgba(255,210,110,0.7)',line:'rgba(190,210,255,0.7)',spark:'rgba(230,240,255,0.9)'};
+  var P_EMERALD={top:'rgba(220,255,238,0.9)',head:['#fff3c4','#f6c453','#d98e2b'],headShadow:'rgba(255,180,60,0.4)',msg:'#eafff5',name:['#ffe9ad','#f6c453','#e0a23f'],nameShadow:'rgba(246,196,83,0.65)',line:'rgba(190,240,210,0.65)',spark:'rgba(255,224,150,0.9)'};
+  var P_MINIMAL={top:'rgba(233,220,255,0.9)',head:['#ffe9ad','#f6c453','#e0a23f'],headShadow:'rgba(246,196,83,0.35)',msg:'#efe6ff',name:['#ffe9ad','#f6c453','#e0a23f'],nameShadow:'rgba(246,196,83,0.6)',line:'rgba(246,196,83,0.6)',spark:'rgba(246,196,83,0.85)'};
+
+  /* ---------- DESIGN 1 : Royal Purple ---------- */
+  function paintRoyal(name,rnd){
     var bg=ctx.createLinearGradient(0,0,0,H);
     bg.addColorStop(0,'#150629'); bg.addColorStop(.45,'#2a0a52');
     bg.addColorStop(.8,'#38105f'); bg.addColorStop(1,'#471a6e');
@@ -439,38 +502,247 @@
     glow(540,1240,760,'255,120,30',0.28);
     glow(540,260,620,'140,70,220',0.20);
     glow(540,700,520,'255,170,60',0.10);
-    /* bokeh */
-    for(var b=0;b<14;b++){var bx=rnd()*W,by=rnd()*H,br=26+rnd()*70;glow(bx,by,br,'255,190,90',0.05+rnd()*0.08);}
-    /* stars */
-    var cols=['#fff6d8','#ffd98a','#ffc46b'];
-    for(var i=0;i<120;i++){
-      var sx=rnd()*W, sy=rnd()*H*0.8, sr=0.6+rnd()*1.7, sc=cols[Math.floor(rnd()*3)];
-      ctx.save(); ctx.globalAlpha=0.35+rnd()*0.6; ctx.shadowColor=sc; ctx.shadowBlur=6;
-      ctx.fillStyle=sc; ctx.beginPath(); ctx.arc(sx,sy,sr,0,7); ctx.fill(); ctx.restore();
-    }
-    /* sparkles */
+    for(var b=0;b<14;b++){glow(rnd()*W,rnd()*H,26+rnd()*70,'255,190,90',0.05+rnd()*0.08);}
+    stars(120,0.8,['#fff6d8','#ffd98a','#ffc46b'],rnd);
     for(var k=0;k<12;k++){drawSparkle(rnd()*W,rnd()*H*0.62,5+rnd()*9,'rgba(255,230,163,'+(0.4+rnd()*0.5).toFixed(2)+')');}
-    /* fireworks */
     firework(170,230,95,'#ff9d4d',rnd);
     firework(905,190,115,'#ffd76a',rnd);
     firework(775,430,70,'#ff8a3d',rnd);
     firework(255,470,62,'#ffbf69',rnd);
-    /* frame + garlands + rangoli + diyas */
-    frame();
+    frameDouble();
     garland(1,rnd); garland(-1,rnd);
     rangoli(540,1055);
-    glow(540,1262,480,'255,140,40',0.14);
-    var dx=[150,345,540,735,930], ds=[0.85,0.95,1.12,0.95,0.85];
-    for(var d=0;d<5;d++){diya(dx[d],1230,ds[d]);}
-    /* text */
-    texts(name);
-    /* vignette */
-    var vg=ctx.createRadialGradient(540,675,420,540,675,980);
-    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(8,0,24,0.42)');
-    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+    diyaRow(1230);
+    texts(name,P_ROYAL);
+    vignette();
   }
 
-  /* ---------- Fonts (Devanagari-safe) ---------- */
+  /* ---------- DESIGN 2 : Saffron Sunrise ---------- */
+  function paintSaffron(name,rnd){
+    var bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#5e150a'); bg.addColorStop(.45,'#a63210');
+    bg.addColorStop(.8,'#d96a12'); bg.addColorStop(1,'#f59e0b');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    /* sun rays from bottom */
+    ctx.save(); ctx.translate(540,1420);
+    for(var i=0;i<24;i++){
+      if(i%2===0){
+        var a0=i/24*Math.PI*2, a1=(i+1)/24*Math.PI*2;
+        ctx.fillStyle='rgba(255,220,140,0.08)';
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,1700,a0-Math.PI/2,a1-Math.PI/2); ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+    glow(540,-80,620,'255,200,110',0.28);
+    glow(540,1300,700,'255,235,170',0.30);
+    stars(70,0.55,['#ffe9c4','#ffd98a','#fff6d8'],rnd);
+    firework(180,260,90,'#ffe08a',rnd);
+    firework(900,300,100,'#ffd24a',rnd);
+    firework(540,150,70,'#fff3c4',rnd);
+    /* hanging lanterns */
+    lantern(120,300,1.0,rnd); lantern(300,390,0.85,rnd);
+    lantern(780,370,0.9,rnd); lantern(960,280,1.05,rnd);
+    /* drifting petals */
+    for(var p=0;p<18;p++){
+      ctx.save(); ctx.globalAlpha=0.35+rnd()*0.4;
+      ctx.fillStyle=['#ffd24a','#ffb703','#ff8c1a'][Math.floor(rnd()*3)];
+      ctx.beginPath(); ctx.arc(rnd()*W,200+rnd()*700,3+rnd()*5,0,7); ctx.fill(); ctx.restore();
+    }
+    frameDouble();
+    /* marigold bed along bottom */
+    for(var mx=60;mx<=1020;mx+=80){ marigold(mx,1312+((mx/80)%2? -8:8),38,rnd); }
+    diyaRow(1216);
+    texts(name,P_SAFFRON);
+    vignette();
+  }
+
+  /* ---------- DESIGN 3 : Midnight Sky ---------- */
+  function paintMidnight(name,rnd){
+    var bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#040a2c'); bg.addColorStop(.5,'#0a1440'); bg.addColorStop(1,'#12235e');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    stars(150,0.85,['#ffffff','#cfe0ff','#ffe9c4'],rnd);
+    /* moon */
+    glow(850,205,230,'210,230,255',0.35);
+    var mg=ctx.createRadialGradient(830,185,10,850,205,90);
+    mg.addColorStop(0,'#fffdf2'); mg.addColorStop(1,'#ddd6c2');
+    ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(850,205,86,0,7); ctx.fill();
+    ctx.fillStyle='rgba(120,110,90,0.22)';
+    var cr=[[820,180,14],[872,225,10],[845,240,7],[880,175,8],[815,225,6]];
+    for(var c=0;c<cr.length;c++){ctx.beginPath();ctx.arc(cr[c][0],cr[c][1],cr[c][2],0,7);ctx.fill();}
+    /* string lights */
+    ctx.save();
+    ctx.strokeStyle='rgba(10,16,50,0.9)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(-20,110); ctx.quadraticCurveTo(540,265,1100,110); ctx.stroke();
+    var bulbCols=['#ffd24a','#ff8c5e','#7ee0ff','#ffb3d1'];
+    for(var t=0.04;t<=0.97;t+=0.06){
+      var u=1-t, bx=u*u*(-20)+2*u*t*540+t*t*1100, by=u*u*110+2*u*t*265+t*t*110;
+      var col=bulbCols[Math.floor(rnd()*4)];
+      ctx.strokeStyle='rgba(10,16,50,0.9)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx,by+12); ctx.stroke();
+      ctx.save(); ctx.shadowColor=col; ctx.shadowBlur=14; ctx.fillStyle=col;
+      ctx.beginPath(); ctx.arc(bx,by+19,7,0,7); ctx.fill(); ctx.restore();
+    }
+    ctx.restore();
+    firework(200,420,90,'#7ee0ff',rnd);
+    firework(930,470,80,'#ff9de2',rnd);
+    firework(540,330,60,'#ffd76a',rnd);
+    /* city skyline */
+    var bld=[[0,90,260],[90,70,200],[160,110,320],[270,80,230],[350,120,290],[470,90,210],[560,110,340],[670,80,240],[750,120,300],[870,90,220],[960,120,280]];
+    for(var bi=0;bi<bld.length;bi++){
+      var B=bld[bi], bx0=B[0], bw=B[1], bh=B[2];
+      ctx.fillStyle='#05081c'; ctx.fillRect(bx0,1350-bh,bw,bh);
+      for(var wx=bx0+10;wx<bx0+bw-14;wx+=22){
+        for(var wy=1350-bh+14;wy<1330;wy+=30){
+          if(rnd()<0.45){ctx.fillStyle='rgba(255,215,106,'+(0.5+rnd()*0.5).toFixed(2)+')';ctx.fillRect(wx,wy,9,13);}
+        }
+      }
+      if(bi%3===0){ glow(bx0+bw/2,1350-bh-6,26,'255,180,60',0.6); ctx.fillStyle='#ffd76a'; ctx.beginPath(); ctx.arc(bx0+bw/2,1350-bh-6,4,0,7); ctx.fill(); }
+    }
+    frameDouble();
+    diyaRow(1216);
+    texts(name,P_MIDNIGHT);
+    vignette();
+  }
+
+  /* ---------- DESIGN 4 : Emerald Mandala ---------- */
+  function scallopRect(inset,r){
+    ctx.save(); ctx.strokeStyle='rgba(246,196,83,0.5)'; ctx.lineWidth=1.5;
+    var x0=inset,y0=inset,x1=W-inset,y1=H-inset,x,y;
+    for(x=x0;x<x1-r*2;x+=r*2){
+      ctx.beginPath(); ctx.arc(x+r,y0,r,0,Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x+r,y1,r,Math.PI,2*Math.PI); ctx.stroke();
+    }
+    for(y=y0;y<y1-r*2;y+=r*2){
+      ctx.beginPath(); ctx.arc(x0,y+r,r,-Math.PI/2,Math.PI/2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x1,y+r,r,Math.PI/2,1.5*Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintEmerald(name,rnd){
+    var bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#03231c'); bg.addColorStop(.5,'#06402f'); bg.addColorStop(1,'#0a5c40');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    glow(540,640,620,'255,200,90',0.14);
+    glow(540,1260,600,'255,150,50',0.22);
+    stars(90,0.8,['#eafff5','#ffe9c4','#ffd98a'],rnd);
+    /* giant mandala behind text */
+    ctx.save(); ctx.translate(540,640); ctx.globalAlpha=0.5;
+    ctx.setLineDash([4,14]); ctx.strokeStyle='rgba(246,196,83,0.5)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,0,430,0,7); ctx.stroke(); ctx.setLineDash([]);
+    petals(36,400,null,'rgba(246,196,83,0.4)',70,24);
+    petals(24,330,'rgba(255,200,90,0.10)','rgba(246,196,83,0.45)',64,30);
+    ctx.fillStyle='rgba(255,220,140,0.5)';
+    for(var i=0;i<40;i++){var a=i/40*Math.PI*2;ctx.beginPath();ctx.arc(Math.cos(a)*265,Math.sin(a)*265,4,0,7);ctx.fill();}
+    petals(16,205,'rgba(255,200,90,0.12)','rgba(246,196,83,0.5)',52,26);
+    ctx.restore();
+    firework(160,240,85,'#ffd76a',rnd);
+    firework(920,260,95,'#ffe08a',rnd);
+    /* top marigold swag */
+    ctx.save();
+    ctx.strokeStyle='rgba(255,190,90,0.7)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(-20,70); ctx.quadraticCurveTo(540,230,1100,70); ctx.stroke();
+    for(var t=0.05;t<=0.96;t+=0.09){
+      var u=1-t, sx=u*u*(-20)+2*u*t*540+t*t*1100, sy=u*u*70+2*u*t*230+t*t*70;
+      marigold(sx,sy,30,rnd);
+    }
+    ctx.restore();
+    /* frame + scallop + corner arcs */
+    ctx.save();
+    ctx.strokeStyle='rgba(244,196,110,0.9)'; ctx.lineWidth=3; ctx.strokeRect(26,26,W-52,H-52);
+    scallopRect(46,14);
+    ctx.strokeStyle='rgba(244,196,110,0.6)'; ctx.lineWidth=2;
+    var cs=[[26,26,0,Math.PI/2],[W-26,26,Math.PI/2,Math.PI],[W-26,H-26,Math.PI,1.5*Math.PI],[26,H-26,1.5*Math.PI,2*Math.PI]];
+    for(var q=0;q<cs.length;q++){
+      ctx.beginPath(); ctx.arc(cs[q][0],cs[q][1],70,cs[q][2],cs[q][3]); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cs[q][0],cs[q][1],92,cs[q][2],cs[q][3]); ctx.stroke();
+    }
+    ctx.restore();
+    /* diya arc along bottom */
+    var arc=[[140,1268,0.85],[320,1236,0.95],[540,1222,1.15],[760,1236,0.95],[940,1268,0.85]];
+    glow(540,1290,480,'255,140,40',0.16);
+    for(var d=0;d<arc.length;d++){ diya(arc[d][0],arc[d][1],arc[d][2]); }
+    texts(name,P_EMERALD);
+    vignette();
+  }
+
+  /* ---------- DESIGN 5 : Minimal Glow ---------- */
+  function paintMinimal(name,rnd){
+    var bg=ctx.createRadialGradient(540,620,80,540,675,1000);
+    bg.addColorStop(0,'#3a1160'); bg.addColorStop(.6,'#26093f'); bg.addColorStop(1,'#180630');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    glow(540,1080,420,'255,170,60',0.16);
+    stars(45,0.75,['#efe6ff','#ffe9c4'],rnd);
+    for(var k=0;k<8;k++){drawSparkle(140+rnd()*800,140+rnd()*520,4+rnd()*6,'rgba(246,196,83,'+(0.3+rnd()*0.4).toFixed(2)+')');}
+    /* thin frame with corner ticks */
+    ctx.save();
+    ctx.strokeStyle='rgba(246,196,83,0.7)'; ctx.lineWidth=2; ctx.strokeRect(60,60,W-120,H-120);
+    ctx.lineWidth=4; ctx.strokeStyle='rgba(246,196,83,0.95)';
+    var tk=[[60,60,1,1],[W-60,60,-1,1],[W-60,H-60,-1,-1],[60,H-60,1,-1]];
+    for(var i=0;i<tk.length;i++){
+      var T=tk[i];
+      ctx.beginPath(); ctx.moveTo(T[0],T[1]+T[3]*46); ctx.lineTo(T[0],T[1]); ctx.lineTo(T[0]+T[2]*46,T[1]); ctx.stroke();
+    }
+    ctx.restore();
+    /* single hero diya */
+    diya(540,1105,1.7);
+    /* three sparkles footer */
+    drawSparkle(480,1268,7,P_MINIMAL.spark);
+    drawSparkle(540,1262,10,P_MINIMAL.spark);
+    drawSparkle(600,1268,7,P_MINIMAL.spark);
+    texts(name,P_MINIMAL);
+    vignette();
+  }
+
+  /* ---------- Design registry ---------- */
+  var DESIGNS={
+    royal:  {label:'Royal Purple',  seed:20261026, paint:paintRoyal},
+    saffron:{label:'Saffron Sunrise',seed:20261027, paint:paintSaffron},
+    midnight:{label:'Midnight Sky', seed:20261028, paint:paintMidnight},
+    emerald:{label:'Emerald Mandala',seed:20261029,paint:paintEmerald},
+    minimal:{label:'Minimal Glow',  seed:20261030, paint:paintMinimal}
+  };
+  var DESIGN_ORDER=['royal','saffron','midnight','emerald','minimal'];
+
+  function paintTo(target,id,name){
+    ctx=target;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,W,H);
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.globalAlpha=1; ctx.shadowBlur=0; ctx.setLineDash([]);
+    DESIGNS[id].paint(name, mulberry32(DESIGNS[id].seed));
+    ctx=view;
+  }
+  function render(name){ paintTo(view,currentDesign,name); }
+
+  /* ---------- Design picker UI ---------- */
+  function buildPicker(){
+    DESIGN_ORDER.forEach(function(id){
+      var btn=document.createElement('button');
+      btn.type='button'; btn.className='design-btn'; btn.dataset.design=id;
+      btn.setAttribute('aria-pressed', id===currentDesign ? 'true':'false');
+      var tc=document.createElement('canvas');
+      tc.width=108; tc.height=135;
+      var sp=document.createElement('span'); sp.textContent=DESIGNS[id].label;
+      btn.appendChild(tc); btn.appendChild(sp);
+      btn.addEventListener('click',function(){
+        if(currentDesign===id) return;
+        currentDesign=id;
+        var all=designRow.querySelectorAll('.design-btn');
+        for(var i=0;i<all.length;i++){all[i].setAttribute('aria-pressed', all[i]===btn?'true':'false');}
+        render(currentName||'Your Name');
+        statusEl.textContent='Design changed to '+DESIGNS[id].label;
+        toast('🎨 Design: '+DESIGNS[id].label);
+      });
+      designRow.appendChild(btn);
+      /* thumbnail */
+      var tctx=tc.getContext('2d');
+      tctx.setTransform(0.1,0,0,0.1,0,0);
+      paintTo(tctx,id,'Abhinav');
+    });
+  }
+
+  /* ---------- Fonts ---------- */
   function ensureFonts(){
     if(fontsReady) return Promise.resolve();
     var loads=[
@@ -492,7 +764,7 @@
     generated=true;
     downloadBtn.disabled=false;
     whatsappBtn.disabled=false;
-    statusEl.textContent='Diwali wish generated for '+name;
+    statusEl.textContent='Diwali wish generated for '+name+' in '+DESIGNS[currentDesign].label+' design';
   }
   form.addEventListener('submit',function(ev){
     ev.preventDefault();
@@ -504,14 +776,14 @@
       toast('✨ Your Diwali wish is ready, '+v.value+'!');
     });
   });
+  var liveUpdate=debounce(function(name){
+    ensureFonts().then(function(){render(name);currentName=name;});
+  },350);
   nameInput.addEventListener('input',function(){
     clearError();
     var v=validateName(nameInput.value);
     if(v.ok){liveUpdate(v.value);}
   });
-  var liveUpdate=debounce(function(name){
-    ensureFonts().then(function(){render(name);currentName=name;});
-  },350);
 
   downloadBtn.addEventListener('click',function(){
     if(!generated) return;
@@ -527,7 +799,7 @@
   });
 
   function waMessage(name){
-    return '🪔 शुभ दीपावली! शुभकामनाएँ — '+name+' ✨\n🌼 दीपावली की शुभकामनाएँ 🌼\n— Made with Diwali Wish Generator';
+    return '🪔 शुभ दीपावली! शुभकामनाएँ — '+name+' ✨\n दीपावली की शुभकामनाएँ 🌼\n— Made with Diwali Wish Generator';
   }
   whatsappBtn.addEventListener('click',function(){
     if(!generated) return;
@@ -536,7 +808,6 @@
     toast('💬 Opening WhatsApp with your wish…');
   });
 
-  /* Native image sharing (mobile) when supported */
   function initShare(){
     try{
       var dummy=new File(['x'],'x.png',{type:'image/png'});
@@ -547,7 +818,7 @@
           canvas.toBlob(function(blob){
             var file=new File([blob],safeFileName(currentName),{type:'image/png'});
             navigator.share({files:[file],title:'Diwali Wish',text:waMessage(currentName)})
-              .then(function(){toast(' Shared successfully!');})
+              .then(function(){toast('📤 Shared successfully!');})
               .catch(function(err){if(err&&err.name!=='AbortError'){toast('Sharing cancelled.');}});
           },'image/png');
         });
@@ -556,9 +827,17 @@
   }
 
   /* ---------- Boot ---------- */
-  render('Your Name');               /* instant placeholder preview */
-  ensureFonts().then(function(){     /* crisp re-render with webfonts */
+  buildPicker();
+  render('Your Name');
+  ensureFonts().then(function(){
     render(currentName||'Your Name');
+    /* redraw thumbnails with real webfonts */
+    var thumbs=designRow.querySelectorAll('.design-btn canvas');
+    for(var i=0;i<thumbs.length;i++){
+      var tctx=thumbs[i].getContext('2d');
+      tctx.setTransform(0.1,0,0,0.1,0,0);
+      paintTo(tctx,DESIGN_ORDER[i],'Abhinav');
+    }
   });
   initShare();
 })();
