@@ -1,0 +1,2020 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+
+/* ============================================================================
+ * PixelBoost — Private AI Photo Enhancement
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURE (mirrors the requested structure inside a single bundle):
+ *   lib/image-processing/enhance.ts   -> PROCESS_CORE (pixel pipeline)
+ *   lib/image-processing/presets.ts   -> PRESETS, DEFAULT_PARAMS
+ *   lib/image-processing/image-utils  -> decode / scale / analyze / export
+ *   workers/image-worker.ts           -> WORKER_SRC (Blob web worker)
+ *   components/*                      -> all React components below
+ *
+ * PRIVACY: There is ZERO network I/O for image data anywhere in this app.
+ * Photos are read with File -> createImageBitmap / URL.createObjectURL,
+ * processed on Canvas + a Web Worker, and exported via canvas.toBlob.
+ * ==========================================================================*/
+
+/* ======================= lib/image-processing: core ======================= */
+
+// Pure pixel pipeline (runs inside the Worker, or on the main thread as a
+// fallback). Kept as a source string so it can be injected into a Blob worker.
+const PROCESS_CORE = `(function () {
+  function boxBlurRGBA(data, w, h, r) {
+    var len = data.length;
+    var tmp = new Uint8ClampedArray(len);
+    var out = new Uint8ClampedArray(len);
+    var win = r * 2 + 1;
+    var x, y, c, row, sum, xi, xo;
+    for (y = 0; y < h; y++) {
+      row = y * w * 4;
+      for (c = 0; c < 3; c++) {
+        sum = 0;
+        for (x = -r; x <= r; x++) {
+          xi = x < 0 ? 0 : (x >= w ? w - 1 : x);
+          sum += data[row + xi * 4 + c];
+        }
+        for (x = 0; x < w; x++) {
+          tmp[row + x * 4 + c] = sum / win;
+          xo = x - r; xi = x + r + 1;
+          xo = xo < 0 ? 0 : xo;
+          xi = xi >= w ? w - 1 : xi;
+          sum += data[row + xi * 4 + c] - data[row + xo * 4 + c];
+        }
+      }
+      for (x = 0; x < w; x++) tmp[row + x * 4 + 3] = data[row + x * 4 + 3];
+    }
+    for (x = 0; x < w; x++) {
+      for (c = 0; c < 3; c++) {
+        sum = 0;
+        for (y = -r; y <= r; y++) {
+          xi = y < 0 ? 0 : (y >= h ? h - 1 : y);
+          sum += tmp[(xi * w + x) * 4 + c];
+        }
+        for (y = 0; y < h; y++) {
+          out[(y * w + x) * 4 + c] = sum / win;
+          yo = y - r; xi = y + r + 1;
+          yo = yo < 0 ? 0 : yo;
+          xi = xi >= h ? h - 1 : xi;
+          sum += tmp[(xi * w + x) * 4 + c] - tmp[(yo * w + x) * 4 + c];
+        }
+      }
+      for (y = 0; y < h; y++) out[(y * w + x) * 4 + 3] = tmp[(y * w + x) * 4 + 3];
+    }
+    return out;
+  }
+
+  function processImage(imageData, params, onProgress) {
+    var data = imageData.data;
+    var w = imageData.width, h = imageData.height;
+    var n = w * h, i, i4;
+    function report(p) { if (onProgress) onProgress(p); }
+
+    /* Stage 1 — tone: brightness, contrast, highlights, shadows, warmth, saturation */
+    report(8);
+    var lut = new Float32Array(256);
+    var b = params.brightness / 100;
+    var cf = 1 + (params.contrast / 100) * 0.65;
+    var sh = params.shadows / 100;
+    var hi = params.highlights / 100;
+    var v, t, sw;
+    for (v = 0; v < 256; v++) {
+      t = v / 255;
+      if (sh !== 0) {
+        sw = (1 - t) * (1 - t) * Math.min(1, t * 6);
+        t += sh * 0.45 * sw;
+      }
+      if (hi !== 0) {
+        t += hi * 0.3 * t * t * (1 - t * 0.55);
+      }
+      t += b * 0.3;
+      t = (t - 0.5) * cf + 0.5;
+      lut[v] = t < 0 ? 0 : (t > 1 ? 255 : t * 255);
+    }
+    var warm = params.warmth / 100;
+    var wr = 1 + warm * 0.10;
+    var wg = 1 - Math.abs(warm) * 0.025;
+    var wb = 1 - warm * 0.10;
+    var sat = 1 + params.saturation / 100;
+    var r, g, bl, lum;
+    for (i = 0; i < n; i++) {
+      i4 = i * 4;
+      r = lut[data[i4]] * wr;
+      g = lut[data[i4 + 1]] * wg;
+      bl = lut[data[i4 + 2]] * wb;
+      if (sat !== 1) {
+        lum = 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+        r = lum + (r - lum) * sat;
+        g = lum + (g - lum) * sat;
+        bl = lum + (bl - lum) * sat;
+      }
+      data[i4] = r; data[i4 + 1] = g; data[i4 + 2] = bl;
+    }
+    report(34);
+
+    /* Stage 2 — noise reduction (2-pass box blur blend) */
+    if (params.denoise > 0) {
+      var dr = params.denoise > 45 ? 2 : 1;
+      var da = (params.denoise / 100) * 0.8;
+      var db = boxBlurRGBA(data, w, h, dr);
+      db = boxBlurRGBA(db, w, h, dr);
+      for (i = 0; i < n; i++) {
+        i4 = i * 4;
+        data[i4] = data[i4] * (1 - da) + db[i4] * da;
+        data[i4 + 1] = data[i4 + 1] * (1 - da) + db[i4 + 1] * da;
+        data[i4 + 2] = data[i4 + 2] * (1 - da) + db[i4 + 2] * da;
+      }
+    }
+    report(56);
+
+    /* Stage 3 — clarity (local contrast via large-radius unsharp) */
+    if (params.clarity !== 0) {
+      var rc = Math.max(2, Math.round(Math.min(w, h) * 0.012));
+      var cb = boxBlurRGBA(data, w, h, rc);
+      cb = boxBlurRGBA(cb, w, h, rc);
+      var ca = (params.clarity / 100) * 0.7;
+      for (i = 0; i < n; i++) {
+        i4 = i * 4;
+        data[i4] = data[i4] + (data[i4] - cb[i4]) * ca;
+        data[i4 + 1] = data[i4 + 1] + (data[i4 + 1] - cb[i4 + 1]) * ca;
+        data[i4 + 2] = data[i4 + 2] + (data[i4 + 2] - cb[i4 + 2]) * ca;
+      }
+    }
+    report(80);
+
+    /* Stage 4 — sharpness (fine unsharp mask) */
+    if (params.sharpness !== 0) {
+      var sb = boxBlurRGBA(data, w, h, 1);
+      var sa = (params.sharpness / 100) * 0.9;
+      for (i = 0; i < n; i++) {
+        i4 = i * 4;
+        data[i4] = data[i4] + (data[i4] - sb[i4]) * sa;
+        data[i4 + 1] = data[i4 + 1] + (data[i4 + 1] - sb[i4 + 1]) * sa;
+        data[i4 + 2] = data[i4 + 2] + (data[i4 + 2] - sb[i4 + 2]) * sa;
+      }
+    }
+    report(100);
+    return imageData;
+  }
+  return processImage;
+})()`;
+
+// workers/image-worker.ts — instantiated from a Blob (no network, no server).
+const WORKER_SRC =
+  "var processImage = " + PROCESS_CORE + ";\n" +
+  "self.onmessage = function (e) {\n" +
+  "  var msg = e.data;\n" +
+  "  if (msg && msg.type === 'process') {\n" +
+  "    try {\n" +
+  "      var out = processImage(msg.imageData, msg.params, function (p) {\n" +
+  "        self.postMessage({ type: 'progress', id: msg.id, value: p });\n" +
+  "      });\n" +
+  "      self.postMessage({ type: 'done', id: msg.id, imageData: out }, [out.data.buffer]);\n" +
+  "    } catch (err) {\n" +
+  "      self.postMessage({ type: 'error', id: msg.id, message: String((err && err.message) || err) });\n" +
+  "    }\n" +
+  "  }\n" +
+  "};";
+
+function createProcessor() {
+  let worker = null;
+  let workerOk = true;
+  let fallbackFn = null;
+  let seq = 0;
+  const pending = new Map();
+
+  try {
+    const blob = new Blob([WORKER_SRC], { type: "text/javascript" });
+    const url = URL.createObjectURL(blob);
+    worker = new Worker(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    worker = null;
+    workerOk = false;
+  }
+
+  function getFallback() {
+    if (!fallbackFn) fallbackFn = new Function("return " + PROCESS_CORE)();
+    return fallbackFn;
+  }
+
+  function runFallback(id, imageData, params) {
+    const entry = pending.get(id);
+    setTimeout(() => {
+      try {
+        const out = getFallback()(imageData, params, (p) => {
+          const en = pending.get(id);
+          if (en && en.onProgress) en.onProgress(p);
+        });
+        pending.delete(id);
+        if (entry) entry.resolve(out);
+      } catch (err) {
+        pending.delete(id);
+        if (entry) entry.reject(err);
+      }
+    }, 40);
+  }
+
+  if (worker) {
+    worker.onmessage = (e) => {
+      const msg = e.data;
+      const entry = pending.get(msg.id);
+      if (!entry) return;
+      if (msg.type === "progress") {
+        if (entry.onProgress) entry.onProgress(msg.value);
+      } else if (msg.type === "done") {
+        pending.delete(msg.id);
+        entry.resolve(msg.imageData);
+      } else if (msg.type === "error") {
+        pending.delete(msg.id);
+        entry.reject(new Error(msg.message || "Processing failed"));
+      }
+    };
+    worker.onerror = () => {
+      workerOk = false;
+      pending.forEach((entry) => entry.reject(new Error("worker-unavailable")));
+      pending.clear();
+    };
+  }
+
+  return {
+    get usesWorker() { return workerOk && !!worker; },
+    process(imageData, params, onProgress) {
+      const id = ++seq;
+      return new Promise((resolve, reject) => {
+        pending.set(id, { resolve, reject, onProgress });
+        if (workerOk && worker) {
+          try {
+            worker.postMessage(
+              { type: "process", id, params, imageData },
+              [imageData.data.buffer]
+            );
+            return;
+          } catch (e) {
+            workerOk = false;
+          }
+        }
+        runFallback(id, imageData, params);
+      });
+    },
+    terminate() {
+      try { if (worker) worker.terminate(); } catch (e) { /* noop */ }
+      pending.clear();
+    },
+  };
+}
+
+/* ====================== lib/image-processing: presets ===================== */
+
+const DEFAULT_PARAMS = {
+  sharpness: 0, clarity: 0, contrast: 0, brightness: 0,
+  saturation: 0, highlights: 0, shadows: 0, denoise: 0, warmth: 0,
+};
+
+const SLIDER_DEFS = [
+  { key: "sharpness",  label: "Sharpness",       bipolar: false },
+  { key: "clarity",    label: "Clarity",         bipolar: false },
+  { key: "contrast",   label: "Contrast",        bipolar: true },
+  { key: "brightness", label: "Brightness",      bipolar: true },
+  { key: "saturation", label: "Saturation",      bipolar: true },
+  { key: "highlights", label: "Highlights",      bipolar: true },
+  { key: "shadows",    label: "Shadows",         bipolar: true },
+  { key: "denoise",    label: "Noise Reduction", bipolar: false },
+  { key: "warmth",     label: "Warmth",          bipolar: true },
+];
+
+const PRESETS = [
+  { id: "portrait", icon: "🧑", name: "Portrait", desc: "Natural skin, detail & light",
+    params: { sharpness: 20, clarity: 10, contrast: 8, brightness: 5, saturation: 8, highlights: -8, shadows: 12, denoise: 12, warmth: 6 } },
+  { id: "landscape", icon: "🌄", name: "Landscape", desc: "Clarity, contrast & color depth",
+    params: { sharpness: 35, clarity: 30, contrast: 18, brightness: 2, saturation: 20, highlights: -12, shadows: 8, denoise: 0, warmth: 4 } },
+  { id: "social", icon: "📱", name: "Social Media", desc: "Optimized for Instagram & sharing",
+    params: { sharpness: 30, clarity: 20, contrast: 15, brightness: 6, saturation: 22, highlights: -6, shadows: 10, denoise: 5, warmth: 8 } },
+  { id: "lowlight", icon: "🌙", name: "Low Light", desc: "Brightness, shadows & noise",
+    params: { sharpness: 15, clarity: 10, contrast: 12, brightness: 18, saturation: 10, highlights: -15, shadows: 25, denoise: 30, warmth: 10 } },
+  { id: "print", icon: "🖨️", name: "Print", desc: "Sharpness & clarity for printing",
+    params: { sharpness: 45, clarity: 30, contrast: 12, brightness: 3, saturation: 10, highlights: -5, shadows: 5, denoise: 8, warmth: 0 } },
+];
+
+const isDefaultParams = (p) => SLIDER_DEFS.every((s) => (p[s.key] || 0) === 0);
+const clampNum = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/* ===================== lib/image-processing: image utils =================== */
+
+const MAX_EXPORT_PIXELS = 24_000_000; // ~24MP safety ceiling for browser memory
+const PREVIEW_MAX_SIDE = 1400;
+const MAX_FILE_BYTES = 60 * 1024 * 1024;
+const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+async function decodeImageFile(file) {
+  if (typeof createImageBitmap === "function") {
+    try {
+      return { bitmap: await createImageBitmap(file), url: null };
+    } catch (e) { /* fall through to <img> decode */ }
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("decode-failed"));
+      el.src = url;
+    });
+    return { bitmap: img, url };
+  } catch (e) {
+    URL.revokeObjectURL(url);
+    throw new Error("decode-failed");
+  }
+}
+
+function makeCanvas(w, h) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  return c;
+}
+
+function drawScaled(source, sw, sh, maxSide, maxPixels) {
+  let w = sw, h = sh, scaled = false;
+  const sideScale = Math.min(1, maxSide / Math.max(sw, sh));
+  if (sideScale < 1) { w = Math.max(1, Math.round(sw * sideScale)); h = Math.max(1, Math.round(sh * sideScale)); scaled = true; }
+  if (maxPixels && w * h > maxPixels) {
+    const f = Math.sqrt(maxPixels / (w * h));
+    w = Math.max(1, Math.round(w * f)); h = Math.max(1, Math.round(h * f)); scaled = true;
+  }
+  const canvas = makeCanvas(w, h);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(source, 0, 0, w, h);
+  return { canvas, ctx, scaled };
+}
+
+// Local histogram analysis used by "Auto Enhance" — 100% on-device.
+function analyzeForAutoEnhance(canvas) {
+  const side = 200;
+  const f = Math.min(1, side / Math.max(canvas.width, canvas.height));
+  const c = makeCanvas(Math.max(1, Math.round(canvas.width * f)), Math.max(1, Math.round(canvas.height * f)));
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(canvas, 0, 0, c.width, c.height);
+  const d = ctx.getImageData(0, 0, c.width, c.height).data;
+  let sum = 0, sumSq = 0, dark = 0, bright = 0, satSum = 0, rSum = 0, bSum = 0;
+  const n = c.width * c.height;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    sum += lum; sumSq += lum * lum;
+    if (lum < 0.25) dark++;
+    if (lum > 0.85) bright++;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    satSum += mx === 0 ? 0 : (mx - mn) / mx;
+    rSum += r; bSum += b;
+  }
+  const mean = sum / n;
+  const std = Math.sqrt(Math.max(0, sumSq / n - mean * mean));
+  const darkFrac = dark / n, brightFrac = bright / n, meanSat = satSum / n;
+  const warmthHint = clampNum(Math.round(((rSum - bSum) / n) * 40), -8, 10);
+  return {
+    brightness: clampNum(Math.round((0.44 - mean) * 90), -18, 24),
+    contrast: clampNum(Math.round((0.235 - std) * 260), 8, 30),
+    shadows: darkFrac > 0.22 ? clampNum(Math.round(darkFrac * 55), 8, 25) : 6,
+    highlights: brightFrac > 0.12 ? -clampNum(Math.round(brightFrac * 90), 8, 25) : -6,
+    saturation: clampNum(Math.round((0.38 - meanSat) * 80), 8, 22),
+    warmth: warmthHint > 0 ? Math.min(warmthHint, 8) : warmthHint,
+    sharpness: 28,
+    clarity: 18,
+    denoise: mean < 0.3 ? 18 : 4,
+  };
+}
+
+/* ============================== global styles ============================= */
+
+const GLOBAL_CSS = `
+@import url('https://cdn.jsdelivr.net/fontsource/css/inter@latest/index.css');
+@import url('https://cdn.jsdelivr.net/fontsource/css/sora@latest/index.css');
+
+:root {
+  --bg: #06070b;
+  --bg-2: #0b0d14;
+  --panel: #0e111a;
+  --card: #12151f;
+  --card-2: #171b28;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --text: #f4f6fb;
+  --muted: #9aa3b8;
+  --faint: #6b7386;
+  --accent: #6c7bff;
+  --accent-2: #22d3ee;
+  --accent-3: #a78bfa;
+  --grad: linear-gradient(135deg, #6c7bff 0%, #a78bfa 55%, #22d3ee 110%);
+  --danger: #f87171;
+  --success: #34d399;
+  --radius: 16px;
+  --shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); }
+.app-root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+.display-font { font-family: 'Sora', 'Inter', sans-serif; }
+
+::selection { background: rgba(108,123,255,0.35); }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; cursor: pointer; font-family: inherit; font-weight: 600;
+  border-radius: 12px; transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s, opacity .2s;
+  white-space: nowrap; user-select: none;
+}
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-primary {
+  background: var(--grad); color: #fff; padding: 14px 28px; font-size: 15px;
+  box-shadow: 0 8px 30px rgba(108,123,255,.35);
+}
+.btn-primary:hover:not(:disabled) { box-shadow: 0 12px 40px rgba(108,123,255,.5); transform: translateY(-1px); }
+.btn-ghost {
+  background: rgba(255,255,255,0.04); color: var(--text); padding: 13px 24px; font-size: 15px;
+  border: 1px solid var(--border-strong); backdrop-filter: blur(8px);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.28); }
+.btn-sm { padding: 9px 16px; font-size: 13px; border-radius: 10px; }
+.btn-dark { background: var(--card-2); color: var(--text); border: 1px solid var(--border); padding: 10px 18px; font-size: 13.5px; }
+.btn-dark:hover:not(:disabled) { background: #1e2333; border-color: var(--border-strong); }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--text); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 15px;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--border-strong); }
+.icon-btn:active { transform: scale(.92); }
+.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ---------- header ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 90;
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  background: rgba(6,7,11,0.72);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1240px; margin: 0 auto; padding: 0 24px; height: 66px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.logo { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+.logo-mark {
+  width: 32px; height: 32px; border-radius: 9px; background: var(--grad);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  box-shadow: 0 4px 18px rgba(108,123,255,.45);
+}
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-link {
+  background: none; border: none; color: var(--muted); font-family: inherit; font-size: 14px; font-weight: 500;
+  padding: 8px 14px; border-radius: 9px; cursor: pointer; transition: color .15s, background .15s;
+}
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+.privacy-pill {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 8px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  color: #a7f3d0; background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.25);
+  transition: background .15s, transform .1s; font-family: inherit; white-space: nowrap;
+}
+.privacy-pill:hover { background: rgba(52,211,153,0.15); }
+.privacy-pill:active { transform: scale(.97); }
+.pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(52,211,153,.5);} 50% { box-shadow: 0 0 0 6px rgba(52,211,153,0);} }
+
+/* ---------- hero ---------- */
+.hero { position: relative; padding: 96px 24px 80px; overflow: hidden; }
+.hero-bg { position: absolute; inset: 0; pointer-events: none; }
+.hero-orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .5; }
+.orb-1 { width: 520px; height: 520px; top: -180px; left: -120px; background: radial-gradient(circle, rgba(108,123,255,.5), transparent 70%); }
+.orb-2 { width: 460px; height: 460px; top: -60px; right: -140px; background: radial-gradient(circle, rgba(34,211,238,.28), transparent 70%); }
+.orb-3 { width: 380px; height: 380px; bottom: -160px; left: 40%; background: radial-gradient(circle, rgba(167,139,250,.25), transparent 70%); }
+.hero-grid-lines {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+}
+.hero-inner { position: relative; max-width: 1100px; margin: 0 auto; text-align: center; }
+.hero-badge-row { display: flex; justify-content: center; margin-bottom: 28px; }
+.hero h1 {
+  font-family: 'Sora','Inter',sans-serif; font-size: clamp(38px, 6vw, 68px); line-height: 1.06;
+  letter-spacing: -0.03em; font-weight: 700; margin-bottom: 22px;
+}
+.grad-text {
+  background: linear-gradient(92deg, #8b97ff 0%, #c4b5fd 40%, #67e8f9 90%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-sub { color: var(--muted); font-size: clamp(15px, 2vw, 18.5px); line-height: 1.65; max-width: 640px; margin: 0 auto 36px; }
+.hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; }
+.hero-note { color: var(--faint); font-size: 13px; display: flex; align-items: center; gap: 8px; justify-content: center; }
+
+.badge-lock {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; color: #d5dbff;
+  background: rgba(108,123,255,0.1); border: 1px solid rgba(108,123,255,0.3);
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- before/after demo (hero) ---------- */
+.demo-wrap { position: relative; max-width: 920px; margin: 64px auto 0; }
+.demo-frame {
+  position: relative; border-radius: 22px; overflow: hidden; cursor: ew-resize;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04), 0 0 90px rgba(108,123,255,0.14);
+  touch-action: none; user-select: none; aspect-ratio: 16/9; background: #0a0c12;
+}
+.demo-layer { position: absolute; inset: 0; }
+.demo-layer svg { width: 100%; height: 100%; display: block; }
+.demo-before svg { filter: saturate(.5) contrast(.8) brightness(.86) hue-rotate(-4deg); }
+.demo-after svg { filter: saturate(1.22) contrast(1.1) brightness(1.04); }
+.demo-divider {
+  position: absolute; top: 0; bottom: 0; width: 3px; background: rgba(255,255,255,0.9);
+  box-shadow: 0 0 18px rgba(0,0,0,.6); transform: translateX(-1.5px); z-index: 5; pointer-events: none;
+}
+.demo-knob {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 46px; height: 46px; border-radius: 50%; background: rgba(12,14,22,0.85);
+  border: 2px solid rgba(255,255,255,0.9); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.5);
+}
+.demo-label {
+  position: absolute; top: 16px; z-index: 6; padding: 6px 14px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  background: rgba(8,10,16,0.72); backdrop-filter: blur(8px); border: 1px solid var(--border-strong); color: #dfe4f0;
+}
+.demo-label.left { left: 16px; }
+.demo-label.right { right: 16px; background: rgba(108,123,255,0.28); border-color: rgba(140,155,255,0.5); }
+.demo-caption { text-align: center; color: var(--faint); font-size: 13px; margin-top: 18px; }
+
+/* ---------- sections ---------- */
+.section { padding: 96px 24px; position: relative; }
+.section-inner { max-width: 1140px; margin: 0 auto; }
+.section-kicker {
+  display: inline-flex; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: #b6c0ff;
+  background: rgba(108,123,255,0.1); border: 1px solid rgba(108,123,255,0.25); margin-bottom: 18px;
+}
+.section-title { font-family: 'Sora','Inter',sans-serif; font-size: clamp(28px, 4vw, 42px); letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 14px; }
+.section-sub { color: var(--muted); font-size: 16.5px; line-height: 1.65; max-width: 620px; }
+.center { text-align: center; }
+.center .section-sub { margin: 0 auto; }
+
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 56px; }
+.step-card {
+  background: linear-gradient(180deg, var(--card) 0%, var(--panel) 100%);
+  border: 1px solid var(--border); border-radius: 20px; padding: 34px 28px; position: relative;
+  transition: transform .25s ease, border-color .25s;
+}
+.step-card:hover { transform: translateY(-5px); border-color: rgba(108,123,255,0.4); }
+.step-num {
+  width: 42px; height: 42px; border-radius: 12px; background: var(--grad); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px;
+  margin-bottom: 20px; box-shadow: 0 8px 24px rgba(108,123,255,.35);
+}
+.step-card h3 { font-size: 18.5px; margin-bottom: 10px; letter-spacing: -0.01em; }
+.step-card p { color: var(--muted); font-size: 14.5px; line-height: 1.65; }
+.step-icon { font-size: 30px; margin-bottom: 16px; display: block; }
+
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 56px; }
+.feature-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px;
+  transition: transform .25s ease, border-color .25s, background .25s;
+}
+.feature-card:hover { transform: translateY(-4px); border-color: var(--border-strong); background: var(--card-2); }
+.feature-icon {
+  width: 46px; height: 46px; border-radius: 13px; font-size: 21px; margin-bottom: 18px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(108,123,255,0.12); border: 1px solid rgba(108,123,255,0.25);
+}
+.feature-card h3 { font-size: 16.5px; margin-bottom: 8px; }
+.feature-card p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+.privacy-hero-band {
+  border-radius: 28px; padding: 64px 40px; position: relative; overflow: hidden;
+  background: linear-gradient(160deg, rgba(108,123,255,0.14), rgba(34,211,238,0.07) 60%, transparent), var(--panel);
+  border: 1px solid rgba(108,123,255,0.22);
+}
+.privacy-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 44px; }
+.privacy-card {
+  background: rgba(255,255,255,0.035); border: 1px solid var(--border); border-radius: 16px; padding: 24px 20px;
+  transition: background .2s, transform .2s;
+}
+.privacy-card:hover { background: rgba(255,255,255,0.07); transform: translateY(-3px); }
+.privacy-card .p-icon { font-size: 24px; margin-bottom: 12px; display: block; }
+.privacy-card h4 { font-size: 15px; margin-bottom: 6px; }
+.privacy-card p { color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+
+.usecase-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 56px; }
+.usecase-card {
+  border-radius: 18px; overflow: hidden; border: 1px solid var(--border); background: var(--card);
+  transition: transform .25s, border-color .25s; cursor: default;
+}
+.usecase-card:hover { transform: translateY(-5px) scale(1.01); border-color: rgba(108,123,255,0.45); }
+.usecase-thumb { height: 96px; display: flex; align-items: center; justify-content: center; font-size: 38px; position: relative; overflow: hidden; }
+.usecase-thumb::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(10,12,18,0.85)); }
+.usecase-body { padding: 16px 18px 20px; }
+.usecase-body h4 { font-size: 14.5px; margin-bottom: 4px; }
+.usecase-body p { color: var(--faint); font-size: 12.5px; line-height: 1.5; }
+
+.final-cta { text-align: center; padding: 110px 24px 120px; position: relative; }
+.final-cta h2 { font-family: 'Sora','Inter',sans-serif; font-size: clamp(30px, 4.5vw, 48px); letter-spacing: -0.02em; margin-bottom: 16px; }
+.final-cta p { color: var(--muted); font-size: 17px; margin-bottom: 34px; }
+
+.site-footer { border-top: 1px solid var(--border); padding: 36px 24px; }
+.footer-inner { max-width: 1140px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--faint); font-size: 13px; }
+.footer-links { display: flex; gap: 18px; }
+.footer-links button { background: none; border: none; color: var(--faint); font-size: 13px; cursor: pointer; font-family: inherit; }
+.footer-links button:hover { color: var(--text); }
+
+/* ---------- reveal animation ---------- */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ---------- editor layout ---------- */
+.editor-root { min-height: 100vh; display: flex; flex-direction: column; background:
+  radial-gradient(1000px 500px at 80% -10%, rgba(108,123,255,0.08), transparent 60%), var(--bg); }
+.editor-body { flex: 1; display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 20px;
+  max-width: 1560px; width: 100%; margin: 0 auto; padding: 20px 24px 120px; }
+
+.viewer-shell {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+  display: flex; flex-direction: column; overflow: hidden; min-height: 560px; position: relative;
+}
+.viewer-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  background: rgba(255,255,255,0.015);
+}
+.toolbar-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mode-toggle { display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 11px; padding: 3px; }
+.mode-btn {
+  border: none; background: transparent; color: var(--muted); font-family: inherit; font-size: 12.5px; font-weight: 600;
+  padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: all .18s;
+}
+.mode-btn.active { background: var(--grad); color: #fff; box-shadow: 0 4px 14px rgba(108,123,255,.4); }
+.mode-btn:not(.active):hover { color: var(--text); }
+.toolbar-chip { font-size: 12px; color: var(--muted); padding: 7px 12px; border-radius: 9px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); font-weight: 600; }
+
+.viewer-stage {
+  flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
+  overflow: hidden; padding: 26px; background:
+    radial-gradient(600px 300px at 50% 0%, rgba(108,123,255,0.05), transparent 70%),
+    repeating-conic-gradient(rgba(255,255,255,0.028) 0% 25%, transparent 0% 50%) 0 0 / 22px 22px;
+  min-height: 420px; touch-action: none;
+}
+.viewer-stage:fullscreen { background: #05060a; padding: 0; }
+.cv-scaler { transition: transform .18s ease; transform-origin: center center; will-change: transform; }
+.cv-frame { position: relative; display: inline-block; line-height: 0; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55); cursor: ew-resize; touch-action: none; user-select: none; }
+.cv-frame canvas { display: block; max-width: 100%; max-height: calc(100vh - 330px); width: auto; height: auto; }
+.cv-frame .cv-enh { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cv-divider { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; transform: translateX(-1.5px);
+  box-shadow: 0 0 16px rgba(0,0,0,.7); z-index: 4; pointer-events: none; }
+.cv-knob {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 44px; height: 44px; border-radius: 50%; background: rgba(10,12,20,0.85);
+  border: 2px solid #fff; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; backdrop-filter: blur(6px); box-shadow: 0 8px 26px rgba(0,0,0,.55);
+  transition: transform .12s;
+}
+.cv-frame:active .cv-knob { transform: translate(-50%,-50%) scale(1.08); }
+.cv-label { position: absolute; top: 14px; z-index: 5; padding: 5px 12px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .12em; pointer-events: none;
+  background: rgba(6,8,14,0.75); border: 1px solid var(--border-strong); color: #dfe4f0; backdrop-filter: blur(6px); }
+.cv-label.left { left: 14px; }
+.cv-label.right { right: 14px; background: rgba(108,123,255,0.35); border-color: rgba(140,155,255,0.6); }
+
+.preview-progress { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.06); z-index: 10; }
+.preview-progress-bar { height: 100%; background: var(--grad); transition: width .15s ease; border-radius: 0 3px 3px 0; }
+.processing-chip {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 8;
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px; border-radius: 999px;
+  background: rgba(10,12,20,0.85); border: 1px solid var(--border-strong); backdrop-filter: blur(10px);
+  font-size: 13px; font-weight: 600; color: #dbe1f0; box-shadow: 0 10px 34px rgba(0,0,0,.5);
+}
+.spinner { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.18); border-top-color: var(--accent-2); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- upload zone / empty state ---------- */
+.upload-shell { flex: 1; display: flex; align-items: center; justify-content: center; padding: 26px; }
+.upload-zone {
+  width: 100%; max-width: 640px; border-radius: 24px; padding: 72px 40px; text-align: center;
+  border: 2px dashed rgba(255,255,255,0.16); background: rgba(255,255,255,0.02);
+  cursor: pointer; transition: all .25s ease; position: relative;
+}
+.upload-zone:hover { border-color: rgba(108,123,255,0.55); background: rgba(108,123,255,0.05); }
+.upload-zone.dragover {
+  border-color: var(--accent-2); background: rgba(34,211,238,0.08); transform: scale(1.015);
+  box-shadow: 0 0 0 6px rgba(34,211,238,0.08), 0 30px 80px rgba(0,0,0,.4);
+}
+.upload-icon { font-size: 64px; margin-bottom: 20px; display: block; animation: floaty 3.5s ease-in-out infinite; }
+@keyframes floaty { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-8px);} }
+.upload-zone h3 { font-family: 'Sora','Inter',sans-serif; font-size: 24px; margin-bottom: 8px; letter-spacing: -0.01em; }
+.upload-or { color: var(--faint); font-size: 14px; margin: 10px 0 14px; }
+.upload-hint { color: var(--faint); font-size: 12.5px; margin-top: 22px; display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.upload-hint .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--faint); }
+.paste-hint { margin-top: 14px; font-size: 12px; color: var(--faint); }
+.kbd { display: inline-block; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.07); border: 1px solid var(--border-strong); font-size: 11px; font-family: ui-monospace, monospace; }
+
+/* ---------- control panel ---------- */
+.control-panel { display: flex; flex-direction: column; gap: 16px; align-self: start; position: sticky; top: 86px;
+  max-height: calc(100vh - 106px); overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+.control-panel::-webkit-scrollbar { width: 6px; }
+.control-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 3px; }
+.panel-card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 20px; }
+.panel-title { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between; }
+
+.auto-btn {
+  width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer; position: relative; overflow: hidden;
+  background: var(--grad); color: #fff; font-family: 'Sora','Inter',sans-serif; font-weight: 700; font-size: 15.5px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 10px 34px rgba(108,123,255,.4); transition: transform .15s, box-shadow .2s;
+}
+.auto-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 44px rgba(108,123,255,.55); }
+.auto-btn:active:not(:disabled) { transform: scale(.98); }
+.auto-btn:disabled { opacity: .55; cursor: wait; }
+.auto-btn::after {
+  content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform: skewX(-20deg); animation: shine 3.2s infinite;
+}
+@keyframes shine { 0% { left: -80%; } 55%,100% { left: 130%; } }
+
+.presets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.preset-card {
+  text-align: left; padding: 14px; border-radius: 14px; cursor: pointer; font-family: inherit;
+  background: var(--card); border: 1px solid var(--border); color: var(--text);
+  transition: all .18s ease; position: relative;
+}
+.preset-card:hover { background: var(--card-2); border-color: rgba(108,123,255,0.45); transform: translateY(-2px); }
+.preset-card.active { border-color: var(--accent); background: rgba(108,123,255,0.1); box-shadow: 0 0 0 1px var(--accent), 0 8px 24px rgba(108,123,255,0.2); }
+.preset-card .p-emoji { font-size: 20px; display: block; margin-bottom: 8px; }
+.preset-card .p-name { font-size: 13.5px; font-weight: 700; display: block; margin-bottom: 3px; }
+.preset-card .p-desc { font-size: 11.5px; color: var(--muted); line-height: 1.45; display: block; }
+.preset-card.active::after { content: '✓'; position: absolute; top: 10px; right: 12px; font-size: 12px; color: var(--accent-2); font-weight: 700; }
+
+.slider-row { margin-bottom: 18px; }
+.slider-row:last-child { margin-bottom: 4px; }
+.slider-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
+.slider-label { font-size: 13px; font-weight: 600; color: #cfd5e4; }
+.slider-value { font-size: 12px; font-weight: 700; color: var(--accent-2); font-variant-numeric: tabular-nums;
+  min-width: 42px; text-align: right; transition: color .15s; }
+.slider-value.zero { color: var(--faint); }
+input[type="range"].pb-range {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 999px;
+  outline: none; cursor: pointer; background: var(--track, rgba(255,255,255,0.1));
+}
+input[type="range"].pb-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--accent); box-shadow: 0 2px 10px rgba(0,0,0,.5);
+  transition: transform .12s ease, box-shadow .15s;
+}
+input[type="range"].pb-range::-webkit-slider-thumb:hover { transform: scale(1.18); box-shadow: 0 0 0 7px rgba(108,123,255,0.15), 0 2px 10px rgba(0,0,0,.5); }
+input[type="range"].pb-range::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0,0,0,.5);
+}
+.panel-actions { display: flex; gap: 8px; }
+.panel-actions .btn { flex: 1; }
+
+/* ---------- download panel ---------- */
+.format-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.format-btn {
+  flex: 1; padding: 10px 6px; border-radius: 11px; cursor: pointer; font-family: inherit;
+  background: var(--card); border: 1px solid var(--border); color: var(--muted);
+  font-size: 12.5px; font-weight: 700; transition: all .16s;
+}
+.format-btn.active { background: rgba(108,123,255,0.14); border-color: var(--accent); color: #fff; }
+.format-btn:hover:not(.active) { border-color: var(--border-strong); color: var(--text); }
+.dims-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px;
+  background: rgba(255,255,255,0.035); border: 1px solid var(--border); border-radius: 11px; margin: 14px 0;
+  font-size: 13px; color: var(--muted); }
+.dims-row strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.download-btn {
+  width: 100%; padding: 15px; border-radius: 13px; border: none; cursor: pointer; font-family: inherit;
+  background: #fff; color: #0a0c12; font-weight: 700; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: transform .15s, box-shadow .2s; box-shadow: 0 10px 30px rgba(255,255,255,0.12);
+}
+.download-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255,255,255,0.2); }
+.download-btn:active:not(:disabled) { transform: scale(.98); }
+.download-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.file-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+  background: rgba(255,255,255,0.035); border: 1px solid var(--border); margin-bottom: 16px; min-width: 0; }
+.file-chip .f-icon { font-size: 18px; }
+.file-chip .f-meta { min-width: 0; flex: 1; }
+.file-chip .f-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-chip .f-size { font-size: 11px; color: var(--faint); }
+
+.shortcuts-note { font-size: 11.5px; color: var(--faint); line-height: 1.8; }
+
+/* ---------- mobile sticky action bar ---------- */
+.mobile-action-bar { display: none; }
+
+/* ---------- busy overlay ---------- */
+.busy-overlay {
+  position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  background: rgba(6,7,12,0.82); backdrop-filter: blur(10px); border-radius: 20px; text-align: center; padding: 24px;
+}
+.busy-overlay .big-spinner { width: 52px; height: 52px; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.12); border-top-color: var(--accent-2); border-right-color: var(--accent);
+  animation: spin 0.9s linear infinite; }
+.busy-label { font-size: 16px; font-weight: 700; font-family: 'Sora','Inter',sans-serif; }
+.busy-progress { width: min(320px, 70%); height: 6px; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.busy-progress-bar { height: 100%; background: var(--grad); border-radius: 999px; transition: width .2s ease; }
+.busy-sub { font-size: 12.5px; color: var(--muted); }
+
+/* ---------- toasts ---------- */
+.toast-stack { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 48px)); }
+.toast {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; border-radius: 14px;
+  background: rgba(18,21,31,0.92); backdrop-filter: blur(14px); border: 1px solid var(--border-strong);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55); font-size: 13.5px; line-height: 1.5; color: #e6eaf4;
+  animation: toastIn .3s cubic-bezier(.2,.9,.3,1.2);
+}
+.toast.leaving { animation: toastOut .25s ease forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(14px) scale(.96);} to { opacity: 1; transform: none;} }
+@keyframes toastOut { to { opacity: 0; transform: translateY(8px) scale(.97);} }
+.toast .t-icon { font-size: 16px; line-height: 1.3; }
+.toast.success { border-color: rgba(52,211,153,0.4); }
+.toast.error { border-color: rgba(248,113,113,0.45); }
+
+/* ---------- privacy modal ---------- */
+.modal-backdrop { position: fixed; inset: 0; z-index: 300; background: rgba(4,5,9,0.7); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; } }
+.modal-card {
+  width: min(460px, 100%); background: linear-gradient(180deg, var(--card-2), var(--panel));
+  border: 1px solid var(--border-strong); border-radius: 22px; padding: 32px;
+  box-shadow: 0 40px 120px rgba(0,0,0,.7); animation: modalIn .28s cubic-bezier(.2,.9,.3,1.15);
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(18px) scale(.96);} }
+.modal-card h3 { font-family: 'Sora','Inter',sans-serif; font-size: 20px; margin: 14px 0 10px; letter-spacing: -0.01em; }
+.modal-card p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.modal-lock { width: 54px; height: 54px; border-radius: 16px; background: rgba(52,211,153,0.12);
+  border: 1px solid rgba(52,211,153,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.modal-list { margin: 18px 0; display: flex; flex-direction: column; gap: 12px; }
+.modal-list .m-item { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: #d7dce9; }
+.m-check { color: var(--success); font-weight: 700; }
+.modal-close { width: 100%; margin-top: 8px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1080px) {
+  .editor-body { grid-template-columns: 1fr; padding-bottom: 140px; }
+  .control-panel { position: static; max-height: none; overflow: visible; }
+  .features-grid, .steps-grid { grid-template-columns: 1fr 1fr; }
+  .privacy-grid, .usecase-grid { grid-template-columns: 1fr 1fr; }
+  .nav-links { display: none; }
+}
+@media (max-width: 640px) {
+  .hero { padding: 64px 18px 56px; }
+  .section { padding: 64px 18px; }
+  .features-grid, .steps-grid, .privacy-grid, .usecase-grid { grid-template-columns: 1fr; }
+  .privacy-hero-band { padding: 44px 22px; }
+  .editor-body { padding: 14px 14px 150px; }
+  .cv-frame canvas { max-height: 44vh; }
+  .viewer-stage { padding: 14px; min-height: 320px; }
+  .viewer-shell { min-height: 420px; }
+  .mobile-action-bar {
+    display: flex; gap: 10px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); background: rgba(8,10,16,0.9);
+    backdrop-filter: blur(16px); border-top: 1px solid var(--border);
+  }
+  .mobile-action-bar .btn { flex: 1; }
+  .toast-stack { bottom: 84px; right: 14px; left: 14px; max-width: none; }
+  .header-inner { padding: 0 14px; }
+}
+`;
+
+/* ============================ shared UI pieces ============================ */
+
+function Logo({ onClick }) {
+  return (
+    <div className="logo display-font" onClick={onClick} role="button" tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}>
+      <span className="logo-mark">◈</span>
+      <span>Pixel<span style={{ background: "var(--grad)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Boost</span></span>
+    </div>
+  );
+}
+
+function PrivacyPill({ onClick, label }) {
+  return (
+    <button className="privacy-pill" onClick={onClick} title="How your privacy is protected">
+      <span className="pulse-dot" /> 🔒 {label || "Processed locally"}
+    </button>
+  );
+}
+
+function PrivacyModal({ onClose }) {
+  useEffect(() => {
+    const h = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose]);
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-lock">🔒</div>
+        <h3>Your image is processed directly inside your browser.</h3>
+        <p>PixelBoost never sees your photos — literally. All enhancement runs on your device's CPU/GPU via Canvas and Web Workers.</p>
+        <div className="modal-list">
+          <div className="m-item"><span className="m-check">✓</span> We don't upload your photo.</div>
+          <div className="m-item"><span className="m-check">✓</span> We don't store your photo.</div>
+          <div className="m-item"><span className="m-check">✓</span> We don't send your photo to an AI server.</div>
+          <div className="m-item"><span className="m-check">✓</span> No account, no tracking of image data.</div>
+        </div>
+        <p style={{ fontSize: 13, color: "var(--faint)" }}>Your image remains on your device. Close this tab and it's gone.</p>
+        <button className="btn btn-dark modal-close" onClick={onClose} style={{ padding: "13px", fontSize: 14 }}>Got it</button>
+      </div>
+    </div>
+  );
+}
+
+function useToasts() {
+  const [toasts, setToasts] = useState([]);
+  const idRef = useRef(0);
+  const push = useCallback((type, msg) => {
+    const id = ++idRef.current;
+    setToasts((t) => [...t, { id, type, msg, leaving: false }]);
+    setTimeout(() => setToasts((t) => t.map((x) => x.id === id ? { ...x, leaving: true } : x)), 3800);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4100);
+  }, []);
+  const node = (
+    <div className="toast-stack">
+      {toasts.map((t) => (
+        <div key={t.id} className={`toast ${t.type} ${t.leaving ? "leaving" : ""}`}>
+          <span className="t-icon">{t.type === "success" ? "✅" : t.type === "error" ? "⚠️" : "ℹ️"}</span>
+          <span>{t.msg}</span>
+        </div>
+      ))}
+    </div>
+  );
+  return [push, node];
+}
+
+/* Reusable hook: animate a section into view */
+function useReveal() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("visible"); obs.unobserve(en.target); } }),
+      { threshold: 0.12 }
+    );
+    el.querySelectorAll(".reveal").forEach((n) => obs.observe(n));
+    return () => obs.disconnect();
+  }, []);
+  return ref;
+}
+
+/* ======================= hero before/after demo scene ======================
+ * A vector "photo" scene so the demo needs zero external/network resources.
+ * The BEFORE side is CSS-filtered to look flat & dull; AFTER looks enhanced. */
+function DemoScene() {
+  return (
+    <svg viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1b2a5e" />
+          <stop offset="45%" stopColor="#e0654a" />
+          <stop offset="75%" stopColor="#f7b25e" />
+          <stop offset="100%" stopColor="#ffd98e" />
+        </linearGradient>
+        <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#f2a65e" />
+          <stop offset="30%" stopColor="#3f6d8e" />
+          <stop offset="100%" stopColor="#12283e" />
+        </linearGradient>
+        <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff3c4" stopOpacity="1" />
+          <stop offset="40%" stopColor="#ffd27a" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#ffb35c" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="mtnFar" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#5d5a86" />
+          <stop offset="100%" stopColor="#8a6a80" />
+        </linearGradient>
+        <linearGradient id="mtnMid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3c3a63" />
+          <stop offset="100%" stopColor="#57436a" />
+        </linearGradient>
+        <linearGradient id="mtnNear" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#232142" />
+          <stop offset="100%" stopColor="#332a4d" />
+        </linearGradient>
+      </defs>
+      <rect width="960" height="540" fill="url(#sky)" />
+      <circle cx="640" cy="290" r="150" fill="url(#sunGlow)" />
+      <circle cx="640" cy="290" r="34" fill="#fff6d8" />
+      {/* clouds */}
+      <ellipse cx="250" cy="120" rx="150" ry="16" fill="#ffffff" opacity="0.14" />
+      <ellipse cx="620" cy="88" rx="200" ry="13" fill="#ffd9a8" opacity="0.2" />
+      <ellipse cx="820" cy="160" rx="130" ry="12" fill="#ffffff" opacity="0.12" />
+      <ellipse cx="430" cy="185" rx="110" ry="9" fill="#ffce9a" opacity="0.22" />
+      {/* far mountains */}
+      <path d="M0 330 L120 210 L200 280 L310 170 L420 300 L520 220 L640 310 L760 200 L880 290 L960 240 L960 360 L0 360 Z" fill="url(#mtnFar)" />
+      {/* snow caps */}
+      <path d="M310 170 L345 212 L325 205 L305 220 L285 205 L275 212 Z" fill="#e9e4f5" opacity="0.9" />
+      <path d="M760 200 L792 240 L772 232 L754 246 L736 232 L728 240 Z" fill="#e9e4f5" opacity="0.85" />
+      <path d="M120 210 L148 244 L130 238 L114 250 L98 238 L92 244 Z" fill="#e9e4f5" opacity="0.8" />
+      {/* mid mountains */}
+      <path d="M0 360 L90 290 L190 350 L300 260 L430 360 L560 300 L700 370 L830 300 L960 360 L960 380 L0 380 Z" fill="url(#mtnMid)" />
+      {/* near ridge */}
+      <path d="M0 380 L140 330 L280 380 L450 320 L620 385 L800 340 L960 385 L960 395 L0 395 Z" fill="url(#mtnNear)" />
+      {/* lake */}
+      <rect y="392" width="960" height="148" fill="url(#lake)" />
+      {/* reflections */}
+      <path d="M0 395 L140 440 L280 395 L450 452 L620 392 L800 435 L960 392 L960 405 L0 405 Z" fill="#1c1a38" opacity="0.5" />
+      <rect x="600" y="398" width="80" height="4" rx="2" fill="#ffe9b0" opacity="0.75" />
+      <rect x="580" y="412" width="120" height="4" rx="2" fill="#ffd98e" opacity="0.6" />
+      <rect x="608" y="426" width="64" height="4" rx="2" fill="#ffcf7d" opacity="0.5" />
+      <rect x="565" y="442" width="150" height="3.5" rx="2" fill="#f7b25e" opacity="0.4" />
+      <rect x="596" y="458" width="88" height="3.5" rx="2" fill="#f7b25e" opacity="0.32" />
+      <rect x="560" y="476" width="160" height="3" rx="1.5" fill="#e0654a" opacity="0.25" />
+      {/* water shimmer lines */}
+      <rect x="80" y="430" width="180" height="2.5" rx="1.2" fill="#9fc4dd" opacity="0.18" />
+      <rect x="700" y="466" width="200" height="2.5" rx="1.2" fill="#9fc4dd" opacity="0.15" />
+      <rect x="150" y="490" width="260" height="2.5" rx="1.2" fill="#9fc4dd" opacity="0.12" />
+      {/* foreground trees */}
+      <path d="M40 540 L40 470 L28 470 L52 420 L44 420 L64 380 L84 420 L76 420 L100 470 L88 470 L88 540 Z" fill="#0e0d20" />
+      <path d="M880 540 L880 480 L870 480 L890 438 L884 438 L900 404 L916 438 L910 438 L930 480 L920 480 L920 540 Z" fill="#0e0d20" />
+      {/* birds */}
+      <path d="M300 140 q8 -8 16 0 q8 -8 16 0" stroke="#2c2a4a" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.7" />
+      <path d="M356 118 q6 -6 12 0 q6 -6 12 0" stroke="#2c2a4a" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.6" />
+    </svg>
+  );
+}
+
+function BeforeAfterDemo() {
+  const frameRef = useRef(null);
+  const [pos, setPos] = useState(52);
+  const draggingRef = useRef(false);
+
+  const updateFromClientX = useCallback((clientX) => {
+    const rect = frameRef.current.getBoundingClientRect();
+    setPos(clampNum(((clientX - rect.left) / rect.width) * 100, 2, 98));
+  }, []);
+
+  useEffect(() => {
+    const move = (e) => { if (draggingRef.current) updateFromClientX(e.clientX); };
+    const up = () => { draggingRef.current = false; };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+  }, [updateFromClientX]);
+
+  return (
+    <div className="demo-wrap reveal">
+      <div className="demo-frame" ref={frameRef}
+        onPointerDown={(e) => { draggingRef.current = true; updateFromClientX(e.clientX); }}>
+        <div className="demo-layer demo-before"><DemoScene /></div>
+        <div className="demo-layer demo-after" style={{ clipPath: `inset(0 0 0 ${pos}%)` }}><DemoScene /></div>
+        <span className="demo-label left">ORIGINAL</span>
+        <span className="demo-label right">ENHANCED</span>
+        <div className="demo-divider" style={{ left: pos + "%" }}>
+          <div className="demo-knob">⇄</div>
+        </div>
+      </div>
+      <p className="demo-caption">Drag the slider — this is exactly what PixelBoost does to your photos, live in your browser.</p>
+    </div>
+  );
+}
+
+/* ================================= header ================================= */
+
+function SiteHeader({ onOpenEditor, onNavigate, editorMode, fileName, onHome, onPrivacy, onNewPhoto }) {
+  return (
+    <header className="site-header">
+      <div className="header-inner">
+        <Logo onClick={onHome} />
+        {editorMode ? (
+          <>
+            <div style={{ flex: 1, textAlign: "center", minWidth: 0 }}>
+              {fileName && (
+                <span style={{ fontSize: 13, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "inline-block", maxWidth: "100%", verticalAlign: "middle" }}>
+                  📄 {fileName}
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <PrivacyPill onClick={onPrivacy} />
+              {fileName && <button className="btn btn-dark btn-sm" onClick={onNewPhoto}>＋ New photo</button>}
+            </div>
+          </>
+        ) : (
+          <>
+            <nav className="nav-links">
+              <button className="nav-link" onClick={onOpenEditor}>Enhance</button>
+              <button className="nav-link" onClick={() => onNavigate("features")}>Features</button>
+              <button className="nav-link" onClick={() => onNavigate("how")}>How It Works</button>
+              <button className="nav-link" onClick={() => onNavigate("privacy")}>Privacy</button>
+            </nav>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button className="btn btn-primary btn-sm" onClick={onOpenEditor} style={{ padding: "10px 20px" }}>Enhance Photo</button>
+            </div>
+          </>
+        )}
+      </div>
+    </header>
+  );
+}
+
+/* ================================ landing ================================ */
+
+function Landing({ onOpenEditor, onPrivacy }) {
+  const rootRef = useReveal();
+
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const steps = [
+    { icon: "📥", title: "Choose a photo", desc: "Pick any JPG, PNG or WEBP from your device — or paste straight from your clipboard." },
+    { icon: "⚙️", title: "Enhance locally", desc: "Our on-device pipeline boosts sharpness, clarity, tone and color in milliseconds. Nothing is uploaded." },
+    { icon: "⬇️", title: "Download", desc: "Export at full resolution as JPG, PNG or WEBP. Your photo never touched a server." },
+  ];
+
+  const features = [
+    { icon: "⚡", title: "Local Processing", desc: "Every pixel is processed on your own device with Canvas & Web Workers. Zero latency, zero leaks." },
+    { icon: "✨", title: "Smart Enhancement", desc: "Auto Enhance analyzes your photo's histogram and intelligently tunes nine professional parameters." },
+    { icon: "🔍", title: "Before / After Comparison", desc: "Silky comparison slider, toggle view, zoom and fullscreen to inspect every detail." },
+    { icon: "🖼️", title: "High-Resolution Export", desc: "Preview is scaled for speed, but export keeps your original resolution up to 24MP." },
+    { icon: "🔒", title: "No Uploads — Ever", desc: "No fetch calls with your image. No cloud. No third-party AI APIs. Verify it in your network tab." },
+    { icon: "🙌", title: "No Account Required", desc: "Open the app and start enhancing. No sign-up, no email, no tracking of your photos." },
+  ];
+
+  const useCases = [
+    { icon: "🧑", title: "Portraits", desc: "Natural skin tones and crisp eyes", g: "linear-gradient(135deg,#7c3aed33,#db277733)" },
+    { icon: "🎞️", title: "Old Photos", desc: "Revive faded memories with clarity", g: "linear-gradient(135deg,#b4530933,#78350f55)" },
+    { icon: "✈️", title: "Travel Photos", desc: "Deeper skies, richer landscapes", g: "linear-gradient(135deg,#0ea5e933,#22d3ee33)" },
+    { icon: "📦", title: "Product Photos", desc: "Sharper detail for storefronts", g: "linear-gradient(135deg,#64748b44,#33415566)" },
+    { icon: "📱", title: "Social Media", desc: "Scroll-stopping color & punch", g: "linear-gradient(135deg,#f43f5e33,#a855f733)" },
+    { icon: "👨‍👩‍👧", title: "Family Photos", desc: "Warm, flattering, natural light", g: "linear-gradient(135deg,#f59e0b33,#ef444433)" },
+    { icon: "🏠", title: "Real Estate", desc: "Bright rooms, balanced windows", g: "linear-gradient(135deg,#10b98133,#0ea5e933)" },
+    { icon: "📷", title: "Professional", desc: "Fine control over every parameter", g: "linear-gradient(135deg,#6366f133,#8b5cf633)" },
+  ];
+
+  return (
+    <div ref={rootRef}>
+      <SiteHeader onOpenEditor={onOpenEditor} onNavigate={scrollTo} onHome={() => window.scrollTo({ top: 0, behavior: "smooth" })} />
+
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-bg">
+          <div className="hero-orb orb-1" /><div className="hero-orb orb-2" /><div className="hero-orb orb-3" />
+          <div className="hero-grid-lines" />
+        </div>
+        <div className="hero-inner">
+          <div className="hero-badge-row reveal">
+            <span className="badge-lock">🔒 100% Local Processing — Your photos never leave your device</span>
+          </div>
+          <h1 className="reveal">
+            Enhance Your Photos.<br />
+            <span className="grad-text">Keep Them Private.</span>
+          </h1>
+          <p className="hero-sub reveal">
+            Professional photo enhancement powered directly on your device.
+            No uploads. No cloud storage. No compromise on privacy.
+          </p>
+          <div className="hero-ctas reveal">
+            <button className="btn btn-primary" onClick={onOpenEditor}>✨ Enhance a Photo</button>
+            <button className="btn btn-ghost" onClick={() => scrollTo("how")}>See How It Works</button>
+          </div>
+          <div className="hero-note reveal">
+            <span>🔒</span> Your photos stay on your device. Nothing is uploaded to our servers.
+          </div>
+          <BeforeAfterDemo />
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="section" id="how" style={{ background: "linear-gradient(180deg, transparent, rgba(255,255,255,0.015), transparent)" }}>
+        <div className="section-inner center">
+          <span className="section-kicker reveal">How it works</span>
+          <h2 className="section-title reveal">Three steps. Zero uploads.</h2>
+          <p className="section-sub reveal">From photo to polished in seconds — entirely inside your browser.</p>
+          <div className="steps-grid">
+            {steps.map((s, i) => (
+              <div className="step-card reveal" key={s.title} style={{ transitionDelay: `${i * 90}ms` }}>
+                <span className="step-icon">{s.icon}</span>
+                <div className="step-num">{i + 1}</div>
+                <h3 className="display-font">{s.title}</h3>
+                <p>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section className="section" id="features">
+        <div className="section-inner center">
+          <span className="section-kicker reveal">Features</span>
+          <h2 className="section-title reveal">A premium studio that respects your privacy</h2>
+          <p className="section-sub reveal">Everything a modern AI photo enhancer should be — without the surveillance.</p>
+          <div className="features-grid" style={{ textAlign: "left" }}>
+            {features.map((f, i) => (
+              <div className="feature-card reveal" key={f.title} style={{ transitionDelay: `${(i % 3) * 80}ms` }}>
+                <div className="feature-icon">{f.icon}</div>
+                <h3>{f.title}</h3>
+                <p>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PRIVACY */}
+      <section className="section" id="privacy">
+        <div className="section-inner">
+          <div className="privacy-hero-band reveal">
+            <div className="center">
+              <span className="section-kicker" style={{ background: "rgba(52,211,153,0.1)", borderColor: "rgba(52,211,153,0.3)", color: "#6ee7b7" }}>Privacy first</span>
+              <h2 className="section-title">Your Photos Stay Yours</h2>
+              <p className="section-sub" style={{ margin: "0 auto" }}>
+                Most "AI enhancers" quietly upload your most personal images to remote servers.
+                PixelBoost is different — the entire pipeline runs where your photos already are: on your device.
+              </p>
+            </div>
+            <div className="privacy-grid" style={{ textAlign: "left" }}>
+              {[
+                { icon: "🚫", t: "No Uploads", d: "Photos never leave your device. Not once. Not ever." },
+                { icon: "☁️", t: "No Cloud Storage", d: "We don't store your photos — there's nowhere to store them." },
+                { icon: "💻", t: "Local Processing", d: "Enhancement happens inside your browser using Canvas & Web Workers." },
+                { icon: "🛡️", t: "Private by Design", d: "Your images aren't sent to third-party APIs or analytics." },
+              ].map((p, i) => (
+                <div className="privacy-card reveal" key={p.t} style={{ transitionDelay: `${i * 70}ms` }}>
+                  <span className="p-icon">{p.icon}</span>
+                  <h4>{p.t}</h4>
+                  <p>{p.d}</p>
+                </div>
+              ))}
+            </div>
+            <div className="center" style={{ marginTop: 34 }}>
+              <button className="btn btn-ghost btn-sm" onClick={onPrivacy}>🔒 Read exactly how it works</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* USE CASES */}
+      <section className="section">
+        <div className="section-inner center">
+          <span className="section-kicker reveal">Use cases</span>
+          <h2 className="section-title reveal">Made for every kind of photo</h2>
+          <div className="usecase-grid" style={{ textAlign: "left" }}>
+            {useCases.map((u, i) => (
+              <div className="usecase-card reveal" key={u.title} style={{ transitionDelay: `${(i % 4) * 60}ms` }}>
+                <div className="usecase-thumb" style={{ background: u.g }}>{u.icon}</div>
+                <div className="usecase-body">
+                  <h4>{u.title}</h4>
+                  <p>{u.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="final-cta">
+        <div className="hero-bg"><div className="hero-orb orb-2" style={{ left: "30%", right: "auto", top: "20%" }} /></div>
+        <div style={{ position: "relative" }}>
+          <h2 className="reveal display-font">Ready to enhance your photo?</h2>
+          <p className="reveal">Professional enhancement. Zero uploads. Free, private, instant.</p>
+          <div className="reveal">
+            <button className="btn btn-primary" style={{ padding: "16px 40px", fontSize: 16 }} onClick={onOpenEditor}>✨ Enhance a Photo</button>
+          </div>
+          <p className="reveal" style={{ marginTop: 18, fontSize: 13, color: "var(--faint)" }}>🔒 Your photo. Your device. Your privacy.</p>
+        </div>
+      </section>
+
+      <footer className="site-footer">
+        <div className="footer-inner">
+          <Logo onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} />
+          <span>© 2026 PixelBoost · Professional enhancement. Zero uploads.</span>
+          <div className="footer-links">
+            <button onClick={() => scrollTo("features")}>Features</button>
+            <button onClick={() => scrollTo("privacy")}>Privacy</button>
+            <button onClick={onPrivacy}>🔒 Local processing</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ================================= editor ================================= */
+
+function UploadZone({ onFile, busy }) {
+  const inputRef = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
+  const dragDepth = useRef(0);
+
+  return (
+    <div className="upload-shell">
+      <div
+        className={`upload-zone ${dragOver ? "dragover" : ""}`}
+        onClick={() => !busy && inputRef.current && inputRef.current.click()}
+        onDragEnter={(e) => { e.preventDefault(); dragDepth.current++; setDragOver(true); }}
+        onDragOver={(e) => e.preventDefault()}
+        onDragLeave={(e) => { e.preventDefault(); dragDepth.current--; if (dragDepth.current <= 0) { dragDepth.current = 0; setDragOver(false); } }}
+        onDrop={(e) => {
+          e.preventDefault(); dragDepth.current = 0; setDragOver(false);
+          const f = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) onFile(f);
+        }}
+      >
+        <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden
+          onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) onFile(f); e.target.value = ""; }} />
+        <span className="upload-icon">🖼️</span>
+        <h3 className="display-font">{dragOver ? "Drop it — we'll handle the rest" : "Drop your photo here"}</h3>
+        <div className="upload-or">or</div>
+        <button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); inputRef.current && inputRef.current.click(); }} disabled={!!busy}>
+          {busy ? "Loading…" : "Choose Photo"}
+        </button>
+        <div className="upload-hint">
+          <span>JPG</span><span className="dot" /><span>PNG</span><span className="dot" /><span>WEBP</span>
+          <span className="dot" /><span>Processed locally</span>
+        </div>
+        <div className="paste-hint">💡 You can also paste an image with <span className="kbd">Ctrl</span> + <span className="kbd">V</span></div>
+      </div>
+    </div>
+  );
+}
+
+function SliderRow({ def, value, onChange, onCommit }) {
+  const pct = def.bipolar ? ((value + 100) / 2) : value;
+  const track = def.bipolar
+    ? (value >= 0
+      ? `linear-gradient(to right, rgba(255,255,255,0.1) 0 50%, var(--accent) 50% ${pct}%, rgba(255,255,255,0.1) ${pct}% 100%)`
+      : `linear-gradient(to right, rgba(255,255,255,0.1) 0 ${pct}%, var(--accent) ${pct}% 50%, rgba(255,255,255,0.1) 50% 100%)`)
+    : `linear-gradient(to right, var(--accent) 0 ${pct}%, rgba(255,255,255,0.1) ${pct}% 100%)`;
+  return (
+    <div className="slider-row">
+      <div className="slider-head">
+        <span className="slider-label">{def.label}</span>
+        <span className={`slider-value ${value === 0 ? "zero" : ""}`}>
+          {value > 0 && def.bipolar ? `+${value}` : value === 0 ? "0" : value}
+        </span>
+      </div>
+      <input
+        type="range" className="pb-range" min={def.bipolar ? -100 : 0} max={100} step={1}
+        value={value} style={{ "--track": track, background: track }}
+        onChange={(e) => onChange(def.key, parseInt(e.target.value, 10))}
+        onPointerUp={onCommit}
+        onKeyUp={onCommit}
+        aria-label={def.label}
+      />
+    </div>
+  );
+}
+
+function Editor({ onHome, toast, onPrivacy }) {
+  /* --- state --- */
+  const [hasImage, setHasImage] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [fileSize, setFileSize] = useState(0);
+  const [params, setParams] = useState({ ...DEFAULT_PARAMS });
+  const [activePreset, setActivePreset] = useState(null);
+  const [hasEnhancement, setHasEnhancement] = useState(false);
+  const [mode, setMode] = useState("slider"); // slider | before | after
+  const [splitPos, setSplitPos] = useState(50);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [busy, setBusy] = useState(null); // { label, progress }
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewProgress, setPreviewProgress] = useState(0);
+  const [exportDims, setExportDims] = useState({ w: 0, h: 0 });
+  const [format, setFormat] = useState("jpg");
+  const [quality, setQuality] = useState(92);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  /* --- refs --- */
+  const processorRef = useRef(null);
+  const fullCanvasRef = useRef(null);       // full-resolution original
+  const previewOrigCanvasRef = useRef(null); // scaled original (offscreen)
+  const previewOrigDataRef = useRef(null);   // Uint8ClampedArray master copy
+  const previewDimsRef = useRef({ w: 0, h: 0 });
+  const origCanvasElRef = useRef(null);      // visible <canvas>
+  const enhCanvasElRef = useRef(null);       // visible <canvas>
+  const paramsRef = useRef(params);
+  const reqIdRef = useRef(0);
+  const debounceRef = useRef(null);
+  const historyRef = useRef({ stack: [{ ...DEFAULT_PARAMS }], index: 0 });
+  const objectUrlRef = useRef(null);
+  const frameRef = useRef(null);
+  const stageRef = useRef(null);
+  const dragSplitRef = useRef(false);
+  const panRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  paramsRef.current = params;
+
+  /* --- processor lifecycle --- */
+  useEffect(() => {
+    processorRef.current = createProcessor();
+    return () => { if (processorRef.current) processorRef.current.terminate(); };
+  }, []);
+
+  /* --- history helpers --- */
+  const syncHistoryFlags = useCallback(() => {
+    const h = historyRef.current;
+    setCanUndo(h.index > 0);
+    setCanRedo(h.index < h.stack.length - 1);
+  }, []);
+
+  const commitParams = useCallback((next) => {
+    const h = historyRef.current;
+    const cur = h.stack[h.index];
+    if (SLIDER_DEFS.every((s) => (cur[s.key] || 0) === (next[s.key] || 0))) return;
+    h.stack = h.stack.slice(0, h.index + 1);
+    h.stack.push({ ...next });
+    if (h.stack.length > 60) h.stack.shift();
+    h.index = h.stack.length - 1;
+    syncHistoryFlags();
+  }, [syncHistoryFlags]);
+
+  const applyParams = useCallback((next, presetId) => {
+    setParams({ ...DEFAULT_PARAMS, ...next });
+    setActivePreset(presetId === undefined ? null : presetId);
+    commitParams({ ...DEFAULT_PARAMS, ...next });
+  }, [commitParams]);
+
+  const undo = useCallback(() => {
+    const h = historyRef.current;
+    if (h.index > 0) { h.index--; setParams({ ...h.stack[h.index] }); setActivePreset(null); syncHistoryFlags(); }
+  }, [syncHistoryFlags]);
+  const redo = useCallback(() => {
+    const h = historyRef.current;
+    if (h.index < h.stack.length - 1) { h.index++; setParams({ ...h.stack[h.index] }); setActivePreset(null); syncHistoryFlags(); }
+  }, [syncHistoryFlags]);
+
+  /* --- preview processing --- */
+  const drawEnhancedFromData = useCallback((data) => {
+    const c = enhCanvasElRef.current;
+    if (!c) return;
+    const { w, h } = previewDimsRef.current;
+    const id = new ImageData(new Uint8ClampedArray(data), w, h);
+    c.getContext("2d").putImageData(id, 0, 0);
+  }, []);
+
+  const schedulePreview = useCallback(() => {
+    if (!hasImage || !previewOrigDataRef.current) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const p = { ...paramsRef.current };
+      const myReq = ++reqIdRef.current;
+      if (isDefaultParams(p)) {
+        drawEnhancedFromData(previewOrigDataRef.current);
+        setHasEnhancement(false);
+        return;
+      }
+      const { w, h } = previewDimsRef.current;
+      const copy = new ImageData(new Uint8ClampedArray(previewOrigDataRef.current), w, h);
+      setPreviewBusy(true); setPreviewProgress(0);
+      try {
+        const out = await processorRef.current.process(copy, p, (v) => {
+          if (reqIdRef.current === myReq) setPreviewProgress(v);
+        });
+        if (reqIdRef.current !== myReq) return; // stale
+        const c = enhCanvasElRef.current;
+        if (c) c.getContext("2d").putImageData(out, 0, 0);
+        setHasEnhancement(true);
+      } catch (err) {
+        if (reqIdRef.current === myReq) {
+          toast("error", "Something went wrong while previewing. Try reducing the image size.");
+        }
+      } finally {
+        if (reqIdRef.current === myReq) setPreviewBusy(false);
+      }
+    }, 180);
+  }, [hasImage, drawEnhancedFromData, toast]);
+
+  useEffect(() => { if (hasImage) schedulePreview(); }, [params, hasImage, schedulePreview]);
+
+  /* --- load a file --- */
+  const loadFile = useCallback(async (file) => {
+    if (!file) return;
+    if (!ACCEPTED_TYPES.includes(file.type.toLowerCase())) {
+      toast("error", "Unsupported file type. Please choose a JPG, PNG or WEBP image.");
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      toast("error", "This image is too large for your browser to process comfortably. Try a smaller version.");
+      return;
+    }
+    setBusy({ label: "Loading your photo…", progress: null });
+    let decoded = null;
+    try {
+      decoded = await decodeImageFile(file);
+    } catch (e) {
+      setBusy(null);
+      toast("error", "We couldn't read this image — it may be corrupted. Please try another photo.");
+      return;
+    }
+    try {
+      const sw = decoded.bitmap.width, sh = decoded.bitmap.height;
+      if (!sw || !sh) throw new Error("empty");
+      if (sw * sh > 80_000_000) {
+        if (decoded.url) URL.revokeObjectURL(decoded.url);
+        setBusy(null);
+        toast("error", "This image is too large for your browser to process comfortably. Try a smaller version.");
+        return;
+      }
+
+      // full-resolution export canvas (capped at MAX_EXPORT_PIXELS)
+      const full = drawScaled(decoded.bitmap, sw, sh, 8000, MAX_EXPORT_PIXELS);
+      // preview canvas
+      const prev = drawScaled(decoded.bitmap, full.canvas.width, full.canvas.height, PREVIEW_MAX_SIDE, null);
+
+      if (decoded.url) { URL.revokeObjectURL(decoded.url); decoded.url = null; }
+      if (objectUrlRef.current) { URL.revokeObjectURL(objectUrlRef.current); objectUrlRef.current = null; }
+      if (typeof decoded.bitmap.close === "function") { try { decoded.bitmap.close(); } catch (e) {} }
+
+      fullCanvasRef.current = full.canvas;
+      previewOrigCanvasRef.current = prev.canvas;
+      previewDimsRef.current = { w: prev.canvas.width, h: prev.canvas.height };
+      const masterData = prev.ctx.getImageData(0, 0, prev.canvas.width, prev.canvas.height);
+      previewOrigDataRef.current = new Uint8ClampedArray(masterData.data);
+
+      setExportDims({ w: full.canvas.width, h: full.canvas.height });
+      setFileName(file.name || "pasted-image");
+      setFileSize(file.size);
+
+      // reset state
+      reqIdRef.current++;
+      historyRef.current = { stack: [{ ...DEFAULT_PARAMS }], index: 0 };
+      syncHistoryFlags();
+      setParams({ ...DEFAULT_PARAMS });
+      setActivePreset(null);
+      setHasEnhancement(false);
+      setMode("slider"); setSplitPos(50); setZoom(1); setPan({ x: 0, y: 0 });
+      setHasImage(true);
+      if (full.scaled) {
+        toast("info", `Very large image — export resolution was capped at ${full.canvas.width} × ${full.canvas.height} px for stability.`);
+      } else {
+        toast("success", "Photo loaded. It never left your device. 🔒");
+      }
+
+      // draw visible canvases after they mount
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const oc = origCanvasElRef.current, ec = enhCanvasElRef.current;
+          if (oc && ec) {
+            oc.width = prev.canvas.width; oc.height = prev.canvas.height;
+            ec.width = prev.canvas.width; ec.height = prev.canvas.height;
+            oc.getContext("2d").drawImage(prev.canvas, 0, 0);
+            ec.getContext("2d").drawImage(prev.canvas, 0, 0);
+          }
+        });
+      });
+    } catch (e) {
+      toast("error", "We couldn't process this image. It may be corrupted or unsupported.");
+    } finally {
+      setBusy(null);
+    }
+  }, [toast, syncHistoryFlags]);
+
+  /* --- paste support --- */
+  useEffect(() => {
+    const onPaste = (e) => {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (items) {
+        for (const it of items) {
+          if (it.type && it.type.startsWith("image/")) {
+            const f = it.getAsFile();
+            if (f) { e.preventDefault(); loadFile(f); return; }
+          }
+        }
+      }
+      const files = e.clipboardData && e.clipboardData.files;
+      if (files && files[0]) { e.preventDefault(); loadFile(files[0]); }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [loadFile]);
+
+  /* --- window drag & drop when image already loaded --- */
+  useEffect(() => {
+    if (!hasImage) return;
+    const prevent = (e) => e.preventDefault();
+    const onDrop = (e) => {
+      e.preventDefault();
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) loadFile(f);
+    };
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", onDrop);
+    return () => { window.removeEventListener("dragover", prevent); window.removeEventListener("drop", onDrop); };
+  }, [hasImage, loadFile]);
+
+  /* --- keyboard shortcuts --- */
+  useEffect(() => {
+    const onKey = (e) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+      } else if (mod && e.key.toLowerCase() === "y") {
+        e.preventDefault(); redo();
+      } else if (mod && e.key.toLowerCase() === "e" && hasImage) {
+        e.preventDefault(); autoEnhance();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [undo, redo, hasImage]);
+
+  /* --- auto enhance --- */
+  const autoEnhance = useCallback(() => {
+    if (!fullCanvasRef.current) return;
+    setBusy({ label: "Analyzing your photo…", progress: null });
+    setTimeout(() => {
+      try {
+        const tuned = analyzeForAutoEnhance(previewOrigCanvasRef.current || fullCanvasRef.current);
+        setBusy({ label: "Enhancing your photo…", progress: 60 });
+        setTimeout(() => {
+          applyParams(tuned, null);
+          setBusy(null);
+          toast("success", "✨ Auto enhancement applied — analyzed & tuned locally.");
+        }, 250);
+      } catch (e) {
+        setBusy(null);
+        toast("error", "Auto enhance hit a snag. Try adjusting the sliders manually.");
+      }
+    }, 120);
+  }, [applyParams, toast]);
+
+  /* --- reset --- */
+  const resetAll = useCallback(() => {
+    applyParams({ ...DEFAULT_PARAMS }, null);
+    toast("info", "Adjustments reset.");
+  }, [applyParams, toast]);
+
+  /* --- new photo (cleanup) --- */
+  const newPhoto = useCallback(() => {
+    reqIdRef.current++;
+    if (objectUrlRef.current) { URL.revokeObjectURL(objectUrlRef.current); objectUrlRef.current = null; }
+    fullCanvasRef.current = null;
+    previewOrigCanvasRef.current = null;
+    previewOrigDataRef.current = null;
+    setHasImage(false); setFileName(""); setFileSize(0);
+    setParams({ ...DEFAULT_PARAMS }); setActivePreset(null); setHasEnhancement(false);
+    historyRef.current = { stack: [{ ...DEFAULT_PARAMS }], index: 0 };
+    syncHistoryFlags();
+    setZoom(1); setPan({ x: 0, y: 0 }); setMode("slider"); setSplitPos(50);
+  }, [syncHistoryFlags]);
+
+  /* --- slider handlers --- */
+  const onSliderChange = useCallback((key, val) => {
+    setParams((p) => ({ ...p, [key]: val }));
+    setActivePreset(null);
+  }, []);
+  const onSliderCommit = useCallback(() => {
+    commitParams(paramsRef.current);
+  }, [commitParams]);
+
+  /* --- comparison interactions --- */
+  const updateSplit = useCallback((clientX) => {
+    const el = frameRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setSplitPos(clampNum(((clientX - r.left) / r.width) * 100, 0, 100));
+  }, []);
+
+  const onStagePointerDown = useCallback((e) => {
+    if (zoom > 1) {
+      panRef.current = { startX: e.clientX, startY: e.clientY, ox: pan.x, oy: pan.y };
+      try { stageRef.current.setPointerCapture(e.pointerId); } catch (err) {}
+    } else if (mode === "slider") {
+      dragSplitRef.current = true;
+      updateSplit(e.clientX);
+    }
+  }, [zoom, pan, mode, updateSplit]);
+
+  const onStagePointerMove = useCallback((e) => {
+    if (panRef.current) {
+      const d = panRef.current;
+      setPan({ x: d.ox + (e.clientX - d.startX), y: d.oy + (e.clientY - d.startY) });
+    } else if (dragSplitRef.current) {
+      updateSplit(e.clientX);
+    }
+  }, [updateSplit]);
+
+  const onStagePointerUp = useCallback(() => {
+    dragSplitRef.current = false; panRef.current = null;
+  }, []);
+
+  const zoomBy = useCallback((d) => {
+    setZoom((z) => { const nz = clampNum(Math.round((z + d) * 100) / 100, 1, 4); if (nz === 1) setPan({ x: 0, y: 0 }); return nz; });
+  }, []);
+  const resetView = useCallback(() => { setZoom(1); setPan({ x: 0, y: 0 }); setSplitPos(50); }, []);
+  const toggleFullscreen = useCallback(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) { el.requestFullscreen && el.requestFullscreen().catch(() => toast("info", "Fullscreen isn't available in this context.")); }
+    else document.exitFullscreen && document.exitFullscreen();
+  }, [toast]);
+
+  /* --- download --- */
+  const handleDownload = useCallback(async () => {
+    const fc = fullCanvasRef.current;
+    if (!fc) return;
+    const p = { ...paramsRef.current };
+    setBusy({ label: "Enhancing your photo…", progress: 0 });
+    try {
+      let outCanvas = fc;
+      if (!isDefaultParams(p)) {
+        const fctx = fc.getContext("2d", { willReadFrequently: true });
+        const idata = fctx.getImageData(0, 0, fc.width, fc.height);
+        const res = await processorRef.current.process(idata, p, (v) => {
+          setBusy((b) => (b ? { ...b, progress: v } : b));
+        });
+        outCanvas = makeCanvas(fc.width, fc.height);
+        outCanvas.getContext("2d").putImageData(res, 0, 0);
+      }
+      const mime = format === "png" ? "image/png" : format === "webp" ? "image/webp" : "image/jpeg";
+      const q = format === "png" ? undefined : quality / 100;
+      setBusy({ label: "Preparing your download…", progress: 100 });
+      const blob = await new Promise((resolve) => outCanvas.toBlob(resolve, mime, q));
+      if (!blob) {
+        if (format === "webp") toast("error", "Your browser can't export WEBP. Please choose JPG or PNG.");
+        else toast("error", "Export failed in this browser. Try a different format.");
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const base = (fileName || "photo").replace(/\.[^.]+$/, "");
+      a.href = url;
+      a.download = `${base}-pixelboost.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      toast("success", `Enhanced ${format.toUpperCase()} downloaded — ${(blob.size / 1048576).toFixed(1)} MB. Processed 100% locally. 🔒`);
+    } catch (err) {
+      const msg = String((err && err.message) || "");
+      if (msg.includes("memory") || msg.includes("size")) {
+        toast("error", "This image is too large for your browser to export. Try a smaller version.");
+      } else {
+        toast("error", "Download failed. Please try again or use a different format.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }, [format, quality, fileName, toast]);
+
+  /* --- derived --- */
+  const enhClip = useMemo(() => {
+    if (mode === "before") return "inset(0 0 0 100%)";
+    if (mode === "after") return "inset(0 0 0 0%)";
+    return `inset(0 0 0 ${splitPos}%)`;
+  }, [mode, splitPos]);
+
+  const fmtBytes = (b) => (b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB");
+
+  return (
+    <div className="editor-root">
+      <SiteHeader editorMode fileName={hasImage ? fileName : ""} onHome={onHome}
+        onPrivacy={onPrivacy} onNewPhoto={newPhoto} onOpenEditor={() => {}} onNavigate={() => {}} />
+
+      <div className="editor-body">
+        {/* ---------- LEFT: viewer ---------- */}
+        <div className="viewer-shell" id="viewer-shell">
+          {busy && (
+            <div className="busy-overlay">
+              <div className="big-spinner" />
+              <div className="busy-label display-font">{busy.label}</div>
+              {busy.progress !== null && busy.progress !== undefined && (
+                <>
+                  <div className="busy-progress"><div className="busy-progress-bar" style={{ width: `${busy.progress}%` }} /></div>
+                  <div className="busy-sub">{Math.round(busy.progress)}% — processed on your device</div>
+                </>
+              )}
+            </div>
+          )}
+
+          {!hasImage ? (
+            <UploadZone onFile={loadFile} busy={busy} />
+          ) : (
+            <>
+              <div className="viewer-toolbar">
+                <div className="toolbar-group">
+                  <div className="mode-toggle" role="tablist" aria-label="Comparison mode">
+                    <button className={`mode-btn ${mode === "before" ? "active" : ""}`} onClick={() => setMode("before")}>Original</button>
+                    <button className={`mode-btn ${mode === "slider" ? "active" : ""}`} onClick={() => setMode("slider")}>Compare</button>
+                    <button className={`mode-btn ${mode === "after" ? "active" : ""}`} onClick={() => setMode("after")}>Enhanced</button>
+                  </div>
+                  <span className="toolbar-chip">{exportDims.w} × {exportDims.h} px</span>
+                </div>
+                <div className="toolbar-group">
+                  <button className="icon-btn" title="Zoom out" onClick={() => zoomBy(-0.25)} disabled={zoom <= 1}>−</button>
+                  <span className="toolbar-chip" style={{ minWidth: 52, textAlign: "center" }}>{Math.round(zoom * 100)}%</span>
+                  <button className="icon-btn" title="Zoom in" onClick={() => zoomBy(0.25)} disabled={zoom >= 4}>＋</button>
+                  <button className="icon-btn" title="Fit to screen / reset view" onClick={resetView}>⤢</button>
+                  <button className="icon-btn" title="Fullscreen" onClick={toggleFullscreen}>⛶</button>
+                </div>
+              </div>
+
+              <div className="viewer-stage" ref={stageRef}
+                onPointerDown={onStagePointerDown} onPointerMove={onStagePointerMove}
+                onPointerUp={onStagePointerUp} onPointerLeave={onStagePointerUp}
+                onDoubleClick={() => setZoom((z) => (z > 1 ? 1 : 2))}
+                style={{ cursor: zoom > 1 ? (panRef.current ? "grabbing" : "grab") : mode === "slider" ? "ew-resize" : "default" }}>
+                {previewBusy && (
+                  <div className="preview-progress"><div className="preview-progress-bar" style={{ width: `${previewProgress}%` }} /></div>
+                )}
+                <div className="cv-scaler" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
+                  <div className="cv-frame" ref={frameRef}>
+                    <canvas ref={origCanvasElRef} />
+                    <canvas ref={enhCanvasElRef} className="cv-enh" style={{ clipPath: enhClip }} />
+                    {mode === "slider" && (
+                      <>
+                        <span className="cv-label left">ORIGINAL</span>
+                        <span className="cv-label right">ENHANCED</span>
+                        <div className="cv-divider" style={{ left: `${splitPos}%` }}>
+                          <div className="cv-knob">⇄</div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {previewBusy && (
+                  <div className="processing-chip"><span className="spinner" /> Enhancing preview…</div>
+                )}
+              </div>
+
+              {!hasEnhancement && !previewBusy && (
+                <div style={{ padding: "10px 16px", borderTop: "1px solid var(--border)", fontSize: 12.5, color: "var(--faint)", textAlign: "center" }}>
+                  💡 Press <span className="kbd">✨ Auto Enhance</span> or pick a preset to see the magic. <span className="kbd">Ctrl/⌘+E</span> works too.
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ---------- RIGHT: controls ---------- */}
+        {hasImage && (
+          <div className="control-panel">
+            {/* file info */}
+            <div className="panel-card">
+              <div className="file-chip">
+                <span className="f-icon">🖼️</span>
+                <div className="f-meta">
+                  <div className="f-name">{fileName}</div>
+                  <div className="f-size">{fmtBytes(fileSize)} • {exportDims.w} × {exportDims.h} px • 🔒 never uploaded</div>
+                </div>
+              </div>
+              <button className="auto-btn display-font" onClick={autoEnhance} disabled={!!busy}>
+                {busy ? <><span className="spinner" /> Working…</> : <>✨ Auto Enhance</>}
+              </button>
+            </div>
+
+            {/* presets */}
+            <div className="panel-card">
+              <div className="panel-title">One-click presets</div>
+              <div className="presets-grid">
+                {PRESETS.map((p) => (
+                  <button key={p.id} className={`preset-card ${activePreset === p.id ? "active" : ""}`}
+                    onClick={() => { applyParams(p.params, p.id); toast("success", `${p.icon} ${p.name} preset applied.`); }}>
+                    <span className="p-emoji">{p.icon}</span>
+                    <span className="p-name">{p.name}</span>
+                    <span className="p-desc">{p.desc}</span>
+                  </button>
+                ))}
+                <button className={`preset-card ${activePreset === "none" ? "active" : ""}`}
+                  onClick={resetAll}>
+                  <span className="p-emoji">↺</span>
+                  <span className="p-name">Reset</span>
+                  <span className="p-desc">Back to the original photo</span>
+                </button>
+              </div>
+            </div>
+
+            {/* sliders */}
+            <div className="panel-card">
+              <div className="panel-title">
+                <span>Enhancement</span>
+                <span style={{ display: "flex", gap: 6 }}>
+                  <button className="icon-btn" style={{ width: 30, height: 30, fontSize: 13 }} title="Undo (Ctrl/⌘+Z)" onClick={undo} disabled={!canUndo}>↶</button>
+                  <button className="icon-btn" style={{ width: 30, height: 30, fontSize: 13 }} title="Redo (Ctrl/⌘+Shift+Z)" onClick={redo} disabled={!canRedo}>↷</button>
+                </span>
+              </div>
+              {SLIDER_DEFS.map((def) => (
+                <SliderRow key={def.key} def={def} value={params[def.key] || 0}
+                  onChange={onSliderChange} onCommit={onSliderCommit} />
+              ))}
+            </div>
+
+            {/* download */}
+            <div className="panel-card">
+              <div className="panel-title">Export</div>
+              <div className="format-row">
+                {["jpg", "png", "webp"].map((f) => (
+                  <button key={f} className={`format-btn ${format === f ? "active" : ""}`} onClick={() => setFormat(f)}>
+                    {f.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              {format !== "png" && (
+                <div className="slider-row">
+                  <div className="slider-head">
+                    <span className="slider-label">Quality</span>
+                    <span className="slider-value">{quality}%</span>
+                  </div>
+                  <input type="range" className="pb-range" min={40} max={100} step={1} value={quality}
+                    style={{ "--track": `linear-gradient(to right, var(--accent) 0 ${(quality - 40) / 0.6}%, rgba(255,255,255,0.1) ${(quality - 40) / 0.6}% 100%)`, background: `linear-gradient(to right, var(--accent) 0 ${(quality - 40) / 0.6}%, rgba(255,255,255,0.1) ${(quality - 40) / 0.6}% 100%)` }}
+                    onChange={(e) => setQuality(parseInt(e.target.value, 10))} aria-label="Export quality" />
+                </div>
+              )}
+              <div className="dims-row">
+                <span>Output dimensions</span>
+                <strong>{exportDims.w} × {exportDims.h} px</strong>
+              </div>
+              <button className="download-btn" onClick={handleDownload} disabled={!!busy}>
+                ⬇️ Download Enhanced Photo
+              </button>
+              <div className="panel-actions" style={{ marginTop: 10 }}>
+                <button className="btn btn-dark btn-sm" onClick={() => fileInputRef.current && fileInputRef.current.click()}>Process another photo</button>
+              </div>
+              <input ref={fileInputRef} type="file" hidden accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) loadFile(f); e.target.value = ""; }} />
+            </div>
+
+            {/* shortcuts */}
+            <div className="panel-card">
+              <div className="panel-title">Shortcuts</div>
+              <div className="shortcuts-note">
+                <span className="kbd">Ctrl/⌘</span>+<span className="kbd">Z</span> Undo &nbsp;•&nbsp;
+                <span className="kbd">Ctrl/⌘</span>+<span className="kbd">Shift</span>+<span className="kbd">Z</span> Redo<br />
+                <span className="kbd">Ctrl/⌘</span>+<span className="kbd">E</span> Auto Enhance &nbsp;•&nbsp;
+                <span className="kbd">Ctrl/⌘</span>+<span className="kbd">V</span> Paste image<br />
+                Double-click preview to zoom &nbsp;•&nbsp; Drag to pan when zoomed
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* mobile sticky action bar */}
+      {hasImage && (
+        <div className="mobile-action-bar">
+          <button className="btn btn-dark" onClick={autoEnhance} disabled={!!busy}>✨ Auto</button>
+          <button className="btn btn-primary" style={{ padding: "13px 20px" }} onClick={handleDownload} disabled={!!busy}>⬇️ Download</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================================== app ================================== */
+
+export default function App() {
+  const [view, setView] = useState("landing"); // landing | editor
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [toast, toastNode] = useToasts();
+
+  useEffect(() => {
+    document.title = "PixelBoost — Private AI Photo Enhancement";
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [view]);
+
+  return (
+    <div className="app-root">
+      <style>{GLOBAL_CSS}</style>
+      {view === "landing" ? (
+        <Landing onOpenEditor={() => setView("editor")} onPrivacy={() => setPrivacyOpen(true)} />
+      ) : (
+        <Editor onHome={() => setView("landing")} toast={toast} onPrivacy={() => setPrivacyOpen(true)} />
+      )}
+      {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
+      {toastNode}
+    </div>
+  );
+}
