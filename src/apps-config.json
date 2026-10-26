@@ -107,7 +107,17 @@
       "icon": "🛠️",
       "category": "AI",
       "color": "from-lime-500 to-lime-600"
+    },
+      {
+      "id": "ShubhKamna",
+      "name": "ShubhKamna",
+      "description": "ShubhKamna — Festival Wish Studio for WhatsApp",
+      "path": "/apps/shubh-kamna.html",
+      "icon": "🛠️",
+      "category": "AI",
+      "color": "from-lime-500 to-lime-600"
     }
+    
   ],
   "categories": ["All", "Productivity", "Utility", "Widget", "AI"]
 }
