@@ -71,10 +71,50 @@
       <div class="taskbar-icon">📝</div>
       <div class="taskbar-icon">🎨</div>
       <div class="clock">
-        <div>11:11 AM</div>
-        <div>Sunday, Oct 25</div>
+        <div id="clockTime">11:11 AM</div>
+        <div id="clockDate">Sunday, Oct 25</div>
+      </div>
+    </div>
+    <div id="winOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:12px;padding:28px 36px;text-align:center;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+        <div id="winIcon" style="font-size:48px;margin-bottom:10px;"></div>
+        <h2 id="winTitle" style="margin:0 0 8px;font-size:18px;color:#1e293b;font-family:-apple-system,'Segoe UI',sans-serif;"></h2>
+        <p id="winMsg" style="margin:0 0 18px;font-size:13px;color:#64748b;font-family:-apple-system,'Segoe UI',sans-serif;line-height:1.5;"></p>
+        <button id="winClose" style="padding:8px 24px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;">Close</button>
       </div>
     </div>
   </div>
+  <script>
+    // ---- live clock in taskbar ----
+    function tick() {
+      var d = new Date();
+      document.getElementById('clockTime').textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('clockDate').textContent = d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+    tick(); setInterval(tick, 1000);
+
+    // ---- clickable desktop icons / start menu (were dead clicks) ----
+    var overlay = document.getElementById('winOverlay');
+    function openApp(name, icon) {
+      document.getElementById('winIcon').textContent = icon;
+      document.getElementById('winTitle').textContent = name;
+      document.getElementById('winMsg').textContent = name + ' is launching… This is a demo window — wire it up to your real app next.';
+      overlay.style.display = 'flex';
+    }
+    document.getElementById('winClose').onclick = function () { overlay.style.display = 'none'; };
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.style.display = 'none'; });
+
+    document.querySelectorAll('.desktop-icon').forEach(function (el) {
+      el.addEventListener('click', function () {
+        openApp(el.querySelector('.label').textContent, el.querySelector('.icon').textContent);
+      });
+    });
+    document.querySelector('.start-btn').addEventListener('click', function () {
+      openApp('Start Menu', '⊞');
+    });
+    document.querySelectorAll('.taskbar-icon').forEach(function (el) {
+      el.addEventListener('click', function () { openApp('Pinned App', el.textContent); });
+    });
+  </script>
 </body>
 </html>

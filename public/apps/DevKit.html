@@ -29,6 +29,15 @@
       transition: all 0.2s; cursor: pointer;
     }
     .tool:hover { border-color: #65a30d; background: #f7fee7; transform: translateY(-2px); }
+    .tool.selected { border-color: #65a30d; background: #f7fee7; box-shadow: 0 0 0 3px rgba(132,204,22,.25); }
+    .panel { display: none; background: #f7fee7; border: 2px solid #bef264; border-radius: 16px; padding: 20px 24px; margin: -12px 0 28px; text-align: left; }
+    .panel.show { display: block; animation: fadein .25s ease; }
+    @keyframes fadein { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .panel h4 { font-size: 14px; color: #1e1b4b; margin-bottom: 10px; }
+    .panel input[type=text], .panel textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical; }
+    .panel pre { background: #1e1b4b; color: #a3e635; padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin-top: 10px; white-space: pre-wrap; word-break: break-all; min-height: 20px; }
+    .panel button.run { margin-top: 10px; padding: 8px 18px; background: linear-gradient(135deg,#84cc16,#4d7c0f); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px; }
+    .panel button.run:hover { filter: brightness(1.1); }
     .tool .icon { font-size: 28px; margin-bottom: 10px; }
     .tool h3 { font-size: 13px; color: #1e1b4b; margin-bottom: 4px; }
     .tool p { font-size: 11px; color: #64748b; }
@@ -94,7 +103,151 @@
         <p>Test & debug regex</p>
       </div>
     </div>
-    <a href="#" class="cta">🚀 Open DevKit</a>
+    <div class="panel" id="toolPanel"></div>
+    <a href="#" class="cta" id="ctaBtn">🚀 Open DevKit</a>
   </div>
+  <script>
+    // ---- interactive tool cards: click a tool to open it ----
+    var tools = document.querySelectorAll(".tool");
+    var panel = document.getElementById("toolPanel");
+
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+    var builders = {
+      "JSON Formatter": function () {
+        return '<h4>🔤 JSON Formatter — beautify & validate</h4>' +
+          '<textarea id="pIn" rows="5" placeholder=\'{"hello":"world"}\'></textarea>' +
+          '<button class="run" id="pRun">Format</button><pre id="pOut"></pre>';
+      },
+      "Base64": function () {
+        return '<h4>📊 Base64 — encode & decode</h4>' +
+          '<input type="text" id="pIn" placeholder="Type text to encode, or base64 to decode…">' +
+          '<button class="run" id="pEnc" style="margin-right:8px">Encode</button>' +
+          '<button class="run" id="pDec">Decode</button><pre id="pOut"></pre>';
+      },
+      "URL Encoder": function () {
+        return '<h4>🔗 URL Encoder — encode & decode URLs</h4>' +
+          '<input type="text" id="pIn" placeholder="https://example.com/?q=hello world">' +
+          '<button class="run" id="pEnc" style="margin-right:8px">Encode</button>' +
+          '<button class="run" id="pDec">Decode</button><pre id="pOut"></pre>';
+      },
+      "Hash Generator": function () {
+        return '<h4>🔐 Hash Generator — SHA-256</h4>' +
+          '<input type="text" id="pIn" placeholder="Text to hash…"><pre id="pOut"></pre>';
+      },
+      "Unit Converter": function () {
+        return '<h4>📏 Unit Converter — px ↔ rem (16px root)</h4>' +
+          '<input type="text" id="pIn" placeholder="e.g. 32 or 2rem">' +
+          '<button class="run" id="pRun">Convert</button><pre id="pOut"></pre>';
+      },
+      "Cron Parser": function () {
+        return '<h4>⏱️ Cron Parser — human-readable cron</h4>' +
+          '<input type="text" id="pIn" placeholder="*/5 9-17 * * 1-5"><pre id="pOut"></pre>';
+      },
+      "Regex Tester": function () {
+        return '<h4>🔍 Regex Tester</h4>' +
+          '<input type="text" id="pRe" placeholder="\\d+" style="margin-bottom:8px">' +
+          '<input type="text" id="pIn" placeholder="Test string…"><pre id="pOut"></pre>';
+      },
+      "Color Picker": function () {
+        return '<h4>🎨 Color Picker — HEX, RGB, HSL</h4>' +
+          '<input type="color" id="pIn" value="#65a30d" style="width:64px;height:40px;border:none;background:none;cursor:pointer;padding:0">' +
+          '<pre id="pOut"></pre>';
+      },
+      "CSS Generator": function () {
+        return '<h4>📐 CSS Generator — gradient + shadow</h4>' +
+          '<input type="color" id="cA" value="#84cc16" style="width:48px;height:36px;border:none;cursor:pointer">' +
+          ' → <input type="color" id="cB" value="#4d7c0f" style="width:48px;height:36px;border:none;cursor:pointer">' +
+          '<pre id="pOut"></pre>';
+      }
+    };
+
+    function wire(name) {
+      var inEl = document.getElementById("pIn");
+      var out = document.getElementById("pOut");
+      if (!inEl || !out) return;
+      if (name === "JSON Formatter") {
+        document.getElementById("pRun").onclick = function () {
+          try { out.textContent = JSON.stringify(JSON.parse(inEl.value), null, 2); }
+          catch (e) { out.textContent = "❌ Invalid JSON: " + e.message; }
+        };
+      } else if (name === "Base64") {
+        document.getElementById("pEnc").onclick = function () { out.textContent = btoa(unescape(encodeURIComponent(inEl.value))); };
+        document.getElementById("pDec").onclick = function () { try { out.textContent = decodeURIComponent(escape(atob(inEl.value))); } catch (e) { out.textContent = "❌ Invalid base64"; } };
+      } else if (name === "URL Encoder") {
+        document.getElementById("pEnc").onclick = function () { out.textContent = encodeURIComponent(inEl.value); };
+        document.getElementById("pDec").onclick = function () { try { out.textContent = decodeURIComponent(inEl.value); } catch (e) { out.textContent = "❌ Malformed URI"; } };
+      } else if (name === "Hash Generator") {
+        inEl.oninput = function () {
+          if (!inEl.value) { out.textContent = ""; return; }
+          crypto.subtle.digest("SHA-256", new TextEncoder().encode(inEl.value)).then(function (buf) {
+            out.textContent = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+          });
+        };
+      } else if (name === "Unit Converter") {
+        document.getElementById("pRun").onclick = function () {
+          var v = inEl.value.trim();
+          var m = v.match(/^([\d.]+)\s*(px|rem)?$/i);
+          if (!m) { out.textContent = "Enter a number in px or rem, e.g. 32 or 2rem"; return; }
+          var n = parseFloat(m[1]);
+          out.textContent = m[2] && m[2].toLowerCase() === "rem"
+            ? n + "rem = " + (n * 16) + "px"
+            : n + "px = " + (n / 16) + "rem";
+        };
+      } else if (name === "Cron Parser") {
+        inEl.oninput = function () {
+          var p = inEl.value.trim().split(/\s+/);
+          if (p.length !== 5) { out.textContent = "Expected 5 fields: min hour day month weekday"; return; }
+          var names = ["minute", "hour (0-23)", "day of month", "month", "day of week (0=Sun)"];
+          out.textContent = p.map(function (f, i) {
+            return f + " → " + names[i] + (f === "*" ? " (every)" : " (" + (f.indexOf("*/") === 0 ? "every " + f.slice(2) + " " + names[i].split(" ")[0] : f) + ")");
+          }).join("\n");
+        };
+      } else if (name === "Regex Tester") {
+        var reEl = document.getElementById("pRe");
+        function test() {
+          if (!reEl.value) { out.textContent = ""; return; }
+          try {
+            var re = new RegExp(reEl.value, "g");
+            var hits = inEl.value.match(re);
+            out.textContent = hits ? hits.length + " match(es): " + hits.join(", ") : "No matches";
+          } catch (e) { out.textContent = "❌ " + e.message; }
+        }
+        reEl.oninput = test; inEl.oninput = test;
+      } else if (name === "Color Picker") {
+        inEl.oninput = function () {
+          var h = inEl.value, r = parseInt(h.substr(1,2),16), g = parseInt(h.substr(3,2),16), b = parseInt(h.substr(5,2),16);
+          out.textContent = "HEX: " + h + "\nRGB: rgb(" + r + ", " + g + ", " + b + ")";
+        };
+        inEl.oninput();
+      } else if (name === "CSS Generator") {
+        function gen() {
+          out.textContent = "background: linear-gradient(135deg, " +
+            document.getElementById("cA").value + ", " + document.getElementById("cB").value + ");\nbox-shadow: 0 10px 30px rgba(0,0,0,.25);\nborder-radius: 14px;";
+        }
+        document.getElementById("cA").oninput = gen; document.getElementById("cB").oninput = gen; gen();
+      }
+    }
+
+    tools.forEach(function (card) {
+      card.addEventListener("click", function () {
+        var name = card.querySelector("h3").textContent;
+        var already = card.classList.contains("selected");
+        tools.forEach(function (c) { c.classList.remove("selected"); });
+        if (already) { panel.classList.remove("show"); return; }
+        card.classList.add("selected");
+        panel.innerHTML = builders[name] ? builders[name]() : "<h4>" + esc(name) + "</h4><p style='font-size:13px;color:#3f6212'>This tool is coming soon.</p>";
+        panel.classList.add("show");
+        wire(name);
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
+
+    // ---- CTA opens the first tool instead of dead href="#" ----
+    document.getElementById("ctaBtn").addEventListener("click", function (e) {
+      e.preventDefault();
+      tools[0].click();
+    });
+  </script>
 </body>
 </html>
