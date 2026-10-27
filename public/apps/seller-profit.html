@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0F766E" />
+<title>SellerProfit India — Know Your Profit Before You Sell</title>
+<meta name="description" content="Free browser-local calculators for Indian e-commerce sellers: product profit, selling price, GST, marketplace fees, shipping, returns, discounts, break-even, inventory and bulk CSV analysis." />
+<link rel="canonical" href="#" id="canonical-link" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="SellerProfit India" />
+<meta property="og:title" content="SellerProfit India — Know Your Profit Before You Sell" />
+<meta property="og:description" content="Free profit, GST, pricing, shipping and return calculators for Indian online sellers. Runs entirely in your browser." />
+<meta name="twitter:card" content="summary" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/500.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/600.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/700.css" />
+<style>
+/* ============================================================
+   SellerProfit India — single page application
+   Design tokens
+   ============================================================ */
+:root{
+  --bg:#f8fafc; --fg:#0f172a; --card:#ffffff; --border:#e2e8f0;
+  --muted:#f1f5f9; --muted-fg:#64748b; --primary:#0f766e; --primary-fg:#ffffff;
+  --green:#059669; --green-bg:#ecfdf5; --red:#dc2626; --red-bg:#fef2f2;
+  --amber:#b45309; --amber-bg:#fffbeb; --shadow:0 1px 2px rgba(15,23,42,.06),0 4px 14px rgba(15,23,42,.05);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b1220; --fg:#e2e8f0; --card:#111a2c; --border:#22304a;
+  --muted:#162034; --muted-fg:#94a3b8; --primary:#14b8a6; --primary-fg:#04231f;
+  --green:#34d399; --green-bg:rgba(6,78,59,.35); --red:#f87171; --red-bg:rgba(127,29,29,.35);
+  --amber:#fbbf24; --amber-bg:rgba(120,53,15,.32); --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.28);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55;font-size:16px}
+h1,h2,h3,h4{line-height:1.2;margin:0;letter-spacing:-.015em}
+a{color:inherit}
+img{max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:absolute;left:8px;top:-48px;z-index:100;background:var(--primary);color:var(--primary-fg);padding:10px 16px;border-radius:10px;transition:top .15s}
+.skip:focus{top:8px}
+.wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 16px}
+@media(min-width:768px){.wrap{padding:0 24px}}
+
+/* Header */
+.hdr{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.hdr-in{display:flex;align-items:center;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;text-decoration:none;font-size:17px}
+.brand svg{color:var(--primary)}
+.nav{display:none;margin-left:auto;gap:22px}
+.nav a{text-decoration:none;font-size:14px;font-weight:500;color:var(--muted-fg)}
+.nav a:hover,.nav a[aria-current="page"]{color:var(--primary)}
+.hdr-act{display:flex;align-items:center;gap:6px;margin-left:auto}
+@media(min-width:900px){.nav{display:flex}.hdr-act{margin-left:0}}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid transparent;background:transparent;cursor:pointer}
+.icon-btn:hover{background:var(--muted)}
+.mob-nav{display:none;border-top:1px solid var(--border);padding:10px 0 16px}
+.mob-nav.open{display:block}
+.mob-nav a{display:block;padding:10px 4px;text-decoration:none;font-size:15px;border-bottom:1px solid var(--border)}
+.mob-nav a:last-child{border-bottom:0}
+
+/* Layout blocks */
+main{display:block;min-height:60vh}
+section{padding:34px 0}
+.sec-title{font-size:22px;font-weight:700}
+.sec-sub{margin-top:6px;color:var(--muted-fg);font-size:14.5px;max-width:70ch}
+@media(min-width:768px){.sec-title{font-size:26px}}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr}
+.g3{grid-template-columns:1fr}
+@media(min-width:720px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
+@media(min-width:1024px){.g2{grid-template-columns:1.05fr .95fr}.g3{grid-template-columns:repeat(3,1fr)}}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.card-tight{padding:16px}
+.card h2{font-size:17px;font-weight:600}
+.card h3{font-size:15.5px;font-weight:600}
+.card-link{display:block;text-decoration:none;transition:border-color .15s,transform .15s}
+.card-link:hover{border-color:color-mix(in srgb,var(--primary) 55%,var(--border));transform:translateY(-2px)}
+.card-link p{margin:8px 0 0;color:var(--muted-fg);font-size:13.5px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;padding:12px 20px;font-size:14.5px;font-weight:600;text-decoration:none;border:1px solid transparent;cursor:pointer;min-height:44px}
+.btn-primary{background:var(--primary);color:var(--primary-fg)}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-secondary{border-color:var(--border);background:var(--card)}
+.btn-secondary:hover{background:var(--muted)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--primary);padding:8px 10px;min-height:auto}
+.btn-sm{padding:8px 14px;font-size:13px;min-height:38px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Hero */
+.hero{padding:44px 0 26px}
+@media(min-width:768px){.hero{padding:64px 0 30px}}
+.hero h1{font-size:clamp(30px,6vw,48px);font-weight:700;max-width:18ch}
+.hero p.lead{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:var(--muted-fg);max-width:62ch}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.trust{display:flex;flex-wrap:wrap;gap:16px;margin-top:22px;color:var(--muted-fg);font-size:13px}
+.trust span{display:inline-flex;align-items:center;gap:6px}
+.hero-art{position:relative;height:210px;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;background:
+  radial-gradient(120% 120% at 15% 10%,color-mix(in srgb,var(--primary) 18%,transparent),transparent 60%),
+  linear-gradient(180deg,var(--card),var(--muted))}
+@media(min-width:1024px){.hero-art{height:100%;min-height:330px}}
+.hero-art svg{position:absolute;inset:0;width:100%;height:100%}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;background:var(--muted);color:var(--muted-fg)}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+
+/* Forms */
+.form-grid{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:640px){.form-grid{grid-template-columns:1fr 1fr}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label{font-size:13.5px;font-weight:500}
+.field .hint{font-size:12px;color:var(--muted-fg)}
+.input,select.input,textarea.input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-size:14.5px;min-height:44px}
+.input:focus{border-color:var(--primary)}
+.input[aria-invalid="true"]{border-color:var(--red)}
+.err{font-size:12px;color:var(--red);min-height:0}
+.check{display:flex;align-items:flex-start;gap:10px;font-size:14px}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--primary)}
+.form-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.alert{border-radius:11px;padding:12px 14px;font-size:13.5px}
+.alert-red{background:var(--red-bg);color:var(--red)}
+.alert-amber{background:var(--amber-bg);color:var(--amber)}
+.alert-muted{background:var(--muted);color:var(--muted-fg)}
+
+/* Results */
+.result-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--border);font-size:14px}
+.result-row:last-child{border-bottom:0}
+.result-row dt{color:var(--muted-fg)}
+.result-row dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.tone-green{color:var(--green)}
+.tone-red{color:var(--red)}
+.tone-amber{color:var(--amber)}
+.stat{text-align:left}
+.stat .k{font-size:12.5px;color:var(--muted-fg)}
+.stat .v{font-size:24px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+table.data{width:100%;border-collapse:collapse;font-size:13.5px;text-align:left}
+table.data th{color:var(--muted-fg);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;padding:10px 8px;border-bottom:1px solid var(--border)}
+table.data td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+table.data tbody tr:last-child td{border-bottom:0}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.num{font-variant-numeric:tabular-nums}
+.disclaimer{font-size:12px;color:var(--muted-fg);line-height:1.65}
+details.faq{border:1px solid var(--border);border-radius:11px;padding:14px;background:var(--card)}
+details.faq summary{cursor:pointer;font-weight:600;font-size:14.5px}
+details.faq p{margin:10px 0 0;font-size:13.5px;color:var(--muted-fg)}
+.breadcrumb{font-size:12.5px;color:var(--muted-fg);margin-bottom:14px}
+.breadcrumb a{text-decoration:none;color:var(--muted-fg)}
+.breadcrumb a:hover{color:var(--primary)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--border);background:var(--card);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:500;text-decoration:none}
+.chip[aria-pressed="true"],.chip.active{border-color:var(--primary);color:var(--primary)}
+.ad-slot{display:flex;align-items:center;justify-content:center;min-height:92px;border:1px dashed var(--border);border-radius:var(--radius);color:var(--muted-fg);font-size:12px;text-align:center;padding:12px;background:var(--card)}
+.chart-box{position:relative;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;font-size:12px;color:var(--muted-fg)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;font-size:13.5px;color:var(--muted-fg)}
+.footer-grid{display:grid;gap:26px;grid-template-columns:1fr}
+@media(min-width:720px){.footer-grid{grid-template-columns:repeat(4,1fr)}}
+.footer a{text-decoration:none}
+.footer a:hover{color:var(--primary)}
+.footer ul{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.footer-note{margin-top:26px;font-size:11.5px;line-height:1.7}
+.hr{height:1px;background:var(--border);border:0;margin:26px 0}
+.prose p{margin:0 0 12px;font-size:14.5px;color:var(--muted-fg);line-height:1.7}
+.prose h2{font-size:18px;margin:22px 0 8px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+@media print{.hdr,.footer,.ad-slot,.form-actions,.no-print{display:none!important}.card{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="hdr">
+  <div class="wrap hdr-in">
+    <a class="brand" href="#/">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="12" y1="10" x2="14" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="12" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+      <span>SellerProfit <span style="color:var(--primary)">India</span></span>
+    </a>
+    <nav class="nav" id="desktop-nav" aria-label="Main"></nav>
+    <div class="hdr-act">
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button class="icon-btn" id="menu-btn" type="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="wrap"><nav class="mob-nav" id="mobile-nav" aria-label="Mobile"></nav></div>
+</header>
+
+<main id="main" tabindex="-1"></main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <strong style="color:var(--fg);font-size:15px">SellerProfit India</strong>
+        <p style="margin:8px 0 0">Know your profit before you sell. Independent tools for Indian online sellers.</p>
+      </div>
+      <nav aria-label="Tools">
+        <strong style="color:var(--fg)">Tools</strong>
+        <ul>
+          <li><a href="#/calculators/product-profit">Product profit</a></li>
+          <li><a href="#/calculators/selling-price-calculator">Selling price</a></li>
+          <li><a href="#/calculators/gst-calculator">GST</a></li>
+          <li><a href="#/bulk-profit-calculator">Bulk CSV analyzer</a></li>
+          <li><a href="#/product-comparison">Product comparison</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Learn">
+        <strong style="color:var(--fg)">Learn</strong>
+        <ul>
+          <li><a href="#/guides">Seller guides</a></li>
+          <li><a href="#/calculators">All calculators</a></li>
+          <li><a href="#/about">About</a></li>
+          <li><a href="#/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Legal">
+        <strong style="color:var(--fg)">Legal</strong>
+        <ul>
+          <li><a href="#/privacy-policy">Privacy policy</a></li>
+          <li><a href="#/terms">Terms of use</a></li>
+          <li><a href="#/financial-disclaimer">Financial disclaimer</a></li>
+          <li><a href="#/affiliate-disclosure">Affiliate disclosure</a></li>
+        </ul>
+      </nav>
+    </div>
+    <p class="footer-note">
+      SellerProfit India is an independent estimation toolkit. It is not affiliated with, endorsed by, or officially
+      connected to Amazon, Flipkart, Meesho, Shopify, WooCommerce, Meta or any logistics carrier. Marketplace names are
+      used only to describe supported use cases. All outputs are user-configured estimates, not tax, accounting or
+      investment advice. No product data, cost data or uploaded CSV content ever leaves your browser.
+    </p>
+  </div>
+</footer>
+
+<script>
+/* ============================================================================
+   SellerProfit India — single page application
+   Vanilla JS. No network calls. All calculation runs client-side.
+   Hash routing keeps every screen deep-linkable and back/forward friendly.
+   ========================================================================= */
+"use strict";
+
+/* ---------------------------- 0. Utilities -------------------------------- */
+const round2 = (n) => (Number.isFinite(n) ? Math.sign(n) * Math.round((Math.abs(n) + Number.EPSILON) * 100) / 100 : 0);
+
+const inrFormatter = (dp) => new Intl.NumberFormat("en-IN", {
+  style: "currency", currency: "INR", minimumFractionDigits: dp, maximumFractionDigits: dp
+});
+
+/** Indian numbering system: 125000 -> ₹1,25,000.00 */
+function inr(v, dp) {
+  const digits = dp === undefined ? 2 : dp;
+  if (v === null || v === undefined || !Number.isFinite(v)) return "—";
+  return inrFormatter(digits).format(v);
+}
+function pct(v) {
+  if (v === null || v === undefined || !Number.isFinite(v)) return "—";
+  return v.toFixed(2) + "%";
+}
+function num(v) {
+  if (v === null || v === undefined || !Number.isFinite(v)) return "—";
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(v);
+}
+function assertValid() {
+  for (let i = 0; i < arguments.length; i++) {
+    const v = arguments[i];
+    if (!Number.isFinite(v) || v < 0) throw new Error("All amounts and rates must be finite and zero or more.");
+  }
+}
+function escapeHtml(s) {
+  return String(s === undefined || s === null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function clampRate(v, label) {
+  if (v < 0 || v > 100) throw new Error(label + " must be between 0 and 100.");
+  return v;
+}
+
+/* ---------------------- 1. CSV: bounded, non-executing -------------------- */
+const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB
+const MAX_ROWS = 1000;
+
+/** RFC-4180-style parser. Data only — never evaluated or executed. */
+function parseCsv(text) {
+  const src = String(text).replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [], field = "", quoted = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (quoted) {
+      if (ch === '"') {
+        if (src[i + 1] === '"') { field += '"'; i++; } else { quoted = false; }
+      } else { field += ch; }
+    } else if (ch === '"') {
+      quoted = true;
+    } else if (ch === ",") {
+      row.push(field); field = "";
+    } else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && src[i + 1] === "\n") i++;
+      row.push(field); field = "";
+      if (row.some(function (cell) { return cell.trim() !== ""; })) rows.push(row);
+      row = [];
+      if (rows.length > MAX_ROWS) throw new Error("Maximum " + MAX_ROWS + " rows allowed.");
+    } else { field += ch; }
+  }
+  if (quoted) throw new Error("Malformed CSV: unterminated quoted field.");
+  row.push(field);
+  if (row.some(function (cell) { return cell.trim() !== ""; })) rows.push(row);
+  if (!rows.length) throw new Error("CSV file is empty.");
+  return rows;
+}
+
+/** Spreadsheet formula-injection neutralisation on export. */
+function safeCell(value) {
+  const s = String(value);
+  const dangerous = /^[=+@\t\r]/.test(s) || (/^-/.test(s) && !/^-\d/.test(s));
+  return dangerous ? "'" + s : s;
+}
+function toCsv(headers, rows) {
+  const esc = (v) => '"' + safeCell(v).replace(/"/g, '""') + '"';
+  const lines = [headers.map(esc).join(",")];
+  rows.forEach(function (r) { lines.push(r.map(esc).join(",")); });
+  return lines.join("\r\n");
+}
+function downloadFile(filename, content, mime) {
+  const blob = new Blob(["\uFEFF" + content], { type: (mime || "text/csv") + ";charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(url); }, 1200);
+}
+
+/* ============================ 2. CALCULATION ENGINE ======================= */
+/* Pure functions. No DOM access. Documented formulas. Rounding only at the
+   documented output boundary so intermediate values keep full precision.   */
+
+const COST_KEYS = ["product", "packaging", "inbound", "fulfillment", "shipping", "advertising", "returns", "other"];
+const COST_LABELS = {
+  product: "Product cost", packaging: "Packaging", inbound: "Inbound transport",
+  fulfillment: "Warehouse / fulfillment", shipping: "Shipping / delivery",
+  advertising: "Advertising per order", returns: "Return allowance", other: "Other operating"
+};
+
+/** Gross (GST-inclusive) cost line -> expense actually borne.
+ *  If input tax credit is claimed, only the taxable value is an expense. */
+function netOfInputTax(amount, includesGst, ratePct, itcClaimed) {
+  assertValid(amount, ratePct);
+  if (!includesGst || ratePct === 0) return amount;
+  const taxable = amount / (1 + ratePct / 100);
+  return itcClaimed ? taxable : amount;
+}
+
+/** GST: exclusive total = taxable*(1+r); inclusive taxable = amount/(1+r). */
+function computeGst(amount, ratePct, mode, supply) {
+  assertValid(amount); clampRate(ratePct, "GST rate");
+  const m = mode === "inclusive" ? "inclusive" : "exclusive";
+  const factor = 1 + ratePct / 100;
+  const taxableValue = m === "inclusive" ? amount / factor : amount;
+  const gstAmount = m === "inclusive" ? amount - taxableValue : taxableValue * ratePct / 100;
+  const total = m === "inclusive" ? amount : taxableValue + gstAmount;
+  const intra = supply !== "inter";
+  return {
+    taxableValue: round2(taxableValue), gstAmount: round2(gstAmount), total: round2(total),
+    cgst: intra ? round2(gstAmount / 2) : 0,
+    sgst: intra ? round2(gstAmount / 2) : 0,
+    igst: intra ? 0 : round2(gstAmount)
+  };
+}
+
+/** Contribution model.
+ *  Total variable cost = product + packaging + inbound + fulfillment + shipping
+ *                        + advertising + return allowance + other + marketplace fees
+ *  Contribution profit  = revenue excluding output GST - total variable cost
+ *  Contribution margin  = contribution / revenue ex-GST * 100
+ *  Markup               = contribution / total variable cost * 100
+ *  NOTE: this is contribution profit, NOT net business profit. Fixed overhead
+ *  and income tax are out of scope unless the user models them as "other". */
+function calculateProductProfit(input) {
+  assertValid(input.sellingPrice, input.gstRate, input.commissionPct, input.paymentPct,
+    input.marketplaceFixedFee, input.monthlyOrders);
+  clampRate(input.gstRate, "GST rate");
+  clampRate(input.commissionPct, "Commission rate");
+  clampRate(input.paymentPct, "Payment fee rate");
+  if (input.commissionPct + input.paymentPct >= 100) {
+    throw new Error("Combined percentage fees cannot reach 100% of revenue.");
+  }
+
+  const revenue = input.priceIncludesGst
+    ? input.sellingPrice / (1 + input.gstRate / 100)
+    : input.sellingPrice;
+  const outputGst = input.sellingPrice - revenue;
+
+  const net = (key) => {
+    const c = input.costs[key] || { amount: 0 };
+    assertValid(c.amount);
+    return netOfInputTax(c.amount, !!c.includesGst, c.gstRate || 0, !!c.itc);
+  };
+
+  const productCost = net("product");
+  const packaging = net("packaging");
+  const logistics = net("inbound") + net("fulfillment") + net("shipping");
+  const advertising = net("advertising");
+  const returnCost = net("returns");
+  const otherCosts = net("other");
+  const pctRate = (input.commissionPct + input.paymentPct) / 100;
+  const marketplaceFees = revenue * pctRate + input.marketplaceFixedFee;
+  const totalVariableCost = productCost + packaging + logistics + advertising + returnCost + otherCosts + marketplaceFees;
+  const contributionProfit = revenue - totalVariableCost;
+
+  const fixedCostBase = productCost + packaging + logistics + advertising + returnCost + otherCosts + input.marketplaceFixedFee;
+  const breakEvenPriceExGst = (1 - pctRate) > 0 ? fixedCostBase / (1 - pctRate) : null;
+
+  let maxProductCostForTarget = null;
+  const tm = input.targetMarginPct;
+  if (typeof tm === "number" && tm >= 0 && tm <= 100) {
+    const others = totalVariableCost - productCost;
+    maxProductCostForTarget = revenue * (1 - tm / 100) - others;
+  }
+  const breakEvenCustomerPrice = breakEvenPriceExGst === null ? null
+    : round2(breakEvenPriceExGst * (input.priceIncludesGst ? (1 + input.gstRate / 100) : 1));
+
+  return {
+    sellingPrice: round2(input.sellingPrice),
+    revenue: round2(revenue),
+    outputGst: round2(outputGst),
+    productCost: round2(productCost),
+    marketplaceFees: round2(marketplaceFees),
+    logistics: round2(logistics),
+    packaging: round2(packaging),
+    advertising: round2(advertising),
+    returnCost: round2(returnCost),
+    otherCosts: round2(otherCosts),
+    totalVariableCost: round2(totalVariableCost),
+    contributionProfit: round2(contributionProfit),
+    contributionMarginPct: revenue > 0 ? contributionProfit / revenue * 100 : null,
+    markupPct: totalVariableCost > 0 ? contributionProfit / totalVariableCost * 100 : null,
+    profitPerUnit: round2(contributionProfit),
+    monthlyProfit: round2(contributionProfit * input.monthlyOrders),
+    breakEvenPriceExGst: breakEvenPriceExGst === null ? null : round2(breakEvenPriceExGst),
+    breakEvenCustomerPrice: breakEvenCustomerPrice,
+    maxProductCostForTarget: maxProductCostForTarget === null ? null : round2(maxProductCostForTarget),
+    breakdown: [
+      { label: COST_LABELS.product, value: round2(productCost) },
+      { label: "Marketplace + payment fees", value: round2(marketplaceFees) },
+      { label: "Logistics & fulfillment", value: round2(logistics) },
+      { label: COST_LABELS.packaging, value: round2(packaging) },
+      { label: COST_LABELS.advertising, value: round2(advertising) },
+      { label: COST_LABELS.returnCost || "Return allowance", value: round2(returnCost) },
+      { label: COST_LABELS.other, value: round2(otherCosts) },
+      { label: "Contribution profit", value: round2(contributionProfit) }
+    ]
+  };
+}
+
+/** Pricing solved backwards.
+ *  target amount : requiredEx = (fixedCosts + targetAmount) / (1 - v)
+ *  target margin : requiredEx = fixedCosts / (1 - v - m)
+ *  v = combined percentage fee rate, m = target margin. Margin != markup. */
+function calculateSellingPrice(i) {
+  assertValid(i.fixedCosts, i.variableFeePct, i.targetAmount, i.targetMarginPct,
+    i.gstRate, i.discountPct, i.currentPrice);
+  clampRate(i.gstRate, "GST rate"); clampRate(i.targetMarginPct, "Target margin");
+  if (i.variableFeePct >= 100) throw new Error("Percentage fees must stay below 100%.");
+  if (i.discountPct >= 100) throw new Error("Planned discount must stay below 100%.");
+
+  const v = i.variableFeePct / 100;
+  const m = i.targetMarginPct / 100;
+  const denominator = i.goal === "amount" ? 1 - v : 1 - v - m;
+  if (denominator <= 0) {
+    throw new Error("Impossible target: percentage fees plus desired margin leave no room for costs. Lower the target or the fees.");
+  }
+  const requiredExGst = i.goal === "amount"
+    ? (i.fixedCosts + i.targetAmount) / denominator
+    : i.fixedCosts / denominator;
+
+  const gstMultiplier = i.chargeGst ? 1 + i.gstRate / 100 : 1;
+  const customerPrice = requiredExGst * gstMultiplier;
+  const listPrice = customerPrice / (1 - i.discountPct / 100);
+  const achievedRevenue = listPrice * (1 - i.discountPct / 100) / gstMultiplier;
+  const contribution = achievedRevenue * (1 - v) - i.fixedCosts;
+
+  return {
+    requiredExGst: round2(requiredExGst),
+    customerPrice: round2(customerPrice),
+    listPrice: round2(listPrice),
+    contribution: round2(contribution),
+    contributionMarginPct: achievedRevenue > 0 ? contribution / achievedRevenue * 100 : null,
+    deltaVsCurrent: round2(customerPrice - i.currentPrice)
+  };
+}
+
+/** Margin = profit / revenue. Markup = profit / cost. */
+function calculateMargin(revenue, productCost, additionalCosts) {
+  assertValid(revenue, productCost, additionalCosts);
+  const total = productCost + additionalCosts;
+  const profit = revenue - total;
+  return {
+    profit: round2(profit),
+    marginPct: revenue > 0 ? profit / revenue * 100 : null,
+    markupPct: total > 0 ? profit / total * 100 : null,
+    costRatioPct: revenue > 0 ? total / revenue * 100 : null
+  };
+}
+
+/** contribution = price - variableCost; units = ceil((fixed + target)/contribution) */
+function calculateBreakEven(fixedMonthly, priceExGst, variableCost, desiredProfit) {
+  assertValid(fixedMonthly, priceExGst, variableCost, desiredProfit);
+  const contribution = priceExGst - variableCost;
+  if (contribution <= 0) {
+    return { contribution: round2(contribution), units: null, revenue: null, impossible: true };
+  }
+  const units = Math.ceil((fixedMonthly + desiredProfit) / contribution);
+  return { contribution: round2(contribution), units: units, revenue: round2(units * priceExGst), impossible: false };
+}
+function breakEvenScenarios(fixedMonthly, priceExGst, variableCost, volumes) {
+  return volumes.map(function (vol) {
+    assertValid(vol);
+    return { volume: vol, profit: round2(vol * (priceExGst - variableCost) - fixedMonthly) };
+  });
+}
+
+/** Returns. Refunded revenue is NOT added to the loss line: base contribution
+ *  is computed only on retained sales, so refunding is already excluded.
+ *  Sellable returns restock (no cost loss); only the unsellable share loses
+ *  product cost. recoveryValue is value recovered per returned order. */
+function calculateReturns(i) {
+  assertValid(i.monthlyOrders, i.price, i.productCost, i.outboundShipping,
+    i.returnShipping, i.packaging, i.returnFee, i.recoveryValue,
+    i.unsellablePct, i.refundProcessing, i.returnRatePct);
+  clampRate(i.returnRatePct, "Return rate"); clampRate(i.unsellablePct, "Unsellable share");
+
+  const returned = i.monthlyOrders * i.returnRatePct / 100;
+  const retained = i.monthlyOrders - returned;
+  const lossPerReturn = i.outboundShipping + i.packaging + i.returnShipping + i.returnFee +
+    i.refundProcessing + i.productCost * i.unsellablePct / 100 - i.recoveryValue;
+  const totalReturnCost = returned * lossPerReturn;
+  const baseContribution = i.price - i.productCost - i.outboundShipping - i.packaging;
+  const expectedContribution = retained * baseContribution - totalReturnCost;
+
+  return {
+    expectedReturned: round2(returned),
+    expectedRetained: round2(retained),
+    lossPerReturn: round2(lossPerReturn),
+    totalReturnCost: round2(totalReturnCost),
+    recoverableValue: round2(returned * i.recoveryValue),
+    expectedContribution: round2(expectedContribution),
+    effectiveReturnCostPerSale: retained > 0 ? round2(totalReturnCost / retained) : null,
+    scenarios: [0.5, 1, 1.5, 2].map(function (mult) {
+      const rate = Math.min(100, i.returnRatePct * mult);
+      const ret = i.monthlyOrders * rate / 100;
+      const profit = (i.monthlyOrders - ret) * baseContribution - ret * lossPerReturn;
+      return { ratePct: round2(rate), profit: round2(profit) };
+    })
+  };
+}
+
+/** Discounts. maxDiscount keeps contribution at zero; extra units assume
+ *  identical costs, unchanged return rate and unchanged ad cost per order. */
+function calculateDiscount(original, discountPct, productCost, otherVariableCosts, baselineUnits, targetMarginPct) {
+  assertValid(original, discountPct, productCost, otherVariableCosts, baselineUnits);
+  clampRate(discountPct, "Discount");
+  const costs = productCost + otherVariableCosts;
+  const newPrice = original * (1 - discountPct / 100);
+  const oldContribution = original - costs;
+  const newContribution = newPrice - costs;
+  const margin = newPrice > 0 ? newContribution / newPrice * 100 : null;
+  const maxDiscount = original > 0 ? Math.max(0, (1 - costs / original) * 100) : 0;
+  const extraUnits = (oldContribution > 0 && newContribution > 0)
+    ? Math.ceil(baselineUnits * oldContribution / newContribution) - baselineUnits
+    : null;
+  const warning = typeof targetMarginPct === "number" && targetMarginPct > 0 &&
+    (margin === null || margin < targetMarginPct);
+  return {
+    discountAmount: round2(original - newPrice),
+    customerPrice: round2(newPrice),
+    contribution: round2(newContribution),
+    marginPct: margin,
+    maxDiscountPct: round2(maxDiscount),
+    extraUnitsToOffset: extraUnits,
+    warning: !!warning
+  };
+}
+
+/** chargeableWeight = max(actual, L*W*H/divisor), then carrier rounding rule. */
+function calculateShipping(i) {
+  assertValid(i.actualWeightKg, i.lengthCm, i.widthCm, i.heightCm,
+    i.fixedPrice, i.perKgRate, i.fuelSurchargePct, i.handling);
+  if (!(i.dimDivisor > 0)) throw new Error("Dimensional divisor must be greater than zero.");
+  clampRate(i.fuelSurchargePct, "Fuel surcharge");
+
+  const dimensional = i.lengthCm * i.widthCm * i.heightCm / i.dimDivisor;
+  const raw = Math.max(i.actualWeightKg, dimensional);
+  let chargeable = raw;
+  if (i.rounding === "ceilKg") chargeable = Math.ceil(raw);
+  else if (i.rounding === "halfKg") chargeable = Math.ceil(raw * 2) / 2;
+
+  let base;
+  if (i.mode === "fixed") {
+    base = i.fixedPrice;
+  } else if (i.mode === "perKg") {
+    base = chargeable * i.perKgRate;
+  } else {
+    const sorted = (i.slabs || []).slice().sort(function (a, b) { return a.upToKg - b.upToKg; });
+    let match = null;
+    for (let s = 0; s < sorted.length; s++) { if (chargeable <= sorted[s].upToKg) { match = sorted[s]; break; } }
+    if (!match) throw new Error("Shipment weight exceeds every configured slab. Add a higher slab.");
+    base = match.price;
+  }
+  const fuel = base * i.fuelSurchargePct / 100;
+  return {
+    dimensionalWeightKg: round2(dimensional),
+    chargeableWeightKg: round2(chargeable),
+    baseCharge: round2(base),
+    fuelSurcharge: round2(fuel),
+    total: round2(base + fuel + i.handling)
+  };
+}
+
+/** Inventory investment is cash deployment, not a P&L expense. */
+function calculateInventory(i) {
+  assertValid(i.units, i.purchasePerUnit, i.packagingPerUnit, i.inboundFreight,
+    i.storageCost, i.periodMonths, i.monthlyCarryingCost, i.wastagePct, i.unsoldPct);
+  if (!(i.units > 0)) throw new Error("Units purchased must be greater than zero.");
+  clampRate(i.wastagePct, "Wastage"); clampRate(i.unsoldPct, "Unsold share");
+
+  const investment = i.units * (i.purchasePerUnit + i.packagingPerUnit) + i.inboundFreight + i.storageCost;
+  const holding = i.monthlyCarryingCost * i.periodMonths;
+  const sellable = i.units * (1 - i.wastagePct / 100);
+  let breakEvenSellThroughPct = null;
+  if (i.sellingPrice > 0 && typeof i.variableCostPerUnit === "number" && sellable > 0) {
+    const unitContribution = i.sellingPrice - i.variableCostPerUnit;
+    if (unitContribution > 0) breakEvenSellThroughPct = ((investment + holding) / unitContribution) / sellable * 100;
+  }
+  return {
+    totalInvestment: round2(investment),
+    landedCostPerUnit: round2(investment / i.units),
+    monthlyHoldingCost: round2(i.monthlyCarryingCost),
+    estimatedCarryingCost: round2(holding),
+    workingCapital: round2(investment + holding),
+    sellableUnits: round2(sellable),
+    expectedUnsoldUnits: round2(i.units * i.unsoldPct / 100),
+    breakEvenSellThroughPct: breakEvenSellThroughPct === null ? null : round2(breakEvenSellThroughPct)
+  };
+}
+
+/** Marketplace fee estimator. User-configured only — no live fee feed,
+ *  no invented schedule. Each line records source + last-verified date. */
+function calculateMarketplaceFees(price, productCost, weightKg, lines) {
+  assertValid(price, productCost, weightKg);
+  const computed = lines.map(function (rule) {
+    assertValid(rule.value);
+    let raw;
+    if (rule.type === "percent") { clampRate(rule.value, rule.id); raw = price * rule.value / 100; }
+    else if (rule.type === "perKg") raw = weightKg * rule.value;
+    else raw = rule.value;
+    const amount = round2(typeof rule.minimum === "number" ? Math.max(raw, rule.minimum) : raw);
+    return { id: rule.id, label: rule.label || rule.id, amount: amount, source: rule.source || "user-configured", verified: rule.verified || "" };
+  });
+  const total = round2(computed.reduce(function (sum, l) { return sum + l.amount; }, 0));
+  return {
+    lines: computed, total: total,
+    effectiveFeePct: price > 0 ? total / price * 100 : null,
+    netSettlement: round2(price - total),
+    contribution: round2(price - total - productCost),
+    contributionMarginPct: price > 0 ? (price - total - productCost) / price * 100 : null
+  };
+}
+
+/** Bulk model is deliberately ex-GST; GST belongs in the single-product tool. */
+function evaluateBulkRow(row) {
+  const costs = row.productCost + row.packaging + row.shipping + row.marketplaceFee +
+    row.advertising + row.returnAllowance + row.other;
+  const profit = row.sellingPrice - costs;
+  return Object.assign({}, row, {
+    totalCost: round2(costs),
+    profit: round2(profit),
+    marginPct: row.sellingPrice > 0 ? profit / row.sellingPrice * 100 : null,
+    isLoss: profit < 0
+  });
+}
+
+/* ============================ 3. CHART HELPERS =========================== */
+const CHART_COLORS = ["#0f766e", "#0ea5e9", "#f59e0b", "#64748b", "#8b5cf6", "#ef4444", "#22c55e", "#334155"];
+
+function polar(cx, cy, r, deg) {
+  const a = (deg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+function arcPath(cx, cy, rOuter, rInner, startDeg, endDeg) {
+  let sweep = endDeg - startDeg;
+  if (sweep >= 359.999) {
+    return arcPath(cx, cy, rOuter, rInner, startDeg, startDeg + 179.999) + " " +
+           arcPath(cx, cy, rOuter, rInner, startDeg + 180, endDeg - 0.001);
+  }
+  const large = sweep > 180 ? 1 : 0;
+  const p1 = polar(cx, cy, rOuter, startDeg), p2 = polar(cx, cy, rOuter, endDeg);
+  const p3 = polar(cx, cy, rInner, endDeg), p4 = polar(cx, cy, rInner, startDeg);
+  return "M" + p1[0].toFixed(2) + " " + p1[1].toFixed(2) +
+         " A" + rOuter + " " + rOuter + " 0 " + large + " 1 " + p2[0].toFixed(2) + " " + p2[1].toFixed(2) +
+         " L" + p3[0].toFixed(2) + " " + p3[1].toFixed(2) +
+         " A" + rInner + " " + rInner + " 0 " + large + " 0 " + p4[0].toFixed(2) + " " + p4[1].toFixed(2) + " Z";
+}
+function donutChart(items, centerLabel, centerValue) {
+  const positive = items.filter(function (d) { return Number.isFinite(d.value) && d.value > 0; });
+  if (!positive.length) {
+    return '<div class="alert alert-muted" style="text-align:center">Nothing to chart yet — all segments are zero. Enter costs to see the split.</div>';
+  }
+  const total = positive.reduce(function (s, d) { return s + d.value; }, 0);
+  const cx = 110, cy = 110, rOuter = 96, rInner = 58;
+  let cursor = 0;
+  let paths = "";
+  let legend = "";
+  positive.forEach(function (d, idx) {
+    const sweep = d.value / total * 360;
+    const color = CHART_COLORS[idx % CHART_COLORS.length];
+    paths += '<path d="' + arcPath(cx, cy, rOuter, rInner, cursor, cursor + sweep) + '" fill="' + color + '"><title>' +
+      escapeHtml(d.label) + ": " + escapeHtml(inr(d.value)) + " (" + (d.value / total * 100).toFixed(1) + '%)</title></path>';
+    legend += '<span><i style="background:' + color + '"></i>' + escapeHtml(d.label) + " — " + escapeHtml(inr(d.value)) + "</span>";
+    cursor += sweep;
+  });
+  return '<div class="chart-box" role="img" aria-label="Cost and contribution breakdown donut chart">' +
+    '<svg viewBox="0 0 220 220" width="100%" style="max-height:260px">' + paths +
+    '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" font-size="11" fill="currentColor" opacity=".6">' + escapeHtml(centerLabel) + '</text>' +
+    '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" font-size="17" font-weight="700" fill="currentColor">' + escapeHtml(centerValue) + '</text>' +
+    '</svg></div><div class="legend">' + legend + '</div>';
+}
+function lineChart(points, xLabel) {
+  if (!points || !points.length) return "";
+  const w = 620, h = 250, padL = 58, padR = 14, padT = 16, padB = 42;
+  const xs = points.map(function (p) { return p.x; });
+  const ys = points.map(function (p) { return p.y; });
+  const xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+  let yMin = Math.min.apply(null, ys), yMax = Math.max.apply(null, ys);
+  if (yMin > 0) yMin = 0;
+  if (yMax < 0) yMax = 0;
+  if (yMax === yMin) { yMax = yMin + 1; }
+  const spanX = (xMax - xMin) || 1, spanY = yMax - yMin;
+  const px = (x) => padL + (x - xMin) / spanX * (w - padL - padR);
+  const py = (y) => padT + (1 - (y - yMin) / spanY) * (h - padT - padB);
+
+  let grid = "", labels = "";
+  for (let g = 0; g <= 4; g++) {
+    const val = yMin + spanY * g / 4;
+    const y = py(val);
+    grid += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + y.toFixed(1) + '" stroke="currentColor" stroke-opacity=".12"/>';
+    labels += '<text x="' + (padL - 8) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".65">' + escapeHtml(Math.round(val).toLocaleString("en-IN")) + '</text>';
+  }
+  const zeroY = py(0);
+  const pts = points.map(function (p) { return px(p.x).toFixed(1) + "," + py(p.y).toFixed(1); }).join(" ");
+  let dots = "", xTicks = "";
+  points.forEach(function (p, idx) {
+    const color = p.y >= 0 ? "#059669" : "#dc2626";
+    dots += '<circle cx="' + px(p.x).toFixed(1) + '" cy="' + py(p.y).toFixed(1) + '" r="4" fill="' + color + '"><title>' +
+      escapeHtml(xLabel) + " " + num(p.x) + " → " + escapeHtml(inr(p.y)) + '</title></circle>';
+    if (idx % Math.ceil(points.length / 6) === 0 || idx === points.length - 1) {
+      xTicks += '<text x="' + px(p.x).toFixed(1) + '" y="' + (h - padB + 18) + '" text-anchor="middle" font-size="10" fill="currentColor" opacity=".65">' + escapeHtml(num(p.x)) + '</text>';
+    }
+  });
+  return '<div class="chart-box" role="img" aria-label="' + escapeHtml(xLabel) + ' versus profit line chart">' +
+    '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" preserveAspectRatio="xMidYMid meet">' + grid +
+    '<line x1="' + padL + '" y1="' + zeroY.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + zeroY.toFixed(1) + '" stroke="currentColor" stroke-opacity=".35" stroke-dasharray="4 4"/>' +
+    '<polyline points="' + pts + '" fill="none" stroke="#0f766e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+    dots + labels + xTicks +
+    '<text x="' + ((padL + w - padR) / 2) + '" y="' + (h - 6) + '" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">' + escapeHtml(xLabel) + '</text>' +
+    '</svg></div>';
+}
+
+/* ============================ 4. ANALYTICS / ADS ========================== */
+/* Analytics: allowlisted event names only. No product data, no costs,
+   no margins, no CSV contents. Disabled until an endpoint is configured.   */
+const ANALYTICS_ENDPOINT = ""; // set only if you operate a first-party collector
+function track(eventName) {
+  const allowed = ["calculator_opened", "calculation_completed", "csv_uploaded",
+    "report_exported", "guide_viewed", "affiliate_clicked"];
+  if (!ANALYTICS_ENDPOINT || allowed.indexOf(eventName) === -1) return;
+  if (!("sendBeacon" in navigator)) return;
+  try { navigator.sendBeacon(ANALYTICS_ENDPOINT, JSON.stringify({ event: eventName, ts: Date.now() })); }
+  catch (e) { /* analytics must never break a calculation */ }
+}
+const AD_CLIENT = "";      // leave empty: ad slots stay inert
+const AD_SLOT_GUIDE = "";
+function adSlotHtml(kind) {
+  const configured = AD_CLIENT && AD_SLOT_GUIDE;
+  return '<aside class="ad-slot no-print" aria-label="Advertisement placement">' +
+    (configured ? "Sponsored placement — labelled when active" : "Advertising is not enabled on this instance. No third-party request is made.") +
+    "</aside>";
+}
+
+/* ============================ 5. CALCULATOR REGISTRY ===================== */
+const money = (label, value) => ({ l: label, v: inr(value) });
+const percentLine = (label, value) => ({ l: label, v: pct(value) });
+const countLine = (label, value) => ({ l: label, v: num(value) });
+const toneOf = (v) => (v > 0 ? "green" : v < 0 ? "red" : "amber");
+
+const N = (v, key) => { const x = Number(v[key]); return Number.isFinite(x) ? x : 0; };
+const B = (v, key) => v[key] === true;
+const S = (v, key) => String(v[key] === undefined || v[key] === null ? "" : v[key]);
+
+function costFields(defaults) {
+  return COST_KEYS.map(function (key) {
+    return { k: "cost_" + key, l: COST_LABELS[key] + " (₹)", t: "number", d: defaults[key] || 0, min: 0 };
+  });
+}
+function costsFromValues(v, gstRate, includesGst, itc) {
+  const out = {};
+  COST_KEYS.forEach(function (key) {
+    out[key] = { amount: N(v, "cost_" + key), includesGst: includesGst, gstRate: gstRate, itc: itc };
+  });
+  return out;
+}
+
+function profitCalculator(id, title, description, overrides) {
+  const ov = overrides || {};
+  const defaultCosts = Object.assign({ product: 150 }, ov.costs || {});
+  const fields = [
+    { k: "productName", l: "Product name", t: "text", d: "My product", wide: true },
+    { k: "sku", l: "SKU (optional)", t: "text", d: "", wide: true },
+    { k: "sellingPrice", l: "Selling price (₹)", t: "number", d: ov.price === undefined ? 499 : ov.price, min: 0 },
+    { k: "priceIncludesGst", l: "Selling price includes GST", t: "checkbox", d: false },
+    { k: "gstRate", l: "Applicable GST rate (%)", t: "number", d: 18, min: 0, max: 100,
+      hint: "Verify the rate for your product. Rates differ by HSN classification." },
+    { k: "costsIncludeGst", l: "Cost inputs are GST-inclusive cash outflows", t: "checkbox", d: false },
+    { k: "itcClaimed", l: "Claim input tax credit on inclusive costs", t: "checkbox", d: false,
+      hint: "When credit is claimed, only the ex-GST portion counts as an expense." }
+  ].concat(costFields(defaultCosts), [
+    { k: "commissionPct", l: "Marketplace commission (% of ex-GST revenue)", t: "number",
+      d: ov.commissionPct === undefined ? 10 : ov.commissionPct, min: 0, max: 100 },
+    { k: "marketplaceFixedFee", l: "Marketplace fixed / closing fee (₹)", t: "number", d: 0, min: 0 },
+    { k: "paymentPct", l: "Payment processing (% of ex-GST revenue)", t: "number",
+      d: ov.paymentPct === undefined ? 2 : ov.paymentPct, min: 0, max: 100 },
+    { k: "monthlyOrders", l: "Expected orders per month", t: "number", d: 100, min: 0 },
+    { k: "targetMarginPct", l: "Target contribution margin (%)", t: "number", d: 20, min: 0, max: 100 }
+  ]);
+
+  return {
+    id: id, title: title, description: description, tag: ov.tag || "marketplace",
+    chart: "breakdown", fields: fields,
+    disclaimer: "Contribution profit is not net business profit: fixed overhead, salaries, financing costs and income tax are excluded unless you model them as other operating costs. Percentage fees apply to revenue excluding output GST. GST treatment here is a configurable estimate, not tax advice.",
+    compute: function (v) {
+      const result = calculateProductProfit({
+        productName: S(v, "productName"), sku: S(v, "sku"),
+        sellingPrice: N(v, "sellingPrice"),
+        priceIncludesGst: B(v, "priceIncludesGst"),
+        gstRate: N(v, "gstRate"),
+        costs: costsFromValues(v, N(v, "gstRate"), B(v, "costsIncludeGst"), B(v, "itcClaimed")),
+        commissionPct: N(v, "commissionPct"),
+        paymentPct: N(v, "paymentPct"),
+        marketplaceFixedFee: N(v, "marketplaceFixedFee"),
+        monthlyOrders: N(v, "monthlyOrders"),
+        targetMarginPct: N(v, "targetMarginPct")
+      });
+      const lines = [
+        money("Selling price", result.sellingPrice),
+        money("Revenue excluding GST", result.revenue),
+        money("Output GST collected", result.outputGst),
+        money("Product cost", result.productCost),
+        money("Marketplace + payment fees", result.marketplaceFees),
+        money("Logistics & fulfillment", result.logistics),
+        money("Packaging", result.packaging),
+        money("Advertising", result.advertising),
+        money("Return allowance", result.returnCost),
+        money("Other costs", result.otherCosts),
+        money("Total variable cost", result.totalVariableCost),
+        { l: "Contribution profit per unit", v: inr(result.contributionProfit), tone: toneOf(result.contributionProfit) },
+        percentLine("Contribution margin", result.contributionMarginPct),
+        percentLine("Markup on total cost", result.markupPct),
+        money("Estimated monthly contribution", result.monthlyProfit),
+        money("Break-even price (ex-GST)", result.breakEvenPriceExGst),
+        money("Break-even customer price", result.breakEvenCustomerPrice),
+        money("Max product cost for target margin", result.maxProductCostForTarget)
+      ];
+      let warning;
+      if (result.contributionProfit < 0) warning = "This configuration loses money on every order before any fixed cost.";
+      else if (result.contributionMarginPct !== null && result.contributionMarginPct < 10) warning = "Margin is under 10% — thin cover for returns, ad inflation and payment failures.";
+      return { lines: lines, breakdown: result.breakdown, warning: warning, total: result.totalVariableCost };
+    }
+  };
+}
+
+const CALCULATORS = {};
+
+CALCULATORS["product-profit"] = profitCalculator(
+  "product-profit", "Product Profit Calculator",
+  "Model the true per-order economics of a product before you list it, advertise it or discount it.",
+  { tag: "core", price: 499 });
+
+CALCULATORS["amazon-seller-profit-calculator"] = profitCalculator(
+  "amazon-seller-profit-calculator", "Amazon India Seller Profit Calculator",
+  "Independent, user-configured estimate. Enter the referral fee, closing fee and fulfillment charges shown in your own seller dashboard or settlement report — no live fee feed is used and no current schedule is assumed.",
+  { price: 999, costs: { product: 350, shipping: 60 }, commissionPct: 12, paymentPct: 2 });
+
+CALCULATORS["flipkart-seller-profit-calculator"] = profitCalculator(
+  "flipkart-seller-profit-calculator", "Flipkart Seller Profit Calculator",
+  "Configure your category commission, collection fee and shipping weight band manually. This tool is independent of Flipkart and does not fetch or guess its fee schedule.",
+  { price: 899, costs: { product: 300, shipping: 70 }, commissionPct: 12, paymentPct: 2 });
+
+CALCULATORS["meesho-profit-calculator"] = profitCalculator(
+  "meesho-profit-calculator", "Meesho Seller Profit Calculator",
+  "Model both a zero-commission scenario and a paid-commission scenario by setting the commission field yourself, then compare contribution and the return drag typical of COD-heavy catalogs.",
+  { price: 399, costs: { product: 140, shipping: 55, returns: 25 }, commissionPct: 0, paymentPct: 2 });
+
+CALCULATORS["shopify-profit-calculator"] = profitCalculator(
+  "shopify-profit-calculator", "Shopify & D2C Store Profit Calculator",
+  "Include payment gateway fees, ad cost per order, courier charges and returns for your own store. Subscription and app costs belong in other operating costs.",
+  { price: 1299, costs: { product: 450, shipping: 80, advertising: 220 }, commissionPct: 0, paymentPct: 2 });
+
+CALCULATORS["marketplace-fee-calculator"] = {
+  id: "marketplace-fee-calculator", title: "Marketplace Fee Calculator", tag: "marketplace", chart: "breakdown",
+  description: "Add up your own configured fee lines to see the effective fee load and net settlement per order.",
+  disclaimer: "No marketplace fee schedule is built in or fetched. Every line below is a user-configured estimate. Record the source and last-verified date of each figure you enter so the model stays auditable.",
+  fields: [
+    { k: "sellingPrice", l: "Selling price (₹)", t: "number", d: 999, min: 0 },
+    { k: "productCost", l: "Product cost (₹)", t: "number", d: 350, min: 0 },
+    { k: "weightKg", l: "Shipment weight (kg)", t: "number", d: 0.5, min: 0, step: 0.01 },
+    { k: "category", l: "Product category", t: "text", d: "Apparel", wide: true },
+    { k: "fulfillment", l: "Fulfillment method", t: "select", d: "seller",
+      options: [["seller", "Seller ships (easy ship)"], ["marketplace", "Marketplace fulfillment"], ["self", "Own courier / self ship"]] },
+    { k: "zone", l: "Shipping zone", t: "select", d: "local",
+      options: [["local", "Local"], ["regional", "Regional"], ["national", "National"], ["metro", "Metro"]] },
+    { k: "referralPct", l: "Referral / commission (%)", t: "number", d: 12, min: 0, max: 100 },
+    { k: "closingFee", l: "Closing / order fee (₹)", t: "number", d: 10, min: 0 },
+    { k: "fulfillmentFee", l: "Fulfillment charge (₹)", t: "number", d: 45, min: 0 },
+    { k: "collectionPct", l: "Collection / payment fee (%)", t: "number", d: 2, min: 0, max: 100 },
+    { k: "returnFeeAllowance", l: "Return-related fee allowance (₹)", t: "number", d: 20, min: 0 },
+    { k: "otherCharges", l: "Other applicable charges (₹)", t: "number", d: 0, min: 0 },
+    { k: "sourceUrl", l: "Source of your fee figures", t: "text", d: "Seller dashboard", wide: true,
+      hint: "Note where you copied these numbers so the estimate stays traceable." }
+  ],
+  compute: function (v) {
+    const src = S(v, "sourceUrl") || "user-configured";
+    const today = new Date().toISOString().slice(0, 10);
+    const result = calculateMarketplaceFees(N(v, "sellingPrice"), N(v, "productCost"), N(v, "weightKg"), [
+      { id: "referral", label: "Referral / commission", type: "percent", value: N(v, "referralPct"), source: src, verified: today },
+      { id: "closing", label: "Closing / order fee", type: "fixed", value: N(v, "closingFee"), source: src, verified: today },
+      { id: "fulfillment", label: "Fulfillment charge", type: "fixed", value: N(v, "fulfillmentFee"), source: src, verified: today },
+      { id: "collection", label: "Collection / payment fee", type: "percent", value: N(v, "collectionPct"), source: src, verified: today },
+      { id: "returns", label: "Return fee allowance", type: "fixed", value: N(v, "returnFeeAllowance"), source: src, verified: today },
+      { id: "other", label: "Other charges", type: "fixed", value: N(v, "otherCharges"), source: src, verified: today }
+    ]);
+    const lines = [
+      money("Total estimated marketplace charges", result.total),
+      percentLine("Effective fee load on selling price", result.effectiveFeePct),
+      money("Estimated net settlement", result.netSettlement),
+      { l: "Contribution after product cost", v: inr(result.contribution), tone: toneOf(result.contribution) },
+      percentLine("Contribution margin", result.contributionMarginPct),
+      countLine("Chargeable weight used (kg)", N(v, "weightKg"))
+    ];
+    return {
+      lines: lines,
+      breakdown: result.lines.map(function (l) { return { label: l.label, value: l.amount }; }),
+      warning: result.contribution < 0 ? "Fees and product cost exceed the selling price." : undefined
+    };
+  }
+};
+
+CALCULATORS["selling-price-calculator"] = {
+  id: "selling-price-calculator", title: "Selling Price Calculator", tag: "pricing",
+  description: "Work backwards from a target contribution amount or target margin to a defensible selling price.",
+  disclaimer: "Margin is profit ÷ revenue. Markup is profit ÷ cost. This tool solves for margin. If percentage fees plus your target margin reach 100%, no price can work and the calculator refuses rather than returning a misleading number.",
+  fields: [
+    { k: "goal", l: "Pricing goal", t: "select", d: "margin",
+      options: [["margin", "Target contribution margin (%)"], ["amount", "Target contribution amount (₹)"]] },
+    { k: "fixedCosts", l: "Total fixed per-unit costs (₹, ex-GST)", t: "number", d: 250, min: 0,
+      hint: "Product + packaging + logistics + fixed fees. Anything not charged as a percentage of revenue." },
+    { k: "variableFeePct", l: "Combined percentage fees (%)", t: "number", d: 12, min: 0, max: 99,
+      hint: "Commission + payment + any other revenue-linked charge." },
+    { k: "targetAmount", l: "Target contribution per unit (₹)", t: "number", d: 150, min: 0 },
+    { k: "targetMarginPct", l: "Target contribution margin (%)", t: "number", d: 25, min: 0, max: 99 },
+    { k: "gstRate", l: "Output GST rate (%)", t: "number", d: 18, min: 0, max: 100 },
+    { k: "chargeGst", l: "Charge GST on top of the required revenue", t: "checkbox", d: true },
+    { k: "discountPct", l: "Planned discount (%)", t: "number", d: 10, min: 0, max: 99 },
+    { k: "currentPrice", l: "Current selling price (₹)", t: "number", d: 599, min: 0 }
+  ],
+  compute: function (v) {
+    const r = calculateSellingPrice({
+      fixedCosts: N(v, "fixedCosts"), variableFeePct: N(v, "variableFeePct"),
+      goal: S(v, "goal") === "amount" ? "amount" : "margin",
+      targetAmount: N(v, "targetAmount"), targetMarginPct: N(v, "targetMarginPct"),
+      gstRate: N(v, "gstRate"), chargeGst: B(v, "chargeGst"),
+      discountPct: N(v, "discountPct"), currentPrice: N(v, "currentPrice")
+    });
+    return {
+      lines: [
+        money("Required revenue ex-GST", r.requiredExGst),
+        money("Customer price", r.customerPrice),
+        money("Required list price before discount", r.listPrice),
+        money("Expected contribution per unit", r.contribution),
+        percentLine("Expected contribution margin", r.contributionMarginPct),
+        { l: "Difference vs current price", v: inr(r.deltaVsCurrent), tone: r.deltaVsCurrent > 0 ? "amber" : "green" }
+      ],
+      warning: r.deltaVsCurrent > 0 ? "Your current price is below the required price for this target." : undefined
+    };
+  }
+};
+
+CALCULATORS["gst-calculator"] = {
+  id: "gst-calculator", title: "GST Calculator", tag: "tax",
+  description: "Separate taxable value from GST, inclusive or exclusive, with CGST/SGST or IGST split.",
+  disclaimer: "The correct rate depends on your product classification, registration scheme and place of supply. Composition-scheme sellers generally cannot claim input tax credit. Verify with a qualified tax professional — this is an arithmetic aid only.",
+  fields: [
+    { k: "amount", l: "Amount (₹)", t: "number", d: 1180, min: 0 },
+    { k: "rate", l: "GST rate (%) — verify for your product", t: "number", d: 18, min: 0, max: 100 },
+    { k: "mode", l: "Mode", t: "select", d: "inclusive",
+      options: [["inclusive", "Amount includes GST"], ["exclusive", "Add GST on top"]] },
+    { k: "supply", l: "Supply type", t: "select", d: "intra",
+      options: [["intra", "Intra-state (CGST + SGST)"], ["inter", "Inter-state (IGST)"]] },
+    { k: "quickRates", l: "Common rates to check", t: "select", d: "",
+      options: [["", "Select to apply…"], ["0", "0%"], ["5", "5%"], ["12", "12%"], ["18", "18%"], ["28", "28%"]],
+      hint: "Applying a rate here is a shortcut only. Always confirm the rate for your HSN code." }
+  ],
+  compute: function (v) {
+    const r = computeGst(N(v, "amount"), N(v, "rate"), S(v, "mode"), S(v, "supply"));
+    return {
+      lines: [
+        money("Taxable value", r.taxableValue),
+        money("Total GST", r.gstAmount),
+        money("Final amount", r.total),
+        money("CGST", r.cgst), money("SGST", r.sgst), money("IGST", r.igst)
+      ]
+    };
+  }
+};
+
+CALCULATORS["profit-margin-calculator"] = {
+  id: "profit-margin-calculator", title: "Profit Margin & Markup Calculator", tag: "finance",
+  description: "See margin and markup side by side so a 40% target never gets solved as a 40% markup.",
+  disclaimer: "Contribution margin reflects only the variable costs you enter. Gross margin needs a defined cost of goods; net profit needs every fixed cost and tax. Do not treat any of these figures as net profit.",
+  fields: [
+    { k: "revenue", l: "Revenue / selling price ex-GST (₹)", t: "number", d: 999, min: 0 },
+    { k: "productCost", l: "Product cost (₹)", t: "number", d: 400, min: 0 },
+    { k: "additionalCosts", l: "Other variable costs (₹)", t: "number", d: 150, min: 0 }
+  ],
+  compute: function (v) {
+    const r = calculateMargin(N(v, "revenue"), N(v, "productCost"), N(v, "additionalCosts"));
+    return {
+      lines: [
+        { l: "Contribution profit", v: inr(r.profit), tone: toneOf(r.profit) },
+        percentLine("Profit margin (% of revenue)", r.marginPct),
+        percentLine("Markup (% of cost)", r.markupPct),
+        percentLine("Cost-to-selling-price ratio", r.costRatioPct),
+        money("Total costs", N(v, "productCost") + N(v, "additionalCosts"))
+      ]
+    };
+  }
+};
+
+CALCULATORS["break-even-calculator"] = {
+  id: "break-even-calculator", title: "Break-Even Calculator", tag: "finance", chart: "break-even",
+  description: "How many units must you sell each month to cover fixed costs — and to reach a profit target?",
+  disclaimer: "Uses contribution per unit on ex-GST revenue. Only the fixed costs you enter are covered; anything you leave out (your own salary, software, interest) is not in the break-even point.",
+  fields: [
+    { k: "fixedMonthly", l: "Fixed monthly costs (₹)", t: "number", d: 20000, min: 0 },
+    { k: "price", l: "Selling price ex-GST (₹)", t: "number", d: 500, min: 0 },
+    { k: "variableCost", l: "Variable cost per unit (₹)", t: "number", d: 300, min: 0 },
+    { k: "desiredProfit", l: "Desired monthly profit (₹)", t: "number", d: 10000, min: 0 }
+  ],
+  compute: function (v) {
+    const fixed = N(v, "fixedMonthly"), price = N(v, "price"), vc = N(v, "variableCost");
+    const r = calculateBreakEven(fixed, price, vc, N(v, "desiredProfit"));
+    const volumes = [0, 25, 50, 75, 100, 125, 150, 200, 250];
+    return {
+      lines: [
+        money("Contribution per unit", r.contribution),
+        { l: "Units to break even (incl. target profit)", v: r.units === null ? "Not achievable" : num(r.units),
+          tone: r.impossible ? "red" : "green" },
+        money("Revenue at that volume", r.revenue),
+        money("Profit at 0 units", round2(-fixed)),
+        money("Profit at 100 units", round2(100 * (price - vc) - fixed))
+      ],
+      warning: r.impossible ? "Contribution per unit is zero or negative, so no sales volume can cover fixed costs at these prices. Raise price or cut variable cost first." : undefined,
+      scenarios: breakEvenScenarios(fixed, price, vc, volumes).map(function (p) { return { x: p.volume, y: p.profit }; })
+    };
+  }
+};
+
+CALCULATORS["return-loss-calculator"] = {
+  id: "return-loss-calculator", title: "Return & Refund Loss Calculator", tag: "operations",
+  description: "Quantify what COD RTO and prepaid returns really cost per successful sale, and how margin moves as return rates change.",
+  disclaimer: "Refunded revenue is excluded from the loss line to avoid double counting: base contribution is computed only on retained sales. Sellable returns restock at no cost loss; only the unsellable share loses product cost. Recovery value must not also be counted as a sale.",
+  fields: [
+    { k: "monthlyOrders", l: "Monthly orders", t: "number", d: 500, min: 0 },
+    { k: "returnRatePct", l: "Return rate (%)", t: "number", d: 15, min: 0, max: 100 },
+    { k: "price", l: "Average selling price (₹)", t: "number", d: 699, min: 0 },
+    { k: "productCost", l: "Product cost (₹)", t: "number", d: 250, min: 0 },
+    { k: "outboundShipping", l: "Outbound shipping (₹)", t: "number", d: 70, min: 0 },
+    { k: "packaging", l: "Packaging (₹)", t: "number", d: 15, min: 0 },
+    { k: "returnShipping", l: "Return shipping (₹)", t: "number", d: 70, min: 0 },
+    { k: "returnFee", l: "Marketplace return-related fee (₹)", t: "number", d: 20, min: 0 },
+    { k: "refundProcessing", l: "Refund processing cost (₹)", t: "number", d: 5, min: 0 },
+    { k: "recoveryValue", l: "Recovery / resale value per return (₹)", t: "number", d: 100, min: 0 },
+    { k: "unsellablePct", l: "Unsellable share of returns (%)", t: "number", d: 30, min: 0, max: 100 }
+  ],
+  compute: function (v) {
+    const r = calculateReturns({
+      monthlyOrders: N(v, "monthlyOrders"), price: N(v, "price"), productCost: N(v, "productCost"),
+      outboundShipping: N(v, "outboundShipping"), returnShipping: N(v, "returnShipping"),
+      packaging: N(v, "packaging"), returnFee: N(v, "returnFee"), recoveryValue: N(v, "recoveryValue"),
+      unsellablePct: N(v, "unsellablePct"), refundProcessing: N(v, "refundProcessing"),
+      returnRatePct: N(v, "returnRatePct")
+    });
+    const lines = [
+      countLine("Expected returned orders", r.expectedReturned),
+      countLine("Expected retained orders", r.expectedRetained),
+      money("Loss per returned order", r.lossPerReturn),
+      money("Total monthly return cost", r.totalReturnCost),
+      money("Estimated recoverable value", r.recoverableValue),
+      { l: "Expected monthly contribution", v: inr(r.expectedContribution), tone: toneOf(r.expectedContribution) },
+      money("Return cost per successful sale", r.effectiveReturnCostPerSale)
+    ];
+    r.scenarios.forEach(function (s) {
+      lines.push({ l: "Contribution at " + num(s.ratePct) + "% returns", v: inr(s.profit), tone: toneOf(s.profit) });
+    });
+    return { lines: lines, warning: r.expectedContribution < 0 ? "Returns push this product into loss at current volumes." : undefined };
+  }
+};
+
+CALCULATORS["discount-calculator"] = {
+  id: "discount-calculator", title: "Discount Profitability Calculator", tag: "pricing",
+  description: "Does the discount pay for itself in extra units — or silently erase your contribution?",
+  disclaimer: "Extra-unit offset math assumes identical costs, unchanged return rate and unchanged advertising cost per order. Real campaigns usually raise return rates and ad costs, so treat the offset figure as a floor, not a forecast.",
+  fields: [
+    { k: "original", l: "Original price ex-GST (₹)", t: "number", d: 999, min: 0 },
+    { k: "discountPct", l: "Discount (%)", t: "number", d: 20, min: 0, max: 100 },
+    { k: "productCost", l: "Product cost (₹)", t: "number", d: 400, min: 0 },
+    { k: "otherVariableCosts", l: "Other variable costs (₹)", t: "number", d: 150, min: 0 },
+    { k: "baselineUnits", l: "Baseline units for offset math", t: "number", d: 100, min: 1 },
+    { k: "targetMarginPct", l: "Minimum acceptable margin (%)", t: "number", d: 15, min: 0, max: 100 }
+  ],
+  compute: function (v) {
+    const r = calculateDiscount(N(v, "original"), N(v, "discountPct"), N(v, "productCost"),
+      N(v, "otherVariableCosts"), N(v, "baselineUnits"), N(v, "targetMarginPct"));
+    return {
+      lines: [
+        money("Discount amount", r.discountAmount),
+        money("Customer price after discount", r.customerPrice),
+        { l: "Contribution after discount", v: inr(r.contribution), tone: toneOf(r.contribution) },
+        percentLine("Margin after discount", r.marginPct),
+        percentLine("Maximum discount before contribution hits zero", r.maxDiscountPct),
+        { l: "Extra units needed vs baseline", v: r.extraUnitsToOffset === null ? "Not meaningful" : num(r.extraUnitsToOffset) }
+      ],
+      warning: r.warning ? "This discount fails your minimum acceptable margin." :
+        (r.contribution <= 0 ? "At this discount the product no longer contributes." : undefined)
+    };
+  }
+};
+
+CALCULATORS["shipping-cost-calculator"] = {
+  id: "shipping-cost-calculator", title: "Shipping & Dimensional Weight Calculator", tag: "operations",
+  description: "Compare actual weight with volumetric weight and price the parcel using your own rate card.",
+  disclaimer: "User-configured estimate only — not an official carrier quotation. Enter the divisor, rounding rule, fuel surcharge and slab prices from the rate card you were actually given.",
+  fields: [
+    { k: "actualWeightKg", l: "Actual shipment weight (kg)", t: "number", d: 0.8, min: 0, step: 0.01 },
+    { k: "dimDivisor", l: "Dimensional weight divisor", t: "number", d: 5000, min: 1 },
+    { k: "lengthCm", l: "Length (cm)", t: "number", d: 30, min: 0 },
+    { k: "widthCm", l: "Width (cm)", t: "number", d: 20, min: 0 },
+    { k: "heightCm", l: "Height (cm)", t: "number", d: 10, min: 0 },
+    { k: "zone", l: "Shipping zone", t: "select", d: "regional",
+      options: [["local", "Local"], ["regional", "Regional"], ["national", "National"], ["metro", "Metro"]] },
+    { k: "mode", l: "Rate model", t: "select", d: "perKg",
+      options: [["fixed", "Fixed price"], ["perKg", "Per kilogram"], ["slabs", "Weight slabs"]] },
+    { k: "fixedPrice", l: "Fixed shipping price (₹)", t: "number", d: 65, min: 0 },
+    { k: "perKgRate", l: "Rate per kg (₹)", t: "number", d: 80, min: 0 },
+    { k: "slab1", l: "Slab up to 0.5 kg (₹)", t: "number", d: 40, min: 0 },
+    { k: "slab2", l: "Slab up to 1 kg (₹)", t: "number", d: 65, min: 0 },
+    { k: "slab3", l: "Slab up to 5 kg (₹)", t: "number", d: 180, min: 0 },
+    { k: "fuelSurchargePct", l: "Fuel surcharge (%)", t: "number", d: 10, min: 0, max: 100 },
+    { k: "handling", l: "Additional handling charge (₹)", t: "number", d: 5, min: 0 },
+    { k: "rounding", l: "Chargeable weight rounding", t: "select", d: "ceilKg",
+      options: [["none", "No rounding"], ["halfKg", "Round up to 0.5 kg"], ["ceilKg", "Round up to 1 kg"]] }
+  ],
+  compute: function (v) {
+    const r = calculateShipping({
+      actualWeightKg: N(v, "actualWeightKg"), lengthCm: N(v, "lengthCm"),
+      widthCm: N(v, "widthCm"), heightCm: N(v, "heightCm"), dimDivisor: N(v, "dimDivisor"),
+      mode: S(v, "mode"), fixedPrice: N(v, "fixedPrice"), perKgRate: N(v, "perKgRate"),
+      slabs: [
+        { upToKg: 0.5, price: N(v, "slab1") },
+        { upToKg: 1, price: N(v, "slab2") },
+        { upToKg: 5, price: N(v, "slab3") }
+      ],
+      fuelSurchargePct: N(v, "fuelSurchargePct"), handling: N(v, "handling"), rounding: S(v, "rounding")
+    });
+    return {
+      lines: [
+        { l: "Dimensional weight (kg)", v: num(r.dimensionalWeightKg) },
+        { l: "Chargeable weight (kg)", v: num(r.chargeableWeightKg) },
+        { l: "Billed on", v: r.dimensionalWeightKg > r.actualWeightKg ? "Dimensional weight" : "Actual weight" },
+        money("Base charge", r.baseCharge), money("Fuel surcharge", r.fuelSurcharge),
+        money("Handling", N(v, "handling")),
+        { l: "Estimated shipping cost", v: inr(r.total), tone: "neutral" }
+      ]
+    };
+  }
+};
+
+CALCULATORS["inventory-cost-calculator"] = {
+  id: "inventory-cost-calculator", title: "Inventory & Working Capital Calculator", tag: "operations",
+  description: "Separate the cash tied up in stock from the holding cost of carrying it, and find the sell-through you need.",
+  disclaimer: "Inventory investment is cash deployment, not a period expense. Carrying cost is period-based. Expected wastage and unsold stock reduce recoverable value but are not deducted from investment here.",
+  fields: [
+    { k: "units", l: "Units purchased", t: "number", d: 500, min: 1 },
+    { k: "purchasePerUnit", l: "Purchase cost per unit (₹)", t: "number", d: 150, min: 0 },
+    { k: "packagingPerUnit", l: "Packaging cost per unit (₹)", t: "number", d: 10, min: 0 },
+    { k: "inboundFreight", l: "Inbound freight total (₹)", t: "number", d: 2000, min: 0 },
+    { k: "storageCost", l: "Storage / setup total (₹)", t: "number", d: 1000, min: 0 },
+    { k: "periodMonths", l: "Expected selling period (months)", t: "number", d: 3, min: 0 },
+    { k: "monthlyCarryingCost", l: "Monthly carrying cost (₹)", t: "number", d: 1500, min: 0 },
+    { k: "wastagePct", l: "Expected wastage / damage (%)", t: "number", d: 2, min: 0, max: 100 },
+    { k: "unsoldPct", l: "Expected unsold inventory (%)", t: "number", d: 10, min: 0, max: 100 },
+    { k: "sellingPrice", l: "Selling price ex-GST (₹, optional)", t: "number", d: 499, min: 0 },
+    { k: "variableCostPerUnit", l: "Variable cost per sale (₹, optional)", t: "number", d: 120, min: 0 }
+  ],
+  compute: function (v) {
+    const r = calculateInventory({
+      units: N(v, "units"), purchasePerUnit: N(v, "purchasePerUnit"),
+      packagingPerUnit: N(v, "packagingPerUnit"), inboundFreight: N(v, "inboundFreight"),
+      storageCost: N(v, "storageCost"), periodMonths: N(v, "periodMonths"),
+      monthlyCarryingCost: N(v, "monthlyCarryingCost"), wastagePct: N(v, "wastagePct"),
+      unsoldPct: N(v, "unsoldPct"), sellingPrice: N(v, "sellingPrice"),
+      variableCostPerUnit: N(v, "variableCostPerUnit")
+    });
+    return {
+      lines: [
+        money("Total inventory investment (cash tied up)", r.totalInvestment),
+        money("Landed cost per unit", r.landedCostPerUnit),
+        money("Monthly holding cost", r.monthlyHoldingCost),
+        money("Estimated carrying cost over the period", r.estimatedCarryingCost),
+        money("Working capital requirement", r.workingCapital),
+        countLine("Sellable units after wastage", r.sellableUnits),
+        countLine("Expected unsold units", r.expectedUnsoldUnits),
+        percentLine("Break-even sell-through of sellable units", r.breakEvenSellThroughPct)
+      ],
+      warning: r.breakEvenSellThroughPct !== null && r.breakEvenSellThroughPct > 100
+        ? "You need to sell more than every sellable unit to recover capital plus carrying cost." : undefined
+    };
+  }
+};
+
+const CALCULATOR_ORDER = [
+  "product-profit", "selling-price-calculator", "marketplace-fee-calculator", "gst-calculator",
+  "profit-margin-calculator", "break-even-calculator", "return-loss-calculator",
+  "discount-calculator", "shipping-cost-calculator", "inventory-cost-calculator",
+  "amazon-seller-profit-calculator", "flipkart-seller-profit-calculator",
+  "meesho-profit-calculator", "shopify-profit-calculator"
+];
+function calculatorList() { return CALCULATOR_ORDER.map(function (id) { return CALCULATORS[id]; }).filter(Boolean); }
+
+const TAG_LABELS = { all: "All tools", core: "Core", marketplace: "Marketplace", pricing: "Pricing", tax: "Tax", finance: "Finance", operations: "Operations" };
+
+/* ============================ 6. CONTENT ================================= */
+const GUIDES = [
+  {
+    slug: "how-to-calculate-ecommerce-profit",
+    title: "How to calculate real e-commerce product profit in India",
+    reviewed: "2025-01-15", calculator: "#/calculators/product-profit",
+    sections: [
+      ["Start with revenue excluding GST", "If the customer pays ₹1,180 inclusive of 18% GST, your revenue is 1,180 ÷ 1.18 = ₹1,000. The ₹180 output GST is collected on behalf of the government; treating it as income overstates profit and leads to over-spending on ads."],
+      ["Subtract every variable cost", "Product cost, packaging, inbound freight, warehouse or fulfillment, outbound shipping, marketplace commission, fixed closing fees, payment processing, advertising per order, and an expected return allowance. Where a cost line includes GST and you can claim input tax credit, only the ex-GST portion is an expense."],
+      ["Worked example", "Revenue ₹1,000. Costs: product ₹300, packaging ₹20, logistics ₹100, commission 10% = ₹100, payment 2% = ₹20, advertising ₹80, return allowance ₹30. Total variable cost ₹650. Contribution profit ₹350. Contribution margin 35%. Markup 350 ÷ 650 = 53.85%."],
+      ["Break-even price", "With ₹550 of fixed per-unit cost and 12% combined percentage fees, break-even revenue = 550 ÷ (1 − 0.12) = ₹625. Any price below that loses money before a single rupee of rent or salary."],
+      ["What this excludes", "Rent, salaries, software subscriptions, loan interest, income tax and owner draw. Contribution profit answers 'should I sell this unit at this price', not 'is my business profitable'."]
+    ],
+    faqs: [
+      ["Is contribution profit the same as net profit?", "No. Fixed overhead and income tax are excluded. Use contribution to price and screen products; use a full P&L to judge the business."],
+      ["Should advertising be a variable cost?", "Ad spend per order behaves like a variable cost once a campaign is scaled, so include it. Brand spend that is not attributable per order belongs in fixed costs."]
+    ],
+    related: ["profit-margin-vs-markup", "how-gst-affects-pricing", "how-returns-affect-profit"]
+  },
+  {
+    slug: "profit-margin-vs-markup",
+    title: "Profit margin vs markup: the confusion that breaks pricing",
+    reviewed: "2025-01-15", calculator: "#/calculators/profit-margin-calculator",
+    sections: [
+      ["Definitions", "Margin = profit ÷ revenue. Markup = profit ÷ cost. The same transaction produces two different percentages, and quoting the wrong one is the most common pricing error in small catalogs."],
+      ["Worked example", "Buy at ₹600, sell at ₹1,000. Profit ₹400. Margin = 40%. Markup = 66.67%. If you aim for a '40% margin' but apply it as a markup, you price at ₹840 and land at only 28.6% margin."],
+      ["Solving for a target margin with fees", "Required revenue = fixed per-unit cost ÷ (1 − percentage fee rate − target margin). At ₹250 fixed cost, 12% fees and a 25% margin target: 250 ÷ (1 − 0.12 − 0.25) = ₹396.83."],
+      ["When the math fails", "If fees plus target margin reach 100%, the denominator is zero or negative and no price can work. A correct calculator refuses instead of returning a nonsense number."]
+    ],
+    faqs: [["Which should I use for marketplace pricing?", "Contribution margin, because commissions, discounts and payment fees are all expressed against revenue."]],
+    related: ["how-to-calculate-ecommerce-profit", "how-to-set-selling-price"]
+  },
+  {
+    slug: "how-to-set-selling-price",
+    title: "How to set a selling price that survives discounts",
+    reviewed: "2025-01-15", calculator: "#/calculators/selling-price-calculator",
+    sections: [
+      ["Price the list price, not the deal price", "Marketplace campaigns and coupons mean customers rarely pay your listed price. Solve for the required customer price first, then gross it up by the discount you intend to run: list price = customer price ÷ (1 − discount %)."],
+      ["Worked example", "Required customer price ₹468 including 18% GST with a planned 10% discount: ex-GST customer price ₹396.83, list price ₹440.92, customer-facing price ₹520.29."],
+      ["Keep a contribution floor", "Decide the minimum contribution per unit you will accept — often ₹40 to ₹80 for low-ticket items — and treat it as a hard rule during sale events."],
+      ["Test two goals", "Price once for a target amount (cash per order) and once for a target margin (percentage). If the two answers differ sharply, your cost base or fee load is the real problem, not the price."]
+    ],
+    faqs: [["Should GST be added on top or included?", "For B2C marketplaces, prices are usually quoted GST-inclusive. Model whichever convention your listing uses and stay consistent."]],
+    related: ["profit-margin-vs-markup", "how-gst-affects-pricing"]
+  },
+  {
+    slug: "how-gst-affects-pricing",
+    title: "How GST changes your selling price and your costs",
+    reviewed: "2025-01-15", calculator: "#/calculators/gst-calculator",
+    sections: [
+      ["Two separate questions", "Output GST is what you charge the customer and remit. Input tax credit is what you may recover on business purchases. Modelling them as one number either overstates cost or overstates revenue."],
+      ["Inclusive vs exclusive", "Exclusive: total = taxable × (1 + rate). Inclusive: taxable = total ÷ (1 + rate). At 18%, an inclusive ₹1,180 contains ₹180 GST and ₹1,000 taxable value."],
+      ["Intra-state vs inter-state", "Intra-state supplies split into CGST and SGST (₹90 + ₹90 on ₹1,180 at 18%). Inter-state supplies charge IGST of ₹180. The total is the same; the return filing is not."],
+      ["Avoid double counting costs", "A ₹118 purchase line at 18% is a ₹100 expense if you claim credit and ₹118 if you cannot. Composition-scheme sellers generally cannot claim credit, which changes landed cost materially."],
+      ["Limitations", "The correct rate depends on HSN classification, scheme, place of supply and exemption notifications. Verify the rate for each product and confirm treatment with a qualified tax professional."]
+    ],
+    faqs: [["Can I assume 18% for everything?", "No. Apparel, footwear, food, electronics and services fall in different slabs, and slabs change. Select the rate per product."]],
+    related: ["how-to-calculate-ecommerce-profit", "how-to-set-selling-price"]
+  },
+  {
+    slug: "how-returns-affect-profit",
+    title: "How returns and COD RTO quietly destroy margin",
+    reviewed: "2025-01-15", calculator: "#/calculators/return-loss-calculator",
+    sections: [
+      ["Model per returned order", "Outbound freight already spent, packaging already consumed, return freight, marketplace return-related fees, refund processing, plus product cost on the unsellable share, less any recovery or resale value."],
+      ["Do not count the refund twice", "If base contribution is computed only on retained sales, the refunded revenue is already excluded. Adding the refund again to return loss double counts it and understates profitability."],
+      ["Worked example", "500 orders/month at a 15% return rate means 75 returns and 425 retained sales. At ₹135 loss per return (₹70 outbound + ₹15 packaging + ₹70 return freight + ₹20 fee + ₹5 processing + ₹75 unsellable product cost − ₹100 recovery), returns cost ₹10,125 per month, roughly ₹23.82 per successful sale."],
+      ["Return rate sensitivity", "Because loss per return is fixed while retained volume shrinks, contribution falls faster than linearly as return rate rises. Always review at 0.5×, 1×, 1.5× and 2× your observed rate."],
+      ["Levers that actually work", "Size and fit information, honest photographs, COD pincode filtering, prepaid nudges, faster dispatch, and refusing to advertise SKUs whose return-adjusted contribution is negative."]
+    ],
+    faqs: [["Does a sellable return lose product cost?", "Not in this model — it restocks and sells again. Only the unsellable fraction loses cost."]],
+    related: ["how-to-calculate-ecommerce-profit", "how-to-calculate-shipping-cost"]
+  },
+  {
+    slug: "how-to-calculate-shipping-cost",
+    title: "Actual weight vs dimensional weight: pricing shipping honestly",
+    reviewed: "2025-01-15", calculator: "#/calculators/shipping-cost-calculator",
+    sections: [
+      ["Dimensional weight", "Length × width × height in cm ÷ the carrier's divisor. At a 5,000 divisor, a 30 × 20 × 10 cm box is 1.2 kg volumetric even if it weighs 300 g."],
+      ["Chargeable weight", "The greater of actual and dimensional weight, after the carrier's rounding rule — commonly rounded up to the next 0.5 kg or 1 kg. Configure the rule you were given; do not assume it."],
+      ["Apply charges in order", "Base freight from the rate card or slab, then fuel surcharge as a percentage of base, then fixed handling or remote-area charges. Order matters because the surcharge applies to base only."],
+      ["Worked example", "0.8 kg actual, 1.2 kg volumetric, rounded up to 2 kg, at ₹80/kg = ₹160 base, plus 10% fuel ₹16, plus ₹5 handling = ₹181 per shipment."],
+      ["Packaging is a shipping lever", "Reducing box volume cuts dimensional weight directly. For light, bulky products, packaging redesign often saves more than courier negotiation."]
+    ],
+    faqs: [["Is this an official carrier quote?", "No. Enter the divisor, rounding rule and rate card from your own agreement."]],
+    related: ["how-to-calculate-ecommerce-profit", "how-returns-affect-profit"]
+  }
+];
+
+const FAQS = [
+  ["Is this an official Amazon, Flipkart or Meesho tool?", "No. SellerProfit India is independent and is not affiliated with or endorsed by any marketplace or carrier. Marketplace names appear only to describe the use case, and every fee is entered or configured by you."],
+  ["Do you store my product costs or uploaded CSV?", "No. All calculation and CSV parsing happens in your browser. Optional saved inputs stay in this browser's localStorage and can be cleared with the Clear saved button on any calculator, or by clearing site data."],
+  ["Is contribution profit the same as net profit?", "No. Contribution profit subtracts only the variable costs you model. Fixed overhead, financing costs and income tax are excluded unless you add them explicitly."],
+  ["How is GST handled?", "Output GST is separated from revenue. Cost lines entered as GST-inclusive can be split into taxable value and input GST, with configurable input tax credit. Only the non-recoverable portion is treated as an expense."],
+  ["Do the marketplace calculators use live fee data?", "No. There is no live fee feed and no built-in schedule that could go stale. You enter current fees from your own seller dashboard; results are labelled user-configured estimates."],
+  ["Are there usage limits?", "Bulk CSV analysis is capped at 2 MB and 1,000 rows per upload to keep the browser responsive. Single-product calculators are unlimited and require no account."]
+];
+
+const STATIC_PAGES = {
+  about: {
+    title: "About SellerProfit India",
+    description: "Independent, browser-local profit tools for Indian e-commerce sellers.",
+    body: [
+      ["Built for sellers, not for guesswork", "SellerProfit India exists because most small Indian sellers discover their true margin in a settlement report three weeks after the sale — after inventory, packaging and advertising money has already been committed."],
+      ["What this is", "An independent estimation toolkit: contribution profit per order, required selling price, GST split, marketplace fee load, shipping dimensional weight, return drag, discount limits, break-even volume and inventory working capital."],
+      ["What this is not", "It is not accounting software, not tax advice, not a marketplace integration and not affiliated with Amazon, Flipkart, Meesho, Shopify, WooCommerce, Meta or any logistics carrier."],
+      ["How your data is handled", "Every calculation runs in your browser. Product names, SKUs, costs and uploaded CSV files are never transmitted anywhere. Optional saved inputs live in this browser's localStorage only."]
+    ]
+  },
+  contact: {
+    title: "Contact",
+    description: "Contact SellerProfit India about corrections, fee schedules or feedback.",
+    body: [
+      ["Feedback and corrections", "This instance has no server-side contact delivery configured, so no form is collecting messages. Configure a delivery endpoint or a mailto address before enabling one."],
+      ["What not to send", "Please do not send marketplace credentials, GSTINs, customer data or full catalogs. Product calculations never leave your browser, and we do not need your data to help."],
+      ["Corrections welcome", "If a formula, rounding rule or GST convention looks wrong for your category, that is exactly the kind of report worth acting on."]
+    ]
+  },
+  "privacy-policy": {
+    title: "Privacy Policy",
+    description: "How SellerProfit India handles data: browser-local calculations, optional saved inputs, analytics and advertising controls.",
+    body: [
+      ["Core calculators", "All profit, GST, pricing, shipping, return, inventory and CSV calculations run entirely in your browser. No product data, cost data, SKU, margin or uploaded file is transmitted to any server."],
+      ["Local storage", "If you choose Save locally, calculator inputs and your theme preference are stored in this browser's localStorage. Use Clear saved on any calculator, or clear site data in your browser, to remove them. Nothing is synced or uploaded."],
+      ["Cookies", "No tracking cookies are set by this application."],
+      ["Analytics", "Analytics are disabled unless an operator configures a first-party endpoint. When enabled, only an allowlisted anonymous event name and timestamp are sent — never product data, costs, margins, uploaded content or form values."],
+      ["Advertising and affiliates", "Advertising slots are inert placeholders until a valid publisher configuration is supplied; no third-party request is made while unconfigured. Any affiliate relationship is disclosed on the affiliate disclosure page."],
+      ["Your control", "No account is required, no marketplace credentials are requested, and no personal data needs to be deleted because none is collected."]
+    ]
+  },
+  terms: {
+    title: "Terms of Use",
+    description: "Terms governing use of SellerProfit India calculators and guides.",
+    body: [
+      ["Purpose", "SellerProfit India provides estimation tools and educational content for business planning. It is not accounting, tax, legal or investment advice."],
+      ["No affiliation", "We are not affiliated with, endorsed by, sponsored by or officially connected to Amazon, Flipkart, Meesho, Shopify, WooCommerce, Meta, WhatsApp or any carrier. Trademarks belong to their owners and are used descriptively only."],
+      ["Your inputs, your responsibility", "Results are only as accurate as the fees, rates and costs you enter. Verify current marketplace fees, carrier rate cards and GST classification before acting."],
+      ["Acceptable use", "Do not attempt to disrupt the service or use it to distribute malicious files. Uploaded CSV content is parsed strictly as data and is never executed."],
+      ["No warranty", "The tools are provided as-is, without warranty of any kind, and without guarantee of profit or fitness for a particular business."]
+    ]
+  },
+  "financial-disclaimer": {
+    title: "Financial Disclaimer",
+    description: "Contribution profit is not net profit. Outputs are estimates, not tax or investment advice.",
+    body: [
+      ["Estimates only", "Every output is a mathematical estimate derived from inputs you supply. Nothing here is a quotation, invoice, tax filing, audit or guarantee of profitability."],
+      ["Contribution vs net profit", "Contribution profit subtracts only modelled variable costs. Fixed overhead, financing costs, depreciation, income tax and any cost you did not enter are excluded. Results are never labelled net profit after all taxes and overhead."],
+      ["GST", "Tax treatment depends on product classification, registration scheme, place of supply, exemption notifications and input tax credit eligibility. Composition-scheme sellers generally cannot claim credit. Confirm treatment with a qualified tax professional."],
+      ["Marketplace and carrier fees", "No live fee feed is used and no current schedule is built in. Fees, divisors, rounding rules and surcharges must come from your own agreements, and every estimate is labelled user-configured."],
+      ["Rounding", "Intermediate values keep full precision; rounding to two decimal places is applied at the reported output boundary. Marketplace rules that specify per-line rounding may produce small differences from your settlement report."]
+    ]
+  },
+  "affiliate-disclosure": {
+    title: "Affiliate Disclosure",
+    description: "How affiliate relationships and sponsored content are disclosed on SellerProfit India.",
+    body: [
+      ["Current status", "No affiliate partnership is active on this instance and no commission-bearing link is inserted anywhere in the product."],
+      ["Future links", "If an affiliate relationship is added, it will be labelled immediately adjacent to the link, and this page will name the relationship. Recommendations will never be driven solely by commission."],
+      ["Sponsored content", "Sponsored placements and sponsored listings will always be labelled as sponsored. Advertising slots remain inert, with no third-party request, until a valid publisher configuration is supplied."]
+    ]
+  }
+};
+
+/* ============================ 7. STATE + STORAGE ========================= */
+const STORAGE_PREFIX = "sellerprofit:";
+const formStates = {};      // calculatorId -> values
+const bulkState = { columns: [], mapping: {}, rows: [], errors: [], sort: "margin", search: "", lastFile: null, header: [] };
+const compareState = {
+  sort: "margin",
+  rows: [
+    { name: "Product A", price: 499, cost: 150, fee: 50, shipping: 60, ads: 30, returns: 20, units: 100, fixedMonthly: 10000 },
+    { name: "Product B", price: 799, cost: 280, fee: 80, shipping: 70, ads: 60, returns: 30, units: 100, fixedMonthly: 10000 }
+  ]
+};
+const directoryState = { q: "", tag: "all" };
+
+function storageGet(key, fallback) {
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) { return fallback; }
+}
+function storageSet(key, value) {
+  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); return true; }
+  catch (e) { return false; }
+}
+function storageRemove(key) { try { localStorage.removeItem(STORAGE_PREFIX + key); } catch (e) {} }
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const icon = document.getElementById("theme-icon");
+  if (!icon) return;
+  icon.innerHTML = theme === "dark"
+    ? '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'
+    : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+}
+function initTheme() {
+  const saved = storageGet("theme", null);
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(saved || (prefersDark ? "dark" : "light"));
+}
+
+/* ============================ 8. FORM ENGINE ============================= */
+function defaultValues(config) {
+  const values = {};
+  config.fields.forEach(function (f) {
+    if (f.t === "checkbox") values[f.k] = !!f.d;
+    else if (f.t === "number") values[f.k] = typeof f.d === "number" ? f.d : 0;
+    else values[f.k] = f.d === undefined ? "" : String(f.d);
+  });
+  return values;
+}
+function loadState(id, config) {
+  if (!formStates[id]) {
+    const saved = storageGet("calc:" + id, null);
+    const base = defaultValues(config);
+    if (saved && typeof saved === "object") {
+      Object.keys(base).forEach(function (k) {
+        if (saved[k] !== undefined && typeof saved[k] === typeof base[k]) base[k] = saved[k];
+      });
+    }
+    formStates[id] = base;
+  }
+  return formStates[id];
+}
+function validateValues(config, values) {
+  const errors = {};
+  config.fields.forEach(function (f) {
+    if (f.t === "number") {
+      const raw = values[f.k];
+      const x = Number(raw);
+      if (raw === "" || !Number.isFinite(x)) { errors[f.k] = "Enter a number."; return; }
+      if (x < 0) { errors[f.k] = "Must be zero or more."; return; }
+      if (typeof f.min === "number" && x < f.min) { errors[f.k] = "Minimum is " + f.min + "."; return; }
+      if (typeof f.max === "number" && x > f.max) { errors[f.k] = "Maximum is " + f.max + "."; return; }
+    } else if (f.t === "text") {
+      if (String(values[f.k] || "").length > 120) errors[f.k] = "Keep this under 120 characters.";
+    }
+  });
+  return errors;
+}
+function fieldHtml(config, f, values, error) {
+  const id = "f-" + config.id + "-" + f.k;
+  const errId = id + "-err";
+  const wide = f.wide ? " wide" : "";
+  if (f.t === "checkbox") {
+    return '<div class="field wide' + wide + '"><label class="check" for="' + id + '">' +
+      '<input type="checkbox" id="' + id + '" data-k="' + escapeHtml(f.k) + '"' + (values[f.k] ? " checked" : "") + ' />' +
+      '<span>' + escapeHtml(f.l) + (f.hint ? '<span class="hint" style="display:block">' + escapeHtml(f.hint) + "</span>" : "") + "</span></label></div>";
+  }
+  let control;
+  if (f.t === "select") {
+    control = '<select class="input" id="' + id + '" data-k="' + escapeHtml(f.k) + '" aria-describedby="' + errId + '">' +
+      f.options.map(function (o) {
+        return '<option value="' + escapeHtml(o[0]) + '"' + (String(values[f.k]) === String(o[0]) ? " selected" : "") + ">" + escapeHtml(o[1]) + "</option>";
+      }).join("") + "</select>";
+  } else {
+    control = '<input class="input" id="' + id + '" data-k="' + escapeHtml(f.k) + '" ' +
+      'type="' + (f.t === "text" ? "text" : "number") + '" ' +
+      (f.t === "number" ? 'step="' + (f.step === undefined ? "0.01" : f.step) + '" min="' + (f.min === undefined ? 0 : f.min) + '"' +
+        (f.max === undefined ? "" : ' max="' + f.max + '"') + " " : "") +
+      'value="' + escapeHtml(values[f.k]) + '" aria-invalid="' + (error ? "true" : "false") + '" aria-describedby="' + errId + '" />';
+  }
+  return '<div class="field' + wide + '">' +
+    '<label for="' + id + '">' + escapeHtml(f.l) + "</label>" + control +
+    (f.hint ? '<span class="hint">' + escapeHtml(f.hint) + "</span>" : "") +
+    '<span class="err" id="' + errId + '" role="alert">' + escapeHtml(error || "") + "</span></div>";
+}
+function resultsHtml(res) {
+  const lines = res.lines.map(function (l) {
+    const tone = l.tone === "green" ? " tone-green" : l.tone === "red" ? " tone-red" : l.tone === "amber" ? " tone-amber" : "";
+    return '<div class="result-row"><dt>' + escapeHtml(l.l) + '</dt><dd class="num' + tone + '">' + escapeHtml(l.v) + "</dd></div>";
+  }).join("");
+  return '<dl style="margin:0">' + lines + "</dl>";
+}
+function renderCalculator(id) {
+  const config = CALCULATORS[id];
+  if (!config) return renderNotFound();
+  track("calculator_opened");
+  const values = loadState(id, config);
+  let errors = {};
+  let res = null;
+  let fatal = null;
+  try {
+    errors = validateValues(config, values);
+    if (!Object.keys(errors).length) res = config.compute(values);
+  } catch (e) { fatal = e.message; }
+
+  const fieldsHtml = config.fields.map(function (f) { return fieldHtml(config, f, values, errors[f.k]); }).join("");
+  const formCard =
+    '<div class="card"><h2 style="margin-bottom:14px">Inputs</h2>' +
+    '<form id="calc-form" novalidate><div class="form-grid">' + fieldsHtml + "</div>" +
+    '<div class="form-actions">' +
+    '<button class="btn btn-primary" type="submit">Calculate</button>' +
+    '<button class="btn btn-secondary btn-sm" type="button" data-act="save">Save locally</button>' +
+    '<button class="btn btn-secondary btn-sm" type="button" data-act="clear">Clear saved</button>' +
+    '<button class="btn btn-secondary btn-sm" type="button" data-act="print">Print / PDF</button>' +
+    "</div>" +
+    '<p class="hint" id="save-note" style="margin-top:10px;font-size:12px;color:var(--muted-fg)"></p>' +
+    '<div id="calc-fatal" style="margin-top:12px">' + (fatal ? '<div class="alert alert-red" role="alert">' + escapeHtml(fatal) + "</div>" : "") + "</div>" +
+    "</form></div>";
+
+  let right = "";
+  if (res) {
+    right += '<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">' +
+      "<h2>Estimated results</h2>" +
+      '<span class="badge badge-green">User-configured estimate</span></div>' +
+      (res.warning ? '<div class="alert alert-amber" role="status" style="margin-bottom:12px">' + escapeHtml(res.warning) + "</div>" : "") +
+      resultsHtml(res) +
+      '<div class="form-actions"><button class="btn btn-secondary btn-sm" type="button" data-act="export">Export results CSV</button></div></div>';
+    if (config.chart === "breakdown" && res.breakdown) {
+      right += '<div class="card" style="margin-top:16px"><h3>Cost & contribution split</h3>' +
+        donutChart(res.breakdown, "Total modelled", inr((res.total !== undefined ? res.total : 0), 0)) + "</div>";
+    }
+    if (config.chart === "break-even" && res.scenarios) {
+      right += '<div class="card" style="margin-top:16px"><h3>Monthly profit by sales volume</h3>' +
+        lineChart(res.scenarios, "Units per month") + "</div>";
+    }
+  } else if (!fatal) {
+    right += '<div class="card"><div class="alert alert-muted">Fix the highlighted fields to see results.</div></div>';
+  }
+  right += '<p class="disclaimer" style="margin-top:16px">' + escapeHtml(config.disclaimer) + "</p>";
+  right += adSlotHtml("calculator");
+  right += '<div class="card" style="margin-top:16px"><h3>Formula reference</h3><div class="prose">' +
+    "<p>Total variable cost = product + packaging + inbound + fulfillment + shipping + advertising + return allowance + other + marketplace fees.</p>" +
+    "<p>Contribution profit = revenue excluding output GST − total variable cost.</p>" +
+    "<p>Contribution margin % = contribution ÷ revenue ex-GST × 100. Markup % = contribution ÷ total variable cost × 100.</p>" +
+    "<p>Break-even price ex-GST = fixed per-unit cost ÷ (1 − combined percentage fee rate).</p></div></div>";
+
+  const html =
+    '<div class="wrap">' +
+    '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/">Home</a> / <a href="#/calculators">Calculators</a> / ' + escapeHtml(config.title) + "</nav>" +
+    "<h1>" + escapeHtml(config.title) + "</h1>" +
+    '<p class="sec-sub" style="margin-bottom:22px">' + escapeHtml(config.description) + "</p>" +
+    '<div class="grid g2">' + formCard + "<div>" + right + "</div></div>" +
+    relatedCardsHtml(config) + "</div>";
+
+  mount(html, { title: config.title + " | SellerProfit India", description: config.description, path: "#/calculators/" + id });
+  wireCalculator(config);
+}
+
+function wireCalculator(config) {
+  const form = document.getElementById("calc-form");
+  if (!form) return;
+  const id = config.id;
+  let debounce = null;
+
+  function readForm() {
+    const values = formStates[id];
+    form.querySelectorAll("[data-k]").forEach(function (el) {
+      const key = el.getAttribute("data-k");
+      if (el.type === "checkbox") values[key] = el.checked;
+      else if (el.type === "number") {
+        const x = Number(el.value);
+        values[key] = el.value === "" ? "" : (Number.isFinite(x) ? x : el.value);
+      } else values[key] = el.value;
+    });
+    // GST quick-rate shortcut
+    if (id === "gst-calculator") {
+      const quick = form.querySelector('[data-k="quickRates"]');
+      if (quick && quick.value !== "") {
+        values.rate = Number(quick.value);
+        const rateInput = form.querySelector('[data-k="rate"]');
+        if (rateInput) rateInput.value = String(values.rate);
+        quick.value = "";
+      }
+    }
+    return values;
+  }
+  function rerender() {
+    const scrollY = window.scrollY;
+    renderCalculator(id);
+    window.scrollTo(0, scrollY);
+    const focusKey = lastFocusedKey;
+    if (focusKey) {
+      const el = document.querySelector('[data-k="' + focusKey + '"]');
+      if (el) { el.focus(); if (el.setSelectionRange && el.type === "text") { try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) {} } }
+    }
+  }
+  let lastFocusedKey = null;
+
+  form.addEventListener("focusin", function (e) {
+    const el = e.target;
+    if (el && el.getAttribute) lastFocusedKey = el.getAttribute("data-k");
+  });
+  form.addEventListener("input", function () {
+    readForm();
+    clearTimeout(debounce);
+    debounce = setTimeout(rerender, 260);
+  });
+  form.addEventListener("change", function () { readForm(); clearTimeout(debounce); rerender(); });
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const values = readForm();
+    const errs = validateValues(config, values);
+    clearTimeout(debounce);
+    if (Object.keys(errs).length) { rerender(); return; }
+    try { config.compute(values); track("calculation_completed"); } catch (err) { /* surfaced by rerender */ }
+    rerender();
+  });
+  form.addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const act = btn.getAttribute("data-act");
+    const note = document.getElementById("save-note");
+    if (act === "save") {
+      const ok = storageSet("calc:" + id, readForm());
+      if (note) note.textContent = ok ? "Saved on this device only. Nothing was uploaded." : "Local storage is unavailable in this browser.";
+    } else if (act === "clear") {
+      storageRemove("calc:" + id);
+      formStates[id] = defaultValues(config);
+      if (note) note.textContent = "Saved inputs cleared and defaults restored.";
+      rerender();
+    } else if (act === "export") {
+      const values = readForm();
+      let res = null;
+      try { res = config.compute(values); } catch (err) { res = null; }
+      if (!res) { if (note) note.textContent = "Fix the inputs before exporting."; return; }
+      const rows = res.lines.map(function (l) { return [l.l, l.v]; });
+      downloadFile("sellerprofit-" + id + ".csv", toCsv(["Metric", "Value"], rows));
+      track("report_exported");
+      if (note) note.textContent = "CSV exported.";
+    } else if (act === "print") {
+      window.print();
+    }
+  });
+}
+
+function relatedCardsHtml(config) {
+  const related = calculatorList().filter(function (c) { return c.id !== config.id; }).slice(0, 3);
+  return '<hr class="hr" /><h2 class="sec-title">Related tools</h2><div class="grid g3" style="margin-top:14px">' +
+    related.map(function (c) {
+      return '<a class="card card-link" href="#/calculators/' + c.id + '"><h3>' + escapeHtml(c.title) + "</h3><p>" + escapeHtml(c.description.slice(0, 120)) + "…</p></a>";
+    }).join("") + "</div>";
+}
+
+/* ============================ 9. PAGE RENDERERS ========================== */
+const mainEl = document.getElementById("main");
+function mount(html, meta) {
+  mainEl.innerHTML = html;
+  if (meta) setMeta(meta);
+  window.scrollTo(0, 0);
+}
+function setMeta(meta) {
+  document.title = meta.title || "SellerProfit India";
+  let desc = document.querySelector('meta[name="description"]');
+  if (desc && meta.description) desc.setAttribute("content", meta.description);
+  const canonical = document.getElementById("canonical-link");
+  if (canonical) canonical.setAttribute("href", location.origin + location.pathname + (meta.path || location.hash || "#/"));
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDesc = document.querySelector('meta[property="og:description"]');
+  if (ogTitle && meta.title) ogTitle.setAttribute("content", meta.title);
+  if (ogDesc && meta.description) ogDesc.setAttribute("content", meta.description);
+  setJsonLd(meta.jsonLd || null);
+  markActiveNav();
+}
+function setJsonLd(obj) {
+  let el = document.getElementById("json-ld");
+  if (!obj) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement("script"); el.type = "application/ld+json"; el.id = "json-ld"; document.head.appendChild(el); }
+  el.textContent = JSON.stringify(obj);
+}
+function markActiveNav() {
+  const hash = location.hash || "#/";
+  document.querySelectorAll("#desktop-nav a, #mobile-nav a").forEach(function (a) {
+    const href = a.getAttribute("href");
+    const active = href === hash || (href !== "#/" && hash.indexOf(href) === 0);
+    if (active) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+}
+
+function heroArt() {
+  return '<div class="hero-art" aria-hidden="true"><svg viewBox="0 0 520 330" preserveAspectRatio="xMidYMid meet">' +
+    '<rect x="34" y="34" width="300" height="188" rx="16" fill="var(--card)" stroke="var(--border)"/>' +
+    '<rect x="54" y="58" width="120" height="10" rx="5" fill="var(--border)"/>' +
+    '<rect x="54" y="78" width="76" height="10" rx="5" fill="var(--border)"/>' +
+    '<polyline points="54,190 104,168 154,176 204,140 254,150 304,104" fill="none" stroke="#0f766e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="304" cy="104" r="5" fill="#0f766e"/>' +
+    '<rect x="352" y="86" width="132" height="132" rx="16" fill="var(--card)" stroke="var(--border)"/>' +
+    '<path d="M418 152 m-42 0 a42 42 0 1 0 84 0 a42 42 0 1 0 -84 0" fill="none" stroke="#0ea5e9" stroke-width="16" stroke-dasharray="150 264"/>' +
+    '<path d="M418 152 m-42 0 a42 42 0 1 0 84 0 a42 42 0 1 0 -84 0" fill="none" stroke="#0f766e" stroke-width="16" stroke-dasharray="90 264" stroke-dashoffset="-150"/>' +
+    '<rect x="34" y="240" width="180" height="58" rx="14" fill="var(--card)" stroke="var(--border)"/>' +
+    '<rect x="52" y="262" width="96" height="9" rx="4.5" fill="#0f766e" opacity=".65"/>' +
+    '<rect x="234" y="240" width="250" height="58" rx="14" fill="var(--card)" stroke="var(--border)"/>' +
+    '<rect x="252" y="262" width="150" height="9" rx="4.5" fill="var(--border)"/>' +
+    '</svg></div>';
+}
+
+function renderHome() {
+  const popular = ["product-profit", "selling-price-calculator", "gst-calculator", "marketplace-fee-calculator",
+    "break-even-calculator", "return-loss-calculator", "discount-calculator", "shipping-cost-calculator", "inventory-cost-calculator"];
+  const marketplaces = ["amazon-seller-profit-calculator", "flipkart-seller-profit-calculator", "meesho-profit-calculator", "shopify-profit-calculator"];
+
+  const html =
+    '<section class="hero"><div class="wrap"><div class="grid g2" style="align-items:center">' +
+    "<div>" +
+    '<span class="badge badge-green">Free · No account · Runs in your browser</span>' +
+    "<h1 style=\"margin-top:18px\">Calculate Your Real E-commerce Profit.</h1>" +
+    '<p class="lead">Understand your product costs, marketplace charges, shipping, GST, discounts, and returns before deciding your selling price.</p>' +
+    '<div class="hero-cta">' +
+    '<a class="btn btn-primary" href="#/calculators/product-profit">Calculate Product Profit</a>' +
+    '<a class="btn btn-secondary" href="#/calculators">Explore Free Tools</a>' +
+    "</div>" +
+    '<div class="trust">' +
+    "<span>No marketplace account needed</span><span>·</span><span>CSV never leaves your device</span><span>·</span><span>No invented fee schedules</span>" +
+    "</div></div>" + heroArt() + "</div></div></section>" +
+
+    '<section><div class="wrap"><div class="card" style="padding:22px">' +
+    "<h2 style=\"font-size:20px;margin-bottom:6px\">Product profit calculator</h2>" +
+    '<p class="sec-sub" style="margin-bottom:18px">The core tool. Configure every fee and cost line, then read contribution profit, margin, markup, break-even price and monthly contribution.</p>' +
+    '<div id="home-calc"></div></div></div></section>' +
+
+    '<section><div class="wrap"><h2 class="sec-title">Popular calculators</h2>' +
+    '<p class="sec-sub">Every tool is free, works offline once loaded, and requires no registration.</p>' +
+    '<div class="grid g3" style="margin-top:16px">' +
+    popular.map(function (cid) {
+      const c = CALCULATORS[cid];
+      return '<a class="card card-link" href="#/calculators/' + cid + '"><h3>' + escapeHtml(c.title) + "</h3><p>" + escapeHtml(c.description) + "</p></a>";
+    }).join("") + "</div></div></section>" +
+
+    '<section><div class="wrap"><h2 class="sec-title">Marketplace-specific tools</h2>' +
+    '<p class="sec-sub">Independent, user-configured estimates. Enter the fees from your own seller dashboard — we never guess a current schedule.</p>' +
+    '<div class="grid g2" style="margin-top:16px">' +
+    marketplaces.map(function (cid) {
+      const c = CALCULATORS[cid];
+      return '<a class="card card-link" href="#/calculators/' + cid + '"><h3>' + escapeHtml(c.title) + "</h3><p>" + escapeHtml(c.description) + "</p></a>";
+    }).join("") + "</div></div></section>" +
+
+    adSlotHtml("home") +
+
+    '<section><div class="wrap"><div class="grid g2">' +
+    '<div class="card"><h2>Analyse a whole catalog</h2><p class="sec-sub">Upload up to 1,000 products as CSV, map your columns, find loss-making SKUs, sort by margin and export a report. Parsing happens in your browser.</p>' +
+    '<a class="btn btn-primary" href="#/bulk-profit-calculator" style="margin-top:14px">Open bulk analyzer</a></div>' +
+    '<div class="card"><h2>Compare product ideas</h2><p class="sec-sub">Rank up to ten products by contribution, margin, capital required and break-even units before you commit inventory.</p>' +
+    '<a class="btn btn-secondary" href="#/product-comparison" style="margin-top:14px">Open comparison tool</a></div>' +
+    "</div></div></section>" +
+
+    '<section><div class="wrap"><h2 class="sec-title">Seller guides</h2>' +
+    '<p class="sec-sub">Worked examples with real numbers — formulas, assumptions and limitations stated plainly.</p>' +
+    '<div class="grid g3" style="margin-top:16px">' +
+    GUIDES.slice(0, 6).map(function (g) {
+      return '<a class="card card-link" href="#/guides/' + g.slug + '"><h3>' + escapeHtml(g.title) + '</h3><p class="hint">Last reviewed ' + escapeHtml(g.reviewed) + "</p></a>";
+    }).join("") + "</div>" +
+    '<a class="btn btn-secondary" href="#/guides" style="margin-top:16px">All guides</a></div></section>' +
+
+    '<section><div class="wrap"><h2 class="sec-title">Frequently asked questions</h2>' +
+    '<div class="grid g2" style="margin-top:16px">' +
+    FAQS.map(function (f) {
+      return '<details class="faq"><summary>' + escapeHtml(f[0]) + "</summary><p>" + escapeHtml(f[1]) + "</p></details>";
+    }).join("") + "</div></div></section>" +
+
+    '<section><div class="wrap"><div class="card"><h2>Toolkit updates</h2>' +
+    '<p class="sec-sub">Newsletter delivery is not configured on this instance, so no email address is collected or stored. Configure an endpoint before enabling signup.</p>' +
+    '<form id="newsletter-form" class="hero-cta" novalidate>' +
+    '<label class="sr-only" for="nl-email">Email address</label>' +
+    '<input class="input" id="nl-email" type="email" placeholder="you@business.in" style="max-width:320px" disabled />' +
+    '<button class="btn btn-primary" type="submit" disabled>Subscribe</button>' +
+    "</form>" +
+    '<p class="hint" id="nl-note" style="margin-top:10px;font-size:12px;color:var(--muted-fg)"></p>' +
+    "</div></div></section>";
+
+  mount(html, {
+    title: "SellerProfit India — Know Your Profit Before You Sell",
+    description: "Free browser-local calculators for Indian e-commerce sellers: product profit, selling price, GST, marketplace fees, shipping, returns, discounts, break-even, inventory and bulk CSV analysis.",
+    path: "#/",
+    jsonLd: {
+      "@context": "https://schema.org", "@type": "WebSite", name: "SellerProfit India",
+      description: "Free e-commerce profit calculators for Indian sellers.",
+      inLanguage: "en-IN",
+      mainEntity: {
+        "@type": "FAQPage",
+        mainEntity: FAQS.map(function (f) {
+          return { "@type": "Question", name: f[0], acceptedAnswer: { "@type": "Answer", text: f[1] } };
+        })
+      }
+    }
+  });
+
+  // Embed the real product profit calculator on the homepage.
+  const slot = document.getElementById("home-calc");
+  if (slot) {
+    const originalMain = mainEl.innerHTML;
+    renderCalculatorInline(slot, "product-profit");
+    void originalMain;
+  }
+  const nl = document.getElementById("newsletter-form");
+  if (nl) nl.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const note = document.getElementById("nl-note");
+    if (note) note.textContent = "Signup is disabled because no delivery endpoint is configured. No data was collected.";
+  });
+}
+
+/** Renders a calculator into an arbitrary container (used on the homepage)
+ *  without disturbing the router-managed main element. */
+function renderCalculatorInline(container, id) {
+  const config = CALCULATORS[id];
+  const values = loadState(id, config);
+  let res = null, fatal = null;
+  try { res = config.compute(values); } catch (e) { fatal = e.message; }
+  const fieldsHtml = config.fields.map(function (f) { return fieldHtml(config, f, values, ""); }).join("");
+  container.innerHTML =
+    '<div class="grid g2">' +
+    '<div class="card card-tight"><h3 style="margin-bottom:12px">Inputs</h3>' +
+    '<form id="inline-form" novalidate><div class="form-grid">' + fieldsHtml + "</div>" +
+    '<div class="form-actions"><button class="btn btn-primary btn-sm" type="submit">Calculate</button>' +
+    '<a class="btn btn-secondary btn-sm" href="#/calculators/' + id + '">Open full calculator</a></div>' +
+    '<div id="inline-fatal" style="margin-top:10px">' + (fatal ? '<div class="alert alert-red">' + escapeHtml(fatal) + "</div>" : "") + "</div>" +
+    "</form></div>" +
+    '<div class="card card-tight"><h3 style="margin-bottom:12px">Results</h3><div id="inline-results">' +
+    (res ? resultsHtml(res) : '<div class="alert alert-muted">Enter your numbers and calculate.</div>') + "</div>" +
+    '<p class="disclaimer" style="margin-top:12px">' + escapeHtml(config.disclaimer) + "</p></div></div>";
+
+  const form = container.querySelector("#inline-form");
+  function sync() {
+    form.querySelectorAll("[data-k]").forEach(function (el) {
+      const key = el.getAttribute("data-k");
+      if (el.type === "checkbox") values[key] = el.checked;
+      else if (el.type === "number") { const x = Number(el.value); values[key] = el.value === "" ? "" : (Number.isFinite(x) ? x : el.value); }
+      else values[key] = el.value;
+    });
+    const errs = validateValues(config, values);
+    let out = null, err = null;
+    if (!Object.keys(errs).length) { try { out = config.compute(values); } catch (e) { err = e.message; } }
+    const fatalBox = container.querySelector("#inline-fatal");
+    fatalBox.innerHTML = err ? '<div class="alert alert-red" role="alert">' + escapeHtml(err) + "</div>" : "";
+    container.querySelector("#inline-results").innerHTML = out ? resultsHtml(out) : '<div class="alert alert-muted">Fix the highlighted fields to see results.</div>';
+    if (out) track("calculation_completed");
+  }
+  form.addEventListener("input", sync);
+  form.addEventListener("change", sync);
+  form.addEventListener("submit", function (e) { e.preventDefault(); sync(); });
+}
+
+function renderDirectory() {
+  const q = directoryState.q.toLowerCase();
+  const items = calculatorList().filter(function (c) {
+    const matchesTag = directoryState.tag === "all" || c.tag === directoryState.tag;
+    const text = (c.title + " " + c.description).toLowerCase();
+    return matchesTag && (!q || text.indexOf(q) !== -1);
+  });
+  const tags = Object.keys(TAG_LABELS);
+  const html =
+    '<div class="wrap" style="padding-top:34px;padding-bottom:34px">' +
+    '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/">Home</a> / Calculators</nav>' +
+    "<h1>Seller calculator directory</h1>" +
+    '<p class="sec-sub">Fourteen free tools. All of them work without an account, and none of them send your data anywhere.</p>' +
+    '<div class="grid g2" style="margin-top:20px;align-items:end">' +
+    '<div class="field"><label for="dir-q">Search calculators</label>' +
+    '<input class="input" id="dir-q" type="search" placeholder="profit, GST, shipping, return…" value="' + escapeHtml(directoryState.q) + '" /></div>' +
+    '<div class="field"><label for="dir-tag">Filter by type</label><select class="input" id="dir-tag">' +
+    tags.map(function (t) {
+      return '<option value="' + t + '"' + (directoryState.tag === t ? " selected" : "") + ">" + TAG_LABELS[t] + "</option>";
+    }).join("") + "</select></div></div>" +
+    '<div class="grid g3" style="margin-top:20px" id="dir-list">' +
+    (items.length ? items.map(function (c) {
+      return '<a class="card card-link" href="#/calculators/' + c.id + '">' +
+        '<span class="badge">' + escapeHtml(TAG_LABELS[c.tag] || c.tag) + "</span>" +
+        '<h3 style="margin-top:10px">' + escapeHtml(c.title) + "</h3><p>" + escapeHtml(c.description) + "</p></a>";
+    }).join("") : '<div class="card"><div class="alert alert-muted">No calculators match that search. Try “GST”, “return”, “price” or “shipping”.</div></div>') +
+    "</div>" +
+    '<div class="grid g2" style="margin-top:20px">' +
+    '<a class="card card-link" href="#/bulk-profit-calculator"><h3>Bulk CSV profit analyzer</h3><p>Score up to 1,000 SKUs, surface loss-makers and export a report.</p></a>' +
+    '<a class="card card-link" href="#/product-comparison"><h3>Product comparison tool</h3><p>Rank product ideas by contribution, margin, capital and break-even units.</p></a>' +
+    "</div>" + adSlotHtml("directory") + "</div>";
+
+  mount(html, {
+    title: "Free Seller Calculators — Directory",
+    description: "Search every SellerProfit India calculator: product profit, selling price, GST, marketplace fees, margin, break-even, returns, discounts, shipping and inventory.",
+    path: "#/calculators"
+  });
+  const searchInput = document.getElementById("dir-q");
+  const tagSelect = document.getElementById("dir-tag");
+  let t = null;
+  searchInput.addEventListener("input", function () {
+    directoryState.q = searchInput.value;
+    clearTimeout(t);
+    t = setTimeout(function () {
+      const pos = searchInput.selectionStart;
+      renderDirectory();
+      const again = document.getElementById("dir-q");
+      if (again) { again.focus(); try { again.setSelectionRange(pos, pos); } catch (e) {} }
+    }, 220);
+  });
+  tagSelect.addEventListener("change", function () { directoryState.tag = tagSelect.value; renderDirectory(); });
+}
+
+function renderBulk() {
+  const BULK_COLUMNS = ["product_name", "sku", "selling_price", "product_cost", "packaging_cost",
+    "shipping_cost", "marketplace_fee", "advertising_cost", "return_allowance", "other_costs"];
+  const rows = bulkState.rows;
+  const search = bulkState.search.toLowerCase();
+  const visible = rows.filter(function (r) { return (r.name + " " + r.sku).toLowerCase().indexOf(search) !== -1; })
+    .sort(function (a, b) {
+      if (bulkState.sort === "margin") return (b.marginPct === null ? -Infinity : b.marginPct) - (a.marginPct === null ? -Infinity : a.marginPct);
+      if (bulkState.sort === "profit") return b.profit - a.profit;
+      if (bulkState.sort === "capital") return a.productCost - b.productCost;
+      return a.totalCost - b.totalCost;
+    });
+  const totalProfit = rows.reduce(function (s, r) { return s + r.profit; }, 0);
+  const lossCount = rows.filter(function (r) { return r.isLoss; }).length;
+  const avgMargin = rows.length ? rows.reduce(function (s, r) { return s + (r.marginPct || 0); }, 0) / rows.length : null;
+
+  const mappingHtml = bulkState.columns.length
+    ? '<div class="card" style="margin-top:16px"><h2>Map your columns</h2>' +
+      '<p class="sec-sub">Detected header: ' + escapeHtml(bulkState.columns.join(", ")) + "</p>" +
+      '<div class="form-grid" style="margin-top:14px">' +
+      BULK_COLUMNS.map(function (col) {
+        return '<div class="field"><label for="map-' + col + '">' + escapeHtml(col.replace(/_/g, " ")) + "</label>" +
+          '<select class="input" id="map-' + col + '" data-map="' + col + '">' +
+          '<option value="">— not present —</option>' +
+          bulkState.columns.map(function (h) {
+            const selected = bulkState.mapping[col] === h ? " selected" : "";
+            return '<option value="' + escapeHtml(h) + '"' + selected + ">" + escapeHtml(h) + "</option>";
+          }).join("") + "</select></div>";
+      }).join("") + "</div>" +
+      '<div class="form-actions"><button class="btn btn-primary btn-sm" type="button" id="bulk-rerun">Re-run with this mapping</button></div></div>'
+    : "";
+
+  const tableHtml = rows.length
+    ? '<div class="card" style="margin-top:16px">' +
+      '<div class="grid g2" style="align-items:end">' +
+      '<div class="field"><label for="bulk-search">Search products</label>' +
+      '<input class="input" id="bulk-search" type="search" placeholder="Name or SKU" value="' + escapeHtml(bulkState.search) + '" /></div>' +
+      '<div class="field"><label for="bulk-sort">Sort by</label><select class="input" id="bulk-sort">' +
+      [["margin", "Highest contribution margin"], ["profit", "Highest contribution"], ["capital", "Lowest product cost"], ["cost", "Lowest total cost"]]
+        .map(function (o) { return '<option value="' + o[0] + '"' + (bulkState.sort === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+      "</select></div></div>" +
+      '<div class="form-actions"><button class="btn btn-secondary btn-sm" type="button" id="bulk-export">Export report CSV</button>' +
+      '<button class="btn btn-secondary btn-sm" type="button" id="bulk-losses">Show loss-makers only</button>' +
+      '<button class="btn btn-secondary btn-sm" type="button" id="bulk-reset">Reset</button></div>' +
+      '<div class="tbl-scroll" style="margin-top:14px"><table class="data">' +
+      "<caption class=\"sr-only\">Per-product contribution analysis</caption>" +
+      "<thead><tr><th scope=\"col\">Product</th><th scope=\"col\">Price</th><th scope=\"col\">Total cost</th>" +
+      "<th scope=\"col\">Contribution</th><th scope=\"col\">Margin</th><th scope=\"col\">Status</th></tr></thead><tbody>" +
+      visible.map(function (r) {
+        return "<tr><td><strong>" + escapeHtml(r.name) + "</strong><br /><span class=\"hint\">" + escapeHtml(r.sku || "—") + "</span></td>" +
+          '<td class="num">' + escapeHtml(inr(r.sellingPrice)) + "</td>" +
+          '<td class="num">' + escapeHtml(inr(r.totalCost)) + "</td>" +
+          '<td class="num ' + (r.profit >= 0 ? "tone-green" : "tone-red") + '">' + escapeHtml(inr(r.profit)) + "</td>" +
+          '<td class="num">' + escapeHtml(pct(r.marginPct)) + "</td>" +
+          '<td><span class="badge ' + (r.isLoss ? "badge-red" : "badge-green") + '">' + (r.isLoss ? "Loss" : "Positive") + "</span></td></tr>";
+      }).join("") +
+      "</tbody></table>" +
+      (visible.length ? "" : '<p class="alert alert-muted" style="margin-top:12px">No products match that filter.</p>') +
+      "</div></div>"
+    : "";
+
+  const html =
+    '<div class="wrap" style="padding-top:34px;padding-bottom:34px">' +
+    '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/">Home</a> / Bulk profit analyzer</nav>' +
+    "<h1>Bulk product profit analyzer</h1>" +
+    '<p class="sec-sub">Find the SKUs that quietly lose money. Files are parsed in your browser and never transmitted. ' +
+    "Limits: 2 MB and " + MAX_ROWS + " rows per upload. Amounts are treated as ex-GST; model GST in the product profit calculator.</p>" +
+    '<div class="card" style="margin-top:20px">' +
+    '<div class="form-actions" style="margin-top:0">' +
+    '<label class="btn btn-secondary btn-sm" for="bulk-file">Choose CSV file</label>' +
+    '<input id="bulk-file" type="file" accept=".csv,text/csv" class="sr-only" />' +
+    '<button class="btn btn-secondary btn-sm" type="button" id="bulk-template">Download sample template</button>' +
+    '<button class="btn btn-secondary btn-sm" type="button" id="bulk-demo">Load demo data</button>' +
+    "</div>" +
+    '<div id="bulk-msg" style="margin-top:12px"></div>' +
+    "</div>" +
+    (rows.length
+      ? '<div class="grid g3" style="margin-top:16px">' +
+        '<div class="card stat"><div class="k">Products analysed</div><div class="v">' + num(rows.length) + "</div></div>" +
+        '<div class="card stat"><div class="k">Summed contribution per unit</div><div class="v ' + (totalProfit >= 0 ? "tone-green" : "tone-red") + '">' + escapeHtml(inr(totalProfit)) + "</div></div>" +
+        '<div class="card stat"><div class="k">Loss-making SKUs</div><div class="v tone-red">' + num(lossCount) + "</div></div>" +
+        "</div>" +
+        (bulkState.errors.length
+          ? '<div class="card" style="margin-top:16px;border-color:var(--amber)"><h2>Skipped rows</h2><ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;color:var(--amber)">' +
+            bulkState.errors.map(function (e) { return "<li>Line " + e.line + ": " + escapeHtml(e.message) + "</li>"; }).join("") + "</ul></div>"
+          : "")
+      : '<div class="card" style="margin-top:16px"><div class="alert alert-muted">No file loaded yet. Choose a CSV, download the template, or load the demo data to explore.</div></div>') +
+    mappingHtml + tableHtml +
+    (rows.length && avgMargin !== null
+      ? '<div class="card" style="margin-top:16px"><h2>Summary</h2><div class="prose" style="margin-top:8px">' +
+        "<p>Average contribution margin across analysed products: <strong>" + escapeHtml(pct(avgMargin)) + "</strong>. " +
+        (lossCount ? lossCount + " SKU(s) contribute nothing before fixed costs. " : "No loss-making SKUs at these assumptions. ") +
+        "Margin alone is not a decision: compare against capital tied up, return behaviour and demand before scaling spend.</p></div></div>"
+      : "") +
+    adSlotHtml("bulk") +
+    '<p class="disclaimer">Bulk results are contribution estimates on ex-GST amounts using the columns you mapped. Fixed overhead, income tax and unmodelled costs are excluded. Nothing here is tax or investment advice.</p>' +
+    "</div>";
+
+  mount(html, {
+    title: "Bulk Product Profit Analyzer",
+    description: "Upload a product CSV and find loss-making SKUs with column mapping, validation, error reporting, sorting and injection-safe export. Processed entirely in your browser.",
+    path: "#/bulk-profit-calculator"
+  });
+  wireBulk();
+}
+
+const SAMPLE_CSV = [
+  "product_name,sku,selling_price,product_cost,packaging_cost,shipping_cost,marketplace_fee,advertising_cost,return_allowance,other_costs",
+  "Cotton Tote Bag,TOTE-01,499,120,15,60,49.9,30,20,10",
+  "Steel Water Bottle,BTL-02,799,260,20,80,79.9,60,30,15",
+  "Phone Grip Stand,GRP-03,199,150,10,55,19.9,25,15,5",
+  "Bamboo Comb,CMB-04,249,60,8,50,24.9,20,10,5",
+  "Yoga Mat 4mm,YGA-05,1299,640,40,120,129.9,150,60,30"
+].join("\r\n");
+
+function bulkParse(text, bytes, mapping) {
+  if (bytes > MAX_FILE_BYTES) throw new Error("File exceeds the 2 MB limit.");
+  const rows = parseCsv(text);
+  if (rows.length < 2) throw new Error("CSV needs a header row and at least one product row.");
+  if (rows.length - 1 > MAX_ROWS) throw new Error("Maximum " + MAX_ROWS + " product rows per upload.");
+  const header = rows[0].map(function (h) { return h.trim(); });
+  const errors = [];
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cells = rows[i];
+    const line = i + 1;
+    const getter = function (canonical) {
+      const col = mapping[canonical];
+      if (!col) return "";
+      const idx = header.indexOf(col);
+      return idx >= 0 && cells[idx] !== undefined ? String(cells[idx]).trim() : "";
+    };
+    try {
+      const readMoney = function (canonical, required) {
+        const raw = getter(canonical);
+        if (raw === "") { if (required) throw new Error("Missing required " + canonical.replace(/_/g, " ")); return 0; }
+        const x = Number(raw.replace(/,/g, ""));
+        if (!Number.isFinite(x) || x < 0) throw new Error('Invalid ' + canonical.replace(/_/g, " ") + ': "' + raw + '"');
+        return x;
+      };
+      parsed.push({
+        line: line,
+        name: getter("product_name") || "Product " + (line - 1),
+        sku: getter("sku"),
+        sellingPrice: readMoney("selling_price", true),
+        productCost: readMoney("product_cost", true),
+        packaging: readMoney("packaging_cost"),
+        shipping: readMoney("shipping_cost"),
+        marketplaceFee: readMoney("marketplace_fee"),
+        advertising: readMoney("advertising_cost"),
+        returnAllowance: readMoney("return_allowance"),
+        other: readMoney("other_costs")
+      });
+    } catch (e) { errors.push({ line: line, message: e.message }); }
+  }
+  return { parsed: parsed, errors: errors, header: header };
+}
+
+function bulkSetMessage(kind, text) {
+  const box = document.getElementById("bulk-msg");
+  if (!box) return;
+  box.innerHTML = text ? '<div class="alert ' + (kind === "error" ? "alert-red" : kind === "warn" ? "alert-amber" : "alert-muted") + '" role="status">' + escapeHtml(text) + "</div>" : "";
+}
+
+function wireBulk() {
+  const fileInput = document.getElementById("bulk-file");
+  const BULK_COLUMNS = ["product_name", "sku", "selling_price", "product_cost", "packaging_cost",
+    "shipping_cost", "marketplace_fee", "advertising_cost", "return_allowance", "other_costs"];
+
+  function autoMap(header) {
+    const mapping = {};
+    BULK_COLUMNS.forEach(function (col) {
+      const direct = header.filter(function (h) { return h.toLowerCase() === col; })[0];
+      if (direct) { mapping[col] = direct; return; }
+      const loose = header.filter(function (h) {
+        const norm = h.toLowerCase().replace(/[^a-z]/g, "");
+        return norm === col.replace(/_/g, "") || norm.indexOf(col.replace(/_/g, "").slice(0, 5)) === 0;
+      })[0];
+      mapping[col] = loose || "";
+    });
+    return mapping;
+  }
+
+  function runParse(text, bytes) {
+    try {
+      const header = (text.replace(/^\uFEFF/, "").split(/\r?\n/)[0] || "").split(",").map(function (h) { return h.trim().replace(/^"|"$/g, ""); });
+      if (!bulkState.columns.length) { bulkState.columns = header; bulkState.mapping = autoMap(header); }
+      const out = bulkParse(text, bytes, bulkState.mapping);
+      bulkState.rows = out.parsed.map(evaluateBulkRow);
+      bulkState.errors = out.errors;
+      bulkState.header = out.header;
+      track("csv_uploaded");
+      renderBulk();
+      if (!out.parsed.length) bulkSetMessage("error", "No valid product rows found. Check the column mapping and required fields (selling_price, product_cost).");
+      else if (out.errors.length) bulkSetMessage("warn", out.parsed.length + " products scored, " + out.errors.length + " row(s) skipped.");
+      else bulkSetMessage("ok", out.parsed.length + " products scored. Nothing was uploaded to a server.");
+    } catch (e) {
+      bulkState.rows = []; bulkState.errors = [];
+      renderBulk();
+      bulkSetMessage("error", e.message);
+    }
+  }
+
+  if (fileInput) fileInput.addEventListener("change", function () {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    if (!/\.csv$/i.test(file.name)) { bulkSetMessage("error", "Please choose a .csv file."); return; }
+    if (file.size > MAX_FILE_BYTES) { bulkSetMessage("error", "File exceeds the 2 MB limit. Split it into smaller batches."); return; }
+    bulkState.lastFile = file;
+    const reader = new FileReader();
+    reader.onload = function () { runParse(String(reader.result), file.size); };
+    reader.onerror = function () { bulkSetMessage("error", "Could not read that file."); };
+    reader.readAsText(file, "utf-8");
+  });
+
+  const tpl = document.getElementById("bulk-template");
+  if (tpl) tpl.addEventListener("click", function () { downloadFile("sellerprofit-bulk-template.csv", SAMPLE_CSV); });
+
+  const demo = document.getElementById("bulk-demo");
+  if (demo) demo.addEventListener("click", function () {
+    bulkState.columns = []; bulkState.mapping = {};
+    runParse(SAMPLE_CSV, SAMPLE_CSV.length);
+  });
+
+  document.querySelectorAll("[data-map]").forEach(function (sel) {
+    sel.addEventListener("change", function () { bulkState.mapping[sel.getAttribute("data-map")] = sel.value; });
+  });
+  const rerun = document.getElementById("bulk-rerun");
+  if (rerun) rerun.addEventListener("click", function () {
+    if (!bulkState.lastFile) { bulkSetMessage("warn", "Choose the CSV file again to apply the new mapping."); return; }
+    const reader = new FileReader();
+    reader.onload = function () { runParse(String(reader.result), bulkState.lastFile.size); };
+    reader.readAsText(bulkState.lastFile, "utf-8");
+  });
+
+  const searchInput = document.getElementById("bulk-search");
+  if (searchInput) {
+    let t = null;
+    searchInput.addEventListener("input", function () {
+      bulkState.search = searchInput.value;
+      clearTimeout(t);
+      t = setTimeout(function () {
+        renderBulk();
+        const again = document.getElementById("bulk-search");
+        if (again) { again.focus(); try { again.setSelectionRange(again.value.length, again.value.length); } catch (e) {} }
+      }, 200);
+    });
+  }
+  const sortSel = document.getElementById("bulk-sort");
+  if (sortSel) sortSel.addEventListener("change", function () { bulkState.sort = sortSel.value; renderBulk(); });
+
+  const exportBtn = document.getElementById("bulk-export");
+  if (exportBtn) exportBtn.addEventListener("click", function () {
+    if (!bulkState.rows.length) return;
+    downloadFile("sellerprofit-bulk-report.csv", toCsv(
+      ["Product", "SKU", "Selling price", "Total cost", "Contribution", "Margin %", "Status"],
+      bulkState.rows.map(function (r) {
+        return [r.name, r.sku, r.sellingPrice.toFixed(2), r.totalCost.toFixed(2), r.profit.toFixed(2),
+          r.marginPct === null ? "" : r.marginPct.toFixed(2), r.isLoss ? "Loss" : "Positive"];
+      })));
+    track("report_exported");
+  });
+
+  const lossBtn = document.getElementById("bulk-losses");
+  if (lossBtn) lossBtn.addEventListener("click", function () {
+    bulkState.search = "";
+    bulkState.rows = bulkState.rows.filter(function (r) { return r.isLoss; });
+    renderBulk();
+    bulkSetMessage(bulkState.rows.length ? "warn" : "ok", bulkState.rows.length ? "Filtered to loss-making SKUs only." : "No loss-making SKUs at these assumptions.");
+  });
+
+  const resetBtn = document.getElementById("bulk-reset");
+  if (resetBtn) resetBtn.addEventListener("click", function () {
+    bulkState.columns = []; bulkState.mapping = {}; bulkState.rows = []; bulkState.errors = [];
+    bulkState.search = ""; bulkState.sort = "margin"; bulkState.lastFile = null;
+    renderBulk();
+  });
+}
+
+function renderCompare() {
+  const rows = compareState.rows;
+  const evaluated = rows.map(function (r, idx) {
+    const costs = {};
+    COST_KEYS.forEach(function (k) { costs[k] = { amount: 0 }; });
+    costs.product = { amount: r.cost };
+    costs.shipping = { amount: r.shipping };
+    costs.advertising = { amount: r.ads };
+    costs.returns = { amount: r.returns };
+    let p = null, error = null;
+    try {
+      p = calculateProductProfit({
+        sellingPrice: r.price, priceIncludesGst: false, gstRate: 0, costs: costs,
+        commissionPct: 0, paymentPct: 0, marketplaceFixedFee: r.fee, monthlyOrders: r.units
+      });
+    } catch (e) { error = e.message; }
+    const contribution = p ? p.contributionProfit : 0;
+    return {
+      idx: idx, row: r, error: error,
+      profit: contribution,
+      margin: p ? p.contributionMarginPct : null,
+      monthly: p ? p.monthlyProfit : 0,
+      capital: r.cost * r.units,
+      breakEven: contribution > 0 ? Math.ceil(r.fixedMonthly / contribution) : null,
+      risk: contribution - r.returns
+    };
+  });
+  const sorted = evaluated.slice().sort(function (a, b) {
+    if (compareState.sort === "margin") return (b.margin === null ? -Infinity : b.margin) - (a.margin === null ? -Infinity : a.margin);
+    if (compareState.sort === "profit") return b.profit - a.profit;
+    if (compareState.sort === "capital") return a.capital - b.capital;
+    return b.risk - a.risk;
+  });
+  const fields = [["name", "Name", "text"], ["price", "Price", "number"], ["cost", "Product cost", "number"],
+    ["fee", "Marketplace fee", "number"], ["shipping", "Shipping", "number"], ["ads", "Advertising", "number"],
+    ["returns", "Return allowance", "number"], ["units", "Monthly units", "number"], ["fixedMonthly", "Fixed monthly cost", "number"]];
+
+  const html =
+    '<div class="wrap" style="padding-top:34px;padding-bottom:34px">' +
+    '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/">Home</a> / Product comparison</nav>' +
+    "<h1>Compare product economics</h1>" +
+    '<p class="sec-sub">Margin alone does not make a business. Compare contribution, capital tied up, and the volume needed to cover fixed costs. All inputs are ex-GST estimates.</p>' +
+    '<div class="form-actions" style="margin-top:18px">' +
+    '<button class="btn btn-primary btn-sm" type="button" id="cmp-add"' + (rows.length >= 10 ? " disabled" : "") + ">Add product</button>" +
+    '<span class="hint" style="align-self:center;font-size:12px;color:var(--muted-fg)">Maximum 10 products</span></div>' +
+    rows.map(function (r, i) {
+      return '<div class="card" style="margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px">' +
+        "<h2>Product " + (i + 1) + "</h2>" +
+        '<button class="btn btn-secondary btn-sm" type="button" data-remove="' + i + '"' + (rows.length <= 2 ? " disabled" : "") + ">Remove</button></div>" +
+        '<div class="form-grid" style="margin-top:14px">' +
+        fields.map(function (f) {
+          return '<div class="field"><label for="cmp-' + i + "-" + f[0] + '">' + escapeHtml(f[1]) + "</label>" +
+            '<input class="input" id="cmp-' + i + "-" + f[0] + '" data-cmp="' + i + '" data-field="' + f[0] + '" ' +
+            'type="' + f[2] + '"' + (f[2] === "number" ? ' min="0" step="0.01"' : "") + ' value="' + escapeHtml(r[f[0]]) + '" /></div>';
+        }).join("") + "</div></div>";
+    }).join("") +
+    '<div class="card" style="margin-top:16px"><div class="field" style="max-width:320px"><label for="cmp-sort">Rank by</label>' +
+    '<select class="input" id="cmp-sort">' +
+    [["margin", "Highest contribution margin"], ["profit", "Highest contribution amount"], ["capital", "Lowest initial capital"], ["risk", "Lowest return-adjusted contribution"]]
+      .map(function (o) { return '<option value="' + o[0] + '"' + (compareState.sort === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+    "</select></div>" +
+    '<div class="tbl-scroll" style="margin-top:14px"><table class="data">' +
+    "<caption class=\"sr-only\">Ranked product comparison</caption>" +
+    '<thead><tr><th scope="col">Rank</th><th scope="col">Product</th><th scope="col">Contribution</th>' +
+    '<th scope="col">Margin</th><th scope="col">Monthly</th><th scope="col">Capital</th><th scope="col">Break-even units</th></tr></thead><tbody>' +
+    sorted.map(function (e, rank) {
+      return "<tr><td>" + (rank + 1) + "</td><td><strong>" + escapeHtml(e.row.name || "Product " + (e.idx + 1)) + "</strong>" +
+        (e.error ? '<br /><span class="hint tone-red">' + escapeHtml(e.error) + "</span>" : "") + "</td>" +
+        '<td class="num ' + (e.profit >= 0 ? "tone-green" : "tone-red") + '">' + escapeHtml(inr(e.profit)) + "</td>" +
+        '<td class="num">' + escapeHtml(pct(e.margin)) + "</td>" +
+        '<td class="num">' + escapeHtml(inr(e.monthly)) + "</td>" +
+        '<td class="num">' + escapeHtml(inr(e.capital)) + "</td>" +
+        "<td>" + (e.breakEven === null ? '<span class="badge badge-red">Not achievable</span>' : num(e.breakEven)) + "</td></tr>";
+    }).join("") + "</tbody></table></div>" +
+    '<p class="disclaimer" style="margin-top:14px">Ranking is a screening aid, not a recommendation. Demand, cash conversion cycle, competition, seasonality and return behaviour are not modelled, and the highest-margin product is not automatically the best opportunity.</p>' +
+    "</div>" + adSlotHtml("compare") + "</div>";
+
+  mount(html, {
+    title: "Product Comparison Tool",
+    description: "Compare contribution, margin, monthly contribution, capital required and break-even units across product ideas.",
+    path: "#/product-comparison"
+  });
+
+  document.querySelectorAll("[data-cmp]").forEach(function (el) {
+    el.addEventListener("change", function () {
+      const i = Number(el.getAttribute("data-cmp"));
+      const field = el.getAttribute("data-field");
+      compareState.rows[i][field] = field === "name" ? el.value : (Number(el.value) || 0);
+      renderCompare();
+    });
+  });
+  const addBtn = document.getElementById("cmp-add");
+  if (addBtn) addBtn.addEventListener("click", function () {
+    if (compareState.rows.length >= 10) return;
+    compareState.rows.push({ name: "Product " + (compareState.rows.length + 1), price: 499, cost: 150, fee: 50, shipping: 60, ads: 30, returns: 20, units: 100, fixedMonthly: 10000 });
+    renderCompare();
+  });
+  document.querySelectorAll("[data-remove]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const i = Number(btn.getAttribute("data-remove"));
+      if (compareState.rows.length <= 2) return;
+      compareState.rows.splice(i, 1);
+      renderCompare();
+    });
+  });
+  const sortSel = document.getElementById("cmp-sort");
+  if (sortSel) sortSel.addEventListener("change", function () { compareState.sort = sortSel.value; renderCompare(); });
+}
+
+function renderGuidesIndex() {
+  const html =
+    '<div class="wrap" style="padding-top:34px;padding-bottom:34px">' +
+    '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/">Home</a> / Guides</nav>' +
+    "<h1>Indian e-commerce seller guides</h1>" +
+    '<p class="sec-sub">Short, practical and worked through with real numbers. Each guide states its formula, assumptions and limitations.</p>' +
+    '<div class="grid g2" style="margin-top:20px">' +
+    GUIDES.map(function (g) {
+      return '<a class="card card-link" href="#/guides/' + g.slug + '"><h2>' + escapeHtml(g.title) + "</h2>" +
+        '<p class="hint" style="margin-top:8px">Last reviewed ' + escapeHtml(g.reviewed) + " · Independent educational content</p>" +
+        "<p>" + escapeHtml(g.sections[0][1].slice(0, 150)) + "…</p></a>";
+    }).join("") + "</div>" + adSlotHtml("guides") + "</div>";
+  mount(html, {
+    title: "Indian E-commerce Seller Guides",
+    description: "Worked examples on profit, margin vs markup, GST, selling price, returns and shipping for Indian online sellers.",
+    path: "#/guides"
+  });
+}
+
+function renderGuide(slug) {
+  const g = GUIDES.filter(function (x) { return x.slug === slug; })[0];
+  if (!g) return renderNotFound();
+  track("guide_viewed");
+  const related = g.related.map(function (s) {
+    const other = GUIDES.filter(function (x) { return x.slug === s; })[0];
+    return other ? '<li><a href="#/guides/' + other.slug + '">' + escapeHtml(other.title) + "</a></li>" : "";
+  }).join("");
+  const html =
+    '<article class="wrap" style="padding-top:34px;padding-bottom:34px;max-width:820px">' +
+    '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/">Home</a> / <a href="#/guides">Guides</a> / ' + escapeHtml(g.slug) + "</nav>" +
+    "<h1>" + escapeHtml(g.title) + "</h1>" +
+    '<p class="hint" style="margin-top:8px;font-size:12.5px;color:var(--muted-fg)">Last reviewed ' + escapeHtml(g.reviewed) + " · Independent educational content</p>" +
+    '<div class="prose" style="margin-top:22px">' +
+    g.sections.map(function (s) { return "<h2>" + escapeHtml(s[0]) + "</h2><p>" + escapeHtml(s[1]) + "</p>"; }).join("") +
+    "</div>" +
+    '<div class="card" style="margin-top:22px"><h2>Apply it</h2>' +
+    '<p class="sec-sub">Use the calculator that matches this guide and plug in your own numbers.</p>' +
+    '<a class="btn btn-primary" href="' + escapeHtml(g.calculator) + '" style="margin-top:12px">Open the calculator</a></div>' +
+    '<h2 style="margin-top:26px;font-size:19px">Frequently asked questions</h2>' +
+    '<div style="display:grid;gap:12px;margin-top:12px">' +
+    g.faqs.map(function (f) { return '<details class="faq"><summary>' + escapeHtml(f[0]) + "</summary><p>" + escapeHtml(f[1]) + "</p></details>"; }).join("") +
+    "</div>" +
+    (related ? '<h2 style="margin-top:26px;font-size:19px">Related guides</h2><ul style="margin-top:10px;padding-left:20px;font-size:14.5px">' + related + "</ul>" : "") +
+    adSlotHtml("guide") +
+    '<p class="disclaimer">Assumptions: illustrative figures only; amounts are ex-GST unless stated otherwise. This is educational content, not tax, accounting or investment advice. Verify current marketplace fees, carrier rate cards and GST classification for your own products.</p>' +
+    "</article>";
+  mount(html, {
+    title: g.title, description: g.sections[0][1].slice(0, 158), path: "#/guides/" + g.slug,
+    jsonLd: {
+      "@context": "https://schema.org", "@type": "Article", headline: g.title,
+      dateModified: g.reviewed, inLanguage: "en-IN",
+      description: g.sections[0][1].slice(0, 200)
+    }
+  });
+}
+
+function renderStatic(key) {
+  const page = STATIC_PAGES[key];
+  if (!page) return renderNotFound();
+  const html =
+    '<div class="wrap" style="padding-top:34px;padding-bottom:34px;max-width:820px">' +
+    '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/">Home</a> / ' + escapeHtml(page.title) + "</nav>" +
+    "<h1>" + escapeHtml(page.title) + "</h1>" +
+    '<p class="hint" style="margin-top:8px;font-size:12.5px;color:var(--muted-fg)">Effective 2025-01-15</p>' +
+    '<div class="prose" style="margin-top:20px">' +
+    page.body.map(function (s) { return "<h2>" + escapeHtml(s[0]) + "</h2><p>" + escapeHtml(s[1]) + "</p>"; }).join("") +
+    "</div></div>";
+  mount(html, { title: page.title + " | SellerProfit India", description: page.description, path: "#/" + key });
+}
+
+function renderNotFound() {
+  mount(
+    '<div class="wrap" style="padding:70px 0;text-align:center">' +
+    '<span class="badge">404</span>' +
+    "<h1 style=\"margin-top:14px;font-size:32px\">This page does not exist.</h1>" +
+    '<p class="sec-sub" style="margin:10px auto 22px">The calculator you are looking for is probably in the directory.</p>' +
+    '<div class="hero-cta" style="justify-content:center">' +
+    '<a class="btn btn-primary" href="#/calculators">Browse calculators</a>' +
+    '<a class="btn btn-secondary" href="#/">Back to home</a></div></div>',
+    { title: "Page not found | SellerProfit India", description: "That page does not exist.", path: location.hash }
+  );
+}
+
+/* ============================ 10. ROUTER ================================= */
+const NAV_ITEMS = [
+  ["#/", "Home"], ["#/calculators", "Calculators"], ["#/bulk-profit-calculator", "Bulk CSV"],
+  ["#/product-comparison", "Compare"], ["#/guides", "Guides"], ["#/about", "About"]
+];
+function buildNav() {
+  const links = NAV_ITEMS.map(function (n) { return '<a href="' + n[0] + '">' + n[1] + "</a>"; }).join("");
+  document.getElementById("desktop-nav").innerHTML = links;
+  document.getElementById("mobile-nav").innerHTML = links;
+}
+
+function currentPath() {
+  const hash = location.hash || "#/";
+  return hash.replace(/^#/, "") || "/";
+}
+function route() {
+  const path = currentPath();
+  const parts = path.split("/").filter(function (s) { return s !== ""; });
+  const menu = document.getElementById("mobile-nav");
+  if (menu) menu.classList.remove("open");
+  const menuBtn = document.getElementById("menu-btn");
+  if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
+
+  if (!parts.length) return renderHome();
+
+  if (parts[0] === "calculators") {
+    if (parts.length === 1) return renderDirectory();
+    const id = parts[1];
+    return CALCULATORS[id] ? renderCalculator(id) : renderNotFound();
+  }
+  if (parts[0] === "guides") {
+    if (parts.length === 1) return renderGuidesIndex();
+    return renderGuide(parts[1]);
+  }
+  if (parts[0] === "bulk-profit-calculator") return renderBulk();
+  if (parts[0] === "product-comparison") return renderCompare();
+  if (CALCULATORS[parts[0]]) return renderCalculator(parts[0]);   // canonical short paths
+  if (STATIC_PAGES[parts[0]]) return renderStatic(parts[0]);
+  return renderNotFound();
+}
+
+/* ============================ 11. BOOTSTRAP ============================== */
+function bindChrome() {
+  const themeBtn = document.getElementById("theme-btn");
+  themeBtn.addEventListener("click", function () {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next); storageSet("theme", next);
+  });
+  const menuBtn = document.getElementById("menu-btn");
+  const menu = document.getElementById("mobile-nav");
+  menuBtn.addEventListener("click", function () {
+    const open = menu.classList.toggle("open");
+    menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  menu.addEventListener("click", function (e) {
+    if (e.target.tagName === "A") { menu.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); }
+  });
+}
+
+(function start() {
+  initTheme();
+  buildNav();
+  bindChrome();
+  if (!location.hash) location.replace("#/");
+  window.addEventListener("hashchange", route);
+  route();
+})();
+</script>
+</body>
+</html>
