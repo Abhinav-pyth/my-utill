@@ -1,215 +1,684 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculator</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .calculator {
-      background: #1e293b;
-      border-radius: 24px;
-      padding: 24px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .display {
-      background: #0f172a;
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 20px;
-      text-align: right;
-      min-height: 100px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-    }
-    .display .expression {
-      color: #64748b;
-      font-size: 16px;
-      margin-bottom: 8px;
-      min-height: 20px;
-    }
-    .display .result {
-      color: white;
-      font-size: 36px;
-      font-weight: 700;
-      word-break: break-all;
-    }
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-    button {
-      padding: 18px;
-      border: none;
-      border-radius: 14px;
-      font-size: 20px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    button:active {
-      transform: scale(0.95);
-    }
-    .btn-number {
-      background: #334155;
-      color: white;
-    }
-    .btn-number:hover {
-      background: #475569;
-    }
-    .btn-operator {
-      background: #6366f1;
-      color: white;
-    }
-    .btn-operator:hover {
-      background: #818cf8;
-    }
-    .btn-function {
-      background: #1e293b;
-      color: #94a3b8;
-      border: 1px solid #334155;
-    }
-    .btn-function:hover {
-      background: #334155;
-      color: white;
-    }
-    .btn-equals {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      grid-column: span 2;
-    }
-    .btn-equals:hover {
-      background: linear-gradient(135deg, #818cf8, #a78bfa);
-    }
-    .btn-clear {
-      background: #ef4444;
-      color: white;
-    }
-    .btn-clear:hover {
-      background: #f87171;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Forge — Webpage PDF Generator</title>
+
+<!-- Fonts (fontsource CDN) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/700.css">
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0f1117;
+    --panel:#161a23;
+    --panel-2:#1d222e;
+    --border:#2a3040;
+    --text:#e8ebf2;
+    --muted:#9aa3b5;
+    --accent:#6c7bff;
+    --accent-2:#8f5cff;
+    --ok:#34d399;
+    --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, #23294a 0%, var(--bg) 55%);
+    color:var(--text);
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 22px;
+    border-bottom:1px solid var(--border);
+    background:rgba(15,17,23,.7);
+    backdrop-filter:blur(8px);
+    flex-shrink:0;
+  }
+  .logo{
+    width:38px;height:38px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 18px rgba(108,123,255,.4);
+    flex-shrink:0;
+  }
+  .brand h1{font-size:17px;font-weight:700;letter-spacing:.2px}
+  .brand p{font-size:12px;color:var(--muted)}
+  .header-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .status-pill{
+    font-size:12px;color:var(--muted);
+    border:1px solid var(--border);border-radius:999px;
+    padding:6px 12px;display:flex;align-items:center;gap:7px;
+    transition:color .3s;
+  }
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background .3s}
+  .status-pill.busy{color:var(--accent)}
+  .status-pill.busy .status-dot{background:var(--accent);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+
+  .btn{
+    font-family:inherit;font-size:13px;font-weight:600;
+    border:none;border-radius:10px;cursor:pointer;
+    padding:10px 16px;display:inline-flex;align-items:center;gap:8px;
+    transition:transform .15s, box-shadow .2s, background .2s;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#fff;box-shadow:0 4px 16px rgba(108,123,255,.35);
+  }
+  .btn-primary:hover{box-shadow:0 6px 22px rgba(108,123,255,.5)}
+  .btn-ghost{background:var(--panel-2);color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{background:#252b3a}
+
+  /* ---------- Layout ---------- */
+  main{flex:1;display:flex;min-height:0}
+
+  /* ---------- Sidebar ---------- */
+  aside{
+    width:360px;flex-shrink:0;
+    border-right:1px solid var(--border);
+    background:var(--panel);
+    overflow-y:auto;
+    padding:18px;
+  }
+  aside::-webkit-scrollbar{width:8px}
+  aside::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
+
+  .section{margin-bottom:18px}
+  .section-title{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;
+    color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  }
+  .section-title::after{content:"";flex:1;height:1px;background:var(--border)}
+
+  label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px}
+  input[type=text],select,textarea{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);
+    color:var(--text);border-radius:10px;padding:10px 12px;
+    font-family:inherit;font-size:13px;outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  input[type=text]:focus,select:focus,textarea:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,123,255,.15);
+  }
+  textarea{resize:vertical;min-height:220px;line-height:1.55}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{margin-bottom:12px}
+
+  input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+  .range-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .range-label b{color:var(--text);font-weight:600}
+
+  input[type=color]{
+    width:100%;height:38px;border:1px solid var(--border);border-radius:10px;
+    background:var(--panel-2);cursor:pointer;padding:4px;
+  }
+
+  .switch-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:9px 12px;background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;margin-bottom:8px;font-size:13px;
+  }
+  .switch{position:relative;width:40px;height:22px;flex-shrink:0}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{
+    position:absolute;inset:0;border-radius:999px;background:#333a4d;cursor:pointer;transition:.25s;
+  }
+  .slider::before{
+    content:"";position:absolute;width:16px;height:16px;border-radius:50%;
+    background:#fff;top:3px;left:3px;transition:.25s;
+  }
+  .switch input:checked + .slider{background:var(--accent)}
+  .switch input:checked + .slider::before{transform:translateX(18px)}
+
+  .dropzone{
+    border:2px dashed var(--border);border-radius:12px;
+    padding:18px;text-align:center;cursor:pointer;
+    transition:border-color .2s, background .2s;
+    font-size:12px;color:var(--muted);
+  }
+  .dropzone:hover,.dropzone.drag{border-color:var(--accent);background:rgba(108,123,255,.06)}
+  .dropzone svg{margin-bottom:6px;opacity:.7}
+  .img-preview{
+    margin-top:10px;position:relative;display:none;border-radius:10px;overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .img-preview img{width:100%;display:block;max-height:110px;object-fit:cover}
+  .img-remove{
+    position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;
+    background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;font-size:13px;line-height:1;
+  }
+  .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px}
+  .hint code{background:var(--panel-2);padding:1px 5px;border-radius:5px;color:var(--accent);font-size:11px}
+
+  /* ---------- Preview ---------- */
+  .preview-area{
+    flex:1;display:flex;flex-direction:column;min-width:0;background:#0a0c11;
+  }
+  .preview-bar{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 18px;border-bottom:1px solid var(--border);
+    font-size:12px;color:var(--muted);flex-shrink:0;
+  }
+  .preview-bar b{color:var(--text);font-weight:600}
+  iframe{flex:1;width:100%;border:none;background:#525659}
+  .preview-loading{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(10,12,17,.6);z-index:5;
+  }
+  .spinner{
+    width:34px;height:34px;border-radius:50%;
+    border:3px solid var(--border);border-top-color:var(--accent);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .preview-wrap{flex:1;position:relative;min-height:0;display:flex}
+
+  @media(max-width:900px){
+    body{overflow:auto}
+    main{flex-direction:column}
+    aside{width:100%;border-right:none;border-bottom:1px solid var(--border)}
+    .preview-wrap{height:70vh}
+  }
+</style>
 </head>
 <body>
-  <div class="calculator">
-    <div class="display">
-      <div class="expression" id="expression"></div>
-      <div class="result" id="result">0</div>
+
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M14 2v6h6" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M9 15h6M9 12h3" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="brand">
+    <h1>PDF Forge</h1>
+    <p>Design &amp; export documents right in your browser</p>
+  </div>
+  <div class="header-actions">
+    <div class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">Ready</span></div>
+    <button class="btn btn-ghost" id="resetBtn">↺ Reset</button>
+    <button class="btn btn-primary" id="downloadBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 21h16" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Download PDF
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ CONTROLS ============ -->
+  <aside>
+    <div class="section">
+      <div class="section-title">Document</div>
+      <div class="field"><label>Title</label><input type="text" id="docTitle" value="My Awesome Report"></div>
+      <div class="field"><label>Author / Subtitle</label><input type="text" id="docAuthor" value="Jane Doe · October 31, 2026"></div>
+      <div class="field"><label>File name</label><input type="text" id="fileName" value="my-document.pdf"></div>
     </div>
-    <div class="buttons">
-      <button class="btn-clear" onclick="clearAll()">C</button>
-      <button class="btn-function" onclick="backspace()">⌫</button>
-      <button class="btn-function" onclick="inputOp('%')">%</button>
-      <button class="btn-operator" onclick="inputOp('/')">÷</button>
-      
-      <button class="btn-number" onclick="inputNum('7')">7</button>
-      <button class="btn-number" onclick="inputNum('8')">8</button>
-      <button class="btn-number" onclick="inputNum('9')">9</button>
-      <button class="btn-operator" onclick="inputOp('*')">×</button>
-      
-      <button class="btn-number" onclick="inputNum('4')">4</button>
-      <button class="btn-number" onclick="inputNum('5')">5</button>
-      <button class="btn-number" onclick="inputNum('6')">6</button>
-      <button class="btn-operator" onclick="inputOp('-')">−</button>
-      
-      <button class="btn-number" onclick="inputNum('1')">1</button>
-      <button class="btn-number" onclick="inputNum('2')">2</button>
-      <button class="btn-number" onclick="inputNum('3')">3</button>
-      <button class="btn-operator" onclick="inputOp('+')">+</button>
-      
-      <button class="btn-number" onclick="inputNum('0')">0</button>
-      <button class="btn-number" onclick="inputNum('.')">.</button>
-      <button class="btn-equals" onclick="calculate()">=</button>
+
+    <div class="section">
+      <div class="section-title">Page Setup</div>
+      <div class="row">
+        <div class="field">
+          <label>Size</label>
+          <select id="pageSize">
+            <option value="a4" selected>A4</option>
+            <option value="letter">Letter</option>
+            <option value="legal">Legal</option>
+            <option value="a5">A5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Orientation</label>
+          <select id="orientation">
+            <option value="portrait" selected>Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <div class="range-label"><span>Margin</span><b><span id="marginVal">20</span> mm</b></div>
+        <input type="range" id="margin" min="8" max="40" value="20">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Typography</div>
+      <div class="row">
+        <div class="field">
+          <label>Font</label>
+          <select id="fontFamily">
+            <option value="helvetica" selected>Helvetica</option>
+            <option value="times">Times</option>
+            <option value="courier">Courier</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Size</label>
+          <select id="fontSize">
+            <option value="9">9 pt</option>
+            <option value="10">10 pt</option>
+            <option value="11" selected>11 pt</option>
+            <option value="12">12 pt</option>
+            <option value="14">14 pt</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <div class="range-label"><span>Line spacing</span><b><span id="lineHeightVal">1.6</span>×</b></div>
+        <input type="range" id="lineHeight" min="1.1" max="2.5" step="0.1" value="1.6">
+      </div>
+      <div class="row">
+        <div class="field"><label>Text color</label><input type="color" id="textColor" value="#1f2937"></div>
+        <div class="field"><label>Accent color</label><input type="color" id="accentColor" value="#4f46e5"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Header &amp; Footer</div>
+      <div class="switch-row"><span>Title header on page 1</span>
+        <label class="switch"><input type="checkbox" id="showHeader" checked><span class="slider"></span></label>
+      </div>
+      <div class="switch-row"><span>Footer rule + title</span>
+        <label class="switch"><input type="checkbox" id="showFooter" checked><span class="slider"></span></label>
+      </div>
+      <div class="switch-row"><span>Page numbers (X / Y)</span>
+        <label class="switch"><input type="checkbox" id="showPageNums" checked><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Image</div>
+      <div class="dropzone" id="dropzone">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7 9m5-5l5 5M4 20h16" stroke="#9aa3b5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div>Click or drop an image here</div>
+        <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp" hidden>
+      </div>
+      <div class="img-preview" id="imgPreview">
+        <img id="imgPreviewEl" alt="preview">
+        <button class="img-remove" id="imgRemove" title="Remove image">✕</button>
+      </div>
+      <div class="field" style="margin-top:10px">
+        <div class="range-label"><span>Image width</span><b><span id="imgWidthVal">60</span>%</b></div>
+        <input type="range" id="imgWidth" min="20" max="100" value="60">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Content</div>
+      <textarea id="content" spellcheck="false"># Welcome to PDF Forge
+
+This is your own PDF generator, running entirely in the browser. Type here and watch the live preview update automatically — then hit Download PDF.
+
+## Simple formatting
+
+You can use a lightweight markdown-style syntax:
+
+- Lines starting with # become big headings
+- Lines starting with ## become sub-headings
+- Lines starting with - or * become bullet points
+- Everything else becomes a normal paragraph
+
+## Multi-page support
+
+Long content automatically flows onto new pages, with headers, footers and page numbers handled for you. Try pasting a long article, an essay, meeting notes, or a report outline.
+
+- Tip: adjust margins, fonts, spacing and colors in the sidebar
+- Tip: upload a logo or banner image to brand the first page
+- Tip: everything stays private — no server, no uploads, 100% client-side
+
+Enjoy generating beautiful PDFs!</textarea>
+      <div class="hint">Supports <code># Heading</code>, <code>## Subheading</code>, <code>- bullet</code> and plain paragraphs.</div>
+    </div>
+  </aside>
+
+  <!-- ============ PREVIEW ============ -->
+  <div class="preview-area">
+    <div class="preview-bar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="#9aa3b5" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="#9aa3b5" stroke-width="1.8"/></svg>
+      <span>Live preview · <b id="pageCountLabel">1 page</b></span>
+      <span style="margin-left:auto" id="sizeLabel"></span>
+    </div>
+    <div class="preview-wrap">
+      <iframe id="previewFrame" title="PDF preview"></iframe>
+      <div class="preview-loading" id="loading"><div class="spinner"></div></div>
     </div>
   </div>
+</main>
 
-  <script>
-    let current = '0';
-    let expression = '';
-    let shouldReset = false;
+<script>
+(function(){
+  const { jsPDF } = window.jspdf;
 
-    function updateDisplay() {
-      document.getElementById('result').textContent = current;
-      document.getElementById('expression').textContent = expression;
+  // ---------- element refs ----------
+  const $ = id => document.getElementById(id);
+  const els = {
+    docTitle:$('docTitle'), docAuthor:$('docAuthor'), fileName:$('fileName'),
+    pageSize:$('pageSize'), orientation:$('orientation'), margin:$('margin'),
+    fontFamily:$('fontFamily'), fontSize:$('fontSize'), lineHeight:$('lineHeight'),
+    textColor:$('textColor'), accentColor:$('accentColor'),
+    showHeader:$('showHeader'), showFooter:$('showFooter'), showPageNums:$('showPageNums'),
+    imageInput:$('imageInput'), dropzone:$('dropzone'), imgPreview:$('imgPreview'),
+    imgPreviewEl:$('imgPreviewEl'), imgRemove:$('imgRemove'), imgWidth:$('imgWidth'),
+    content:$('content'), frame:$('previewFrame'), loading:$('loading'),
+    statusPill:$('statusPill'), statusText:$('statusText'),
+    pageCountLabel:$('pageCountLabel'), sizeLabel:$('sizeLabel'),
+    marginVal:$('marginVal'), lineHeightVal:$('lineHeightVal'), imgWidthVal:$('imgWidthVal')
+  };
+
+  const DEFAULTS = {
+    docTitle:'My Awesome Report',
+    docAuthor:'Jane Doe · October 31, 2026',
+    fileName:'my-document.pdf',
+    content: els.content.value
+  };
+
+  let imageData = null;   // dataURL of uploaded image
+  let currentBlobUrl = null;
+  let debounceTimer = null;
+
+  // ---------- helpers ----------
+  function hexToRgb(hex){
+    const n = parseInt(hex.slice(1),16);
+    return [(n>>16)&255,(n>>8)&255,n&255];
+  }
+  const PT_TO_MM = 25.4/72;
+
+  function setStatus(text,busy){
+    els.statusText.textContent = text;
+    els.statusPill.classList.toggle('busy', !!busy);
+  }
+
+  function readImageFile(file){
+    if(!file || !/^image\/(png|jpeg|webp)$/.test(file.type)) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      imageData = e.target.result;
+      els.imgPreviewEl.src = imageData;
+      els.imgPreview.style.display = 'block';
+      schedulePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- PDF building ----------
+  function buildPdf(){
+    const size = els.pageSize.value;
+    const orient = els.orientation.value;
+    const margin = parseFloat(els.margin.value);
+    const font = els.fontFamily.value;
+    const baseSize = parseFloat(els.fontSize.value);
+    const lh = parseFloat(els.lineHeight.value);
+    const [tr,tg,tb] = hexToRgb(els.textColor.value);
+    const [ar,ag,ab] = hexToRgb(els.accentColor.value);
+
+    const doc = new jsPDF({ unit:'mm', format:size, orientation:orient });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const contentW = pageW - margin*2;
+    const footerZone = (els.showFooter.checked || els.showPageNums.checked) ? 12 : 4;
+    const bottomLimit = pageH - margin - footerZone;
+    const lineMM = baseSize * lh * PT_TO_MM;
+
+    let y = margin;
+
+    // --- optional image banner ---
+    if(imageData){
+      try{
+        const props = doc.getImageProperties(imageData);
+        const w = contentW * (parseFloat(els.imgWidth.value)/100);
+        const h = w * props.height / props.width;
+        const x = margin + (contentW - w)/2;
+        if(y + h > bottomLimit){ doc.addPage(); y = margin; }
+        doc.addImage(imageData, props.fileType || 'PNG', x, y, w, h);
+        y += h + 8;
+      }catch(err){ console.warn('Image skipped:', err); }
     }
 
-    function inputNum(num) {
-      if (shouldReset) {
-        current = '0';
-        shouldReset = false;
+    // --- header ---
+    if(els.showHeader.checked){
+      // accent bar
+      doc.setFillColor(ar,ag,ab);
+      doc.roundedRect(margin, y, 30, 1.6, 0.8, 0.8, 'F');
+      y += 8;
+
+      const title = els.docTitle.value.trim() || 'Untitled Document';
+      doc.setFont(font,'bold');
+      const titleSize = Math.max(baseSize*2, 20);
+      doc.setFontSize(titleSize);
+      doc.setTextColor(tr,tg,tb);
+      const titleLines = doc.splitTextToSize(title, contentW);
+      titleLines.forEach(line=>{
+        doc.text(line, margin, y + titleSize*PT_TO_MM*0.85);
+        y += titleSize*PT_TO_MM*1.15;
+      });
+
+      if(els.docAuthor.value.trim()){
+        doc.setFont(font,'normal');
+        doc.setFontSize(baseSize*0.95);
+        doc.setTextColor(ar,ag,ab);
+        const subLines = doc.splitTextToSize(els.docAuthor.value.trim(), contentW);
+        subLines.forEach(line=>{
+          y += baseSize*PT_TO_MM*0.7;
+          doc.text(line, margin, y);
+        });
       }
-      if (num === '.' && current.includes('.')) return;
-      if (current === '0' && num !== '.') {
-        current = num;
-      } else {
-        current += num;
+      y += 8;
+      // separator
+      doc.setDrawColor(220,220,225);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, pageW-margin, y);
+      y += 9;
+    }
+
+    // --- body content (markdown-lite) ---
+    const lines = els.content.value.split('\n');
+    doc.setTextColor(tr,tg,tb);
+
+    const ensureSpace = needed => {
+      if(y + needed > bottomLimit){
+        doc.addPage();
+        y = margin;
+        return true;
       }
-      updateDisplay();
-    }
+      return false;
+    };
 
-    function inputOp(op) {
-      expression = current + ' ' + op + ' ';
-      shouldReset = true;
-      updateDisplay();
-    }
+    lines.forEach(raw=>{
+      const line = raw.replace(/\s+$/,'');
+      const trimmed = line.trim();
 
-    function calculate() {
-      if (!expression) return;
-      try {
-        const exp = expression + current;
-        const result = Function('"use strict"; return (' + exp + ')')();
-        current = String(Math.round(result * 100000000) / 100000000);
-        expression = exp + ' =';
-        shouldReset = true;
-        updateDisplay();
-      } catch (e) {
-        current = 'Error';
-        updateDisplay();
+      if(trimmed === ''){ y += lineMM*0.5; return; }
+
+      if(trimmed.startsWith('## ')){
+        const text = trimmed.slice(3);
+        const s = baseSize*1.4;
+        y += lineMM*0.4;
+        ensureSpace(s*PT_TO_MM*1.6);
+        doc.setFont(font,'bold'); doc.setFontSize(s); doc.setTextColor(ar,ag,ab);
+        doc.splitTextToSize(text, contentW).forEach(l=>{
+          ensureSpace(s*PT_TO_MM*1.3);
+          doc.text(l, margin, y + s*PT_TO_MM*0.85);
+          y += s*PT_TO_MM*1.35;
+        });
+        doc.setTextColor(tr,tg,tb);
+        y += lineMM*0.25;
+        return;
       }
-    }
 
-    function clearAll() {
-      current = '0';
-      expression = '';
-      shouldReset = false;
-      updateDisplay();
-    }
-
-    function backspace() {
-      if (current.length > 1) {
-        current = current.slice(0, -1);
-      } else {
-        current = '0';
+      if(trimmed.startsWith('# ')){
+        const text = trimmed.slice(2);
+        const s = baseSize*1.9;
+        y += lineMM*0.4;
+        ensureSpace(s*PT_TO_MM*1.6);
+        doc.setFont(font,'bold'); doc.setFontSize(s); doc.setTextColor(tr,tg,tb);
+        doc.splitTextToSize(text, contentW).forEach(l=>{
+          ensureSpace(s*PT_TO_MM*1.3);
+          doc.text(l, margin, y + s*PT_TO_MM*0.85);
+          y += s*PT_TO_MM*1.3;
+        });
+        y += lineMM*0.3;
+        return;
       }
-      updateDisplay();
-    }
 
-    // Keyboard support
-    document.addEventListener('keydown', (e) => {
-      if (e.key >= '0' && e.key <= '9') inputNum(e.key);
-      else if (e.key === '.') inputNum('.');
-      else if (e.key === '+') inputOp('+');
-      else if (e.key === '-') inputOp('-');
-      else if (e.key === '*') inputOp('*');
-      else if (e.key === '/') inputOp('/');
-      else if (e.key === 'Enter' || e.key === '=') calculate();
-      else if (e.key === 'Escape') clearAll();
-      else if (e.key === 'Backspace') backspace();
+      if(/^[-*•]\s+/.test(trimmed)){
+        const text = trimmed.replace(/^[-*•]\s+/,'');
+        doc.setFont(font,'normal'); doc.setFontSize(baseSize); doc.setTextColor(tr,tg,tb);
+        const bulletIndent = 6;
+        const wrapped = doc.splitTextToSize(text, contentW - bulletIndent);
+        wrapped.forEach((l,i)=>{
+          ensureSpace(lineMM*1.2);
+          if(i===0){
+            doc.setTextColor(ar,ag,ab);
+            doc.text('•', margin + 1.5, y + baseSize*PT_TO_MM*0.8);
+            doc.setTextColor(tr,tg,tb);
+          }
+          doc.text(l, margin + bulletIndent, y + baseSize*PT_TO_MM*0.8);
+          y += lineMM;
+        });
+        y += lineMM*0.15;
+        return;
+      }
+
+      // paragraph
+      doc.setFont(font,'normal'); doc.setFontSize(baseSize); doc.setTextColor(tr,tg,tb);
+      doc.splitTextToSize(trimmed, contentW).forEach(l=>{
+        ensureSpace(lineMM*1.2);
+        doc.text(l, margin, y + baseSize*PT_TO_MM*0.8);
+        y += lineMM;
+      });
+      y += lineMM*0.25;
     });
-  </script>
+
+    // --- footers + page numbers on every page ---
+    const totalPages = doc.internal.getNumberOfPages();
+    for(let p=1; p<=totalPages; p++){
+      doc.setPage(p);
+      if(els.showFooter.checked){
+        const footY = pageH - margin - 4;
+        doc.setDrawColor(220,220,225);
+        doc.setLineWidth(0.3);
+        doc.line(margin, footY - 4, pageW - margin, footY - 4);
+        doc.setFont(font,'normal'); doc.setFontSize(8); doc.setTextColor(150,150,160);
+        const footTitle = els.docTitle.value.trim() || 'Untitled Document';
+        const maxFootW = els.showPageNums.checked ? contentW - 30 : contentW;
+        doc.text(doc.splitTextToSize(footTitle, maxFootW)[0], margin, footY);
+        if(els.showPageNums.checked){
+          doc.text(`Page ${p} / ${totalPages}`, pageW - margin, footY, {align:'right'});
+        }
+      } else if(els.showPageNums.checked){
+        doc.setFont(font,'normal'); doc.setFontSize(8); doc.setTextColor(150,150,160);
+        doc.text(`${p} / ${totalPages}`, pageW - margin, pageH - margin, {align:'right'});
+      }
+    }
+
+    els.pageCountLabel.textContent = totalPages + (totalPages===1?' page':' pages');
+    return doc;
+  }
+
+  // ---------- preview ----------
+  function refreshPreview(){
+    setStatus('Rendering…', true);
+    els.loading.style.display = 'flex';
+    // defer so the spinner paints
+    requestAnimationFrame(()=>setTimeout(()=>{
+      try{
+        const doc = buildPdf();
+        const blob = doc.output('blob');
+        els.sizeLabel.textContent = (blob.size/1024).toFixed(1) + ' KB';
+        if(currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = URL.createObjectURL(blob);
+        els.frame.src = currentBlobUrl;
+        setStatus('Preview updated', false);
+      }catch(err){
+        console.error(err);
+        setStatus('Render error', false);
+      }
+      els.loading.style.display = 'none';
+    },30));
+  }
+
+  function schedulePreview(){
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(refreshPreview, 500);
+  }
+
+  // ---------- download ----------
+  $('downloadBtn').addEventListener('click', ()=>{
+    try{
+      setStatus('Exporting…', true);
+      const doc = buildPdf();
+      let name = els.fileName.value.trim() || 'document.pdf';
+      if(!name.toLowerCase().endsWith('.pdf')) name += '.pdf';
+      doc.save(name);
+      setStatus('Downloaded ✓', false);
+      setTimeout(()=>setStatus('Ready', false), 2500);
+    }catch(err){
+      console.error(err);
+      setStatus('Export failed', false);
+    }
+  });
+
+  // ---------- reset ----------
+  $('resetBtn').addEventListener('click', ()=>{
+    els.docTitle.value = DEFAULTS.docTitle;
+    els.docAuthor.value = DEFAULTS.docAuthor;
+    els.fileName.value = DEFAULTS.fileName;
+    els.content.value = DEFAULTS.content;
+    schedulePreview();
+  });
+
+  // ---------- image upload ----------
+  els.dropzone.addEventListener('click', ()=> els.imageInput.click());
+  els.imageInput.addEventListener('change', e => readImageFile(e.target.files[0]));
+  ['dragover','dragenter'].forEach(ev => els.dropzone.addEventListener(ev, e=>{
+    e.preventDefault(); els.dropzone.classList.add('drag');
+  }));
+  ['dragleave','drop'].forEach(ev => els.dropzone.addEventListener(ev, e=>{
+    e.preventDefault(); els.dropzone.classList.remove('drag');
+  }));
+  els.dropzone.addEventListener('drop', e => readImageFile(e.dataTransfer.files[0]));
+  els.imgRemove.addEventListener('click', ()=>{
+    imageData = null;
+    els.imageInput.value = '';
+    els.imgPreview.style.display = 'none';
+    schedulePreview();
+  });
+
+  // ---------- bindings ----------
+  const bindRange = (input, out, fmt) => {
+    const upd = ()=>{ out.textContent = fmt ? fmt(input.value) : input.value; };
+    input.addEventListener('input', ()=>{ upd(); schedulePreview(); });
+    upd();
+  };
+  bindRange(els.margin, els.marginVal);
+  bindRange(els.lineHeight, els.lineHeightVal);
+  bindRange(els.imgWidth, els.imgWidthVal);
+
+  const liveInputs = ['docTitle','docAuthor','content','pageSize','orientation',
+    'fontFamily','fontSize','textColor','accentColor','showHeader','showFooter','showPageNums'];
+  liveInputs.forEach(id=>{
+    $(id).addEventListener('input', schedulePreview);
+    $(id).addEventListener('change', schedulePreview);
+  });
+
+  // ---------- initial render ----------
+  refreshPreview();
+})();
+</script>
 </body>
 </html>
+```
